@@ -1,0 +1,101 @@
+/* Tệp: src/styles/AuthPages.css */
+
+/* --- Các kiểu chung cho cả trang Đăng Nhập và Đăng Ký --- */
+
+/* Làm sạch container chính để loại bỏ viền hoặc khoảng trống không mong muốn ở cuối trang */
+.auth-page-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #111; /* Nền tối đồng bộ */
+  padding-bottom: 0 !important; /* Quan trọng: Loại bỏ padding-bottom không mong muốn */
+  margin-bottom: 0 !important; /* Loại bỏ margin-bottom không mong muốn */
+  overflow: hidden; /* Ngăn chặn cuộn trang không cần thiết khi form nhỏ lại */
+}
+
+/* Kiểu dáng cho thẻ form card (container của form) */
+.auth-card {
+  background-color: #1a1a1a;
+  border-color: #333;
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  margin-bottom: 0 !important; /* Quan trọng: Loại bỏ margin-bottom của card */
+}
+
+/* Kiểu dáng cho logo LKStore */
+.lkstore-logo-text {
+  color: #F28B00;
+  font-size: 2.5rem;
+}
+
+/* Kiểu dáng cho nút chuyển đổi vai trò (Khách hàng/Admin) */
+.role-switcher-container {
+  padding: 0.25rem;
+  background-color: #111;
+  border-color: #444;
+}
+
+.role-switcher-btn {
+  border: 0;
+  color: #888;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.role-switcher-btn.active {
+  background-color: #F28B00;
+  color: #fff;
+}
+
+/* Kiểu dáng cho các input groups với icon */
+.auth-input-group .input-group-text {
+  background-color: #222;
+  border-color: #333;
+  color: #888;
+}
+
+.auth-input-group .form-control {
+  background-color: #222;
+  border-color: #333;
+  color: #fff;
+}
+
+.auth-input-group .form-control::placeholder {
+  color: #666;
+}
+
+/* Kiểu dáng cho nút submit (cam viên thuốc) */
+.auth-submit-btn {
+  background-color: #F28B00;
+  color: #fff;
+  border: 0;
+  transition: background-color 0.3s;
+}
+
+.auth-submit-btn:hover {
+  background-color: #ff9d1a;
+  color: #fff;
+}
+
+/* Kiểu dáng cho liên kết chuyển đổi giữa đăng nhập và đăng ký */
+.auth-switch-link {
+  color: #F28B00;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.auth-switch-link:hover {
+  color: #ff9d1a;
+}
+
+/* --- Các kiểu cụ thể cho từng trang --- */
+
+/* Thu hẹp thẻ form card của trang Đăng Ký */
+.register-card {
+  max-width: 380px; /* Nhỏ lại từ 480px xuống 380px */
+}
+
+/* Đảm bảo thẻ card đăng nhập giữ nguyên chiều rộng */
+.login-card {
+  max-width: 450px;
+}
