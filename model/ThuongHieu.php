@@ -7,29 +7,83 @@
         private	$trang_thai;	
         private $ngay_tao;
         private $table_name="thuong_hieu";
-        private $conn=null;
-        public function __construct($db){
-            $this->conn=$db;
-        }	
-        public function setIdThuongHieu($id) {
-            $this->id_thuong_hieu = (int)$id;
+        private $conn=null;	
+        // Sửa hàm __construct thành như thế này:
+        public function __construct($db = null) {
+            $this->conn = $db;
         }
-        public function setData($ten_thuong_hieu, $mo_ta, $hinh_anh_logo, $trang_thai, $id_thuong_hieu = null) {
-            $this->ten_thuong_hieu = $ten_thuong_hieu;
+        public function setData($ten, $mo_ta, $hinh_anh, $trang_thai, $id = null) {
+            $this->ten_thuong_hieu = $ten;
             $this->mo_ta = $mo_ta;
-            $this->hinh_anh_logo = $hinh_anh_logo;
+            $this->hinh_anh_logo = $hinh_anh;
             $this->trang_thai = $trang_thai;
-            
-            // Nếu có truyền ID vào thì gán nội bộ bên trong class
-            if ($id_thuong_hieu !== null) {
-                $this->id_thuong_hieu = (int)$id_thuong_hieu;
+            if ($id !== null) {
+                $this->id_thuong_hieu = $id;
             }
         }
-        public function getTatCaThuongHieu(){
-            $query="SELECT * FROM ".$this->table_name." ORDER BY id_thuong_hieu DESC";
-            $stmt=$this->conn->prepare($query);
+
+        public function getIdThuongHieu() {
+            return $this->id_thuong_hieu;
+        }
+
+        public function setIdThuongHieu($id_thuong_hieu) {
+            $this->id_thuong_hieu = (int)$id_thuong_hieu;
+        }
+
+        public function getTenThuongHieu() {
+            return $this->ten_thuong_hieu;
+        }
+
+        public function setTenThuongHieu($ten_thuong_hieu) {
+            $this->ten_thuong_hieu = htmlspecialchars(strip_tags($ten_thuong_hieu));
+        }
+
+        public function getMoTa() {
+            return $this->mo_ta;
+        }
+
+        public function setMoTa($mo_ta) {
+            $this->mo_ta = htmlspecialchars(strip_tags($mo_ta));
+        }
+
+        public function getHinhAnhLogo() {
+            return $this->hinh_anh_logo;
+        }
+
+        public function setHinhAnhLogo($hinh_anh_logo) {
+            $this->hinh_anh_logo = htmlspecialchars(strip_tags($hinh_anh_logo));
+        }
+
+        public function getTrangThai() {
+            return $this->trang_thai;
+        }
+
+        public function setTrangThai($trang_thai) {
+            $this->trang_thai = (int)$trang_thai;
+        }
+
+        public function getNgayTao() {
+            return $this->ngay_tao;
+        }
+
+        public function setNgayTao($ngay_tao) {
+            $this->ngay_tao = $ngay_tao;
+        }
+      
+        public function getTatCaThuongHieu() {
+            // 1. Sử dụng LEFT JOIN để đếm sản phẩm. 
+            // COUNT(sp.id_san_pham) sẽ trả về 0 nếu thương hiệu đó chưa có sản phẩm nào.
+            $query = "SELECT th.*, COUNT(sp.id_san_pham) AS count 
+                    FROM " . $this->table_name . " th
+                    LEFT JOIN san_pham sp ON th.id_thuong_hieu = sp.id_thuong_hieu
+                    GROUP BY th.id_thuong_hieu
+                    ORDER BY th.id_thuong_hieu DESC";
+
+            $stmt = $this->conn->prepare($query);
             $stmt->execute();
-            return $stmt;
+            
+            // Trả về mảng dữ liệu có kèm cột 'count'
+            return $stmt->fetchAll(PDO::FETCH_ASSOC); 
         }
         public function createThuongHieu() {
             $query = "INSERT INTO " . $this->table_name . " (ten_thuong_hieu, mo_ta, hinh_anh_logo, trang_thai) 
@@ -101,6 +155,16 @@
                 return false;
             }
         }
-        
+        public function getAllThuongHieuWithCount() {
+            // Sử dụng LEFT JOIN để đếm cả những thương hiệu chưa có sản phẩm nào (số lượng là 0)
+            $sql = "SELECT th.id_thuong_hieu, th.ten_thuong_hieu, COUNT(sp.id_san_pham) as count 
+                    FROM thuong_hieu th
+                    LEFT JOIN san_pham sp ON th.id_thuong_hieu = sp.id_thuong_hieu
+                    GROUP BY th.id_thuong_hieu";
+                    
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
     }
 ?>

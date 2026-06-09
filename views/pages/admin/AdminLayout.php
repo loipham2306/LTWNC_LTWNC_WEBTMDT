@@ -24,7 +24,7 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
     <title>Quản Trị - LuLoShop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/style.css">
     <style>
         body { background-color: #111; color: #fff; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 8px; }
@@ -35,6 +35,23 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
         .modal-content { background-color: #1a1a1a; border: 1px solid #444; border-radius: 15px; }
         .modal-header { border-bottom: 2px solid #F28B00; background-color: #222; }
         .modal-footer { border-top: 1px solid #333; background-color: #222; }
+        /* Tăng độ sáng cho chữ menu */
+        .nav-link {
+            color: #e0e0e0 !important; /* Chữ mặc định sáng hơn text-muted */
+            transition: all 0.3s ease !important;
+        }
+
+        /* Hiệu ứng khi di chuột vào */
+        .nav-link:hover {
+            color: #fff !important;
+            background-color: #333 !important; /* Tạo nền nhẹ khi hover */
+            border-radius: 8px;
+        }
+
+        /* Style riêng cho phần active */
+        .nav-link.active, .nav-link[style*="background-color: #F28B00"] {
+            color: #000 !important; /* Chữ màu đen trên nền cam cho nổi bật */
+        }
     </style>
 </head>
 <body>
@@ -42,7 +59,7 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
 <div class="d-flex" style="min-height: 100vh; background-color: #111;">
 
     <div class="d-flex flex-column flex-shrink-0 p-3 shadow-lg" style="width: 260px; background-color: #1a1a1a; border-right: 1px solid #333;">
-        <a href="dashboard.php" class="d-flex align-items-center mb-4 mb-md-0 me-md-auto text-decoration-none justify-content-center w-100 mt-2">
+        <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=admin_dashboard" class="d-flex align-items-center mb-4 mb-md-0 me-md-auto text-decoration-none justify-content-center w-100 mt-2">
             <h2 class="fw-bold m-0" style="color: #F28B00;">
                 <i class="fas fa-user-shield me-2"></i>Admin
             </h2>
@@ -51,49 +68,50 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
 
         <ul class="nav nav-pills flex-column mb-auto gap-2">
             <li class="nav-item">
-                <a href="Dashboard.php" 
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=admin_dashboard" 
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('Dashboard.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('Dashboard.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-tachometer-alt me-3" style="width: 20px;"></i> Tổng Quan
                 </a>
             </li>
             <li>
-                <a href="CategoryMaganement.php" 
-                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('CashboarManagement.php', $current_page) ? 'text-white' : 'text-muted' ?>"
-                   style="background-color: <?= isActive('CategoryManagement.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
-                    <i class="fas fa-box me-3" style="width: 20px;"></i> Quản Lý Danh Mục
-                </a>
-            </li>
-            <li>
-                <a href="ProductAdmin.php" 
-                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('ProductAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
-                   style="background-color: <?= isActive('ProductAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
-                    <i class="fas fa-box me-3" style="width: 20px;"></i> Quản Lý Sản Phẩm
-                </a>
-            </li>
-            <li>
-                <a href="BrandManagementPage.php" 
-                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 py-2 px-3 <?= isActive('BrandManagementPage.php', $current_page) ? 'text-white' : 'text-muted' ?>"
-                   style="background-color: <?= isActive('BrandManagementPage.php', $current_page) ? '#F28B00' : 'transparent' ?>; border-radius: 8px; transition: all 0.3s;">
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyThuongHieu" 
+                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 py-2 px-3 <?= isActive('QuanLyThuongHieu.php', $current_page) ? 'text-white' : 'text-muted' ?>"
+                   style="background-color: <?= isActive('QuanLyThuongHieu.php', $current_page) ? '#F28B00' : 'transparent' ?>; border-radius: 8px; transition: all 0.3s;">
                     <i class="fas fa-tag me-3" style="width: 20px; font-size: 18px;"></i> Quản Lý Thương Hiệu
                 </a>
             </li>
             <li>
-                <a href="OrderAdmin.php" 
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyDanhMuc" 
+                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('QuanLyDanhMuc.php', $current_page) ? 'text-white' : 'text-muted' ?>"
+                   style="background-color: <?= isActive('QuanLyDanhMuc.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
+                    <i class="fas fa-box me-3" style="width: 20px;"></i> Quản Lý Danh Mục
+                </a>
+            </li>
+            <li>
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLySanPham" 
+                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('QuanLySanPham.php', $current_page) ? 'text-white' : 'text-muted' ?>"
+                   style="background-color: <?= isActive('QuanLySanPham.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
+                    <i class="fas fa-box me-3" style="width: 20px;"></i> Quản Lý Sản Phẩm
+                </a>
+            </li>
+            
+            <li>
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Order_Management" 
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('OrderAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('OrderAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-clipboard-list me-3" style="width: 20px;"></i> Quản Lý Đơn Hàng
                 </a>
             </li>
             <li>
-                <a href="CustomerAdmin.php" 
-                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('CustomerAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
-                   style="background-color: <?= isActive('CustomerAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyKhachHang" 
+                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('QuanLyKhachHang.php', $current_page) ? 'text-white' : 'text-muted' ?>"
+                   style="background-color: <?= isActive('QuanLyKhachHang.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-users me-3" style="width: 20px;"></i> Quản Lý Khách Hàng
                 </a>
             </li>
             <li>
-                <a href="VoucherAdmin.php" 
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Voucher_Management" 
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('VoucherAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('VoucherAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-ticket-alt me-3" style="width: 20px;"></i> Quản Lý Voucher
@@ -102,7 +120,8 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
         </ul>
 
         <hr class="text-secondary" />
-        <a href="../../../controllers/DangXuatController.php" 
+        
+        <a href="index.php?act=logout"
            onclick="return confirm('Thoát khỏi trang Quản Trị?');" 
            class="btn btn-outline-danger fw-bold w-100 d-flex align-items-center justify-content-center text-decoration-none">
             <i class="fas fa-sign-out-alt me-2"></i> Đăng Xuất
@@ -125,16 +144,13 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
             </div>
         </div>
 
-        <div class="p-4 flex-grow-1" style="background-color: #111;">
-            
-            <?php 
-            // Nếu biến $PAGE_CONTENT có dữ liệu từ các trang con truyền vào thì in ra đây
-            if (isset($PAGE_CONTENT)) {
-                echo $PAGE_CONTENT;
-            } 
-            ?>
-
-        </div>
+       <div class="p-4 flex-grow-1" style="background-color: #111;">
+        <?php 
+        if (isset($PAGE_CONTENT)) {
+            echo $PAGE_CONTENT;
+        } 
+        ?>
+    </div>
 
     </div>
 </div>

@@ -30,8 +30,16 @@
         public function setTrangThai($tt) { 
             $this->trang_thai = (int)$tt; 
         }        
-        public function __construct($db){
+        public function __construct($db, $data = null){
             $this->conn = $db;
+
+            if (is_array($data)) {
+                $ten = $data['ten_danh_muc'] ?? $data['ten'] ?? null;
+                $mo_ta = $data['mo_ta'] ?? null;
+                $trang_thai = $data['trang_thai'] ?? $data['trangthai'] ?? 1;
+                $id = $data['id_danh_muc'] ?? $data['id'] ?? null;
+                $this->setData($ten, $mo_ta, $trang_thai, $id);
+            }
         }
         public function setData($ten, $mo_ta, $trang_thai, $id = null) {
             $this->setTenDanhMuc($ten);
@@ -48,26 +56,39 @@
             $stmt->execute();
             return $stmt; 
         }
-        public function ThemDanhMuc(){
-            $query = "INSERT INTO ".$this->table_name."
-                    SET ten_danh_muc=:ten,
-                        mo_ta=:mo_ta,
-                        trang_thai=:trang_thai,
-                        ngay_tao=NOW()";
+        public function ThemDanhMuc() {
+            $query = "INSERT INTO " . $this->table_name . "
+                    SET ten_danh_muc = :ten,
+                        mo_ta        = :mo_ta,
+                        trang_thai   = :trang_thai,
+                        ngay_tao     = NOW()";
             
-            $stmt = $this->conn->prepare($query);
+            try {
+                $stmt = $this->conn->prepare($query);
 
-            // Lấy giá trị vào biến trung gian
-            $ten = $this->getTenDanhMuc();
-            $mo_ta = $this->getMoTa();
-            $trang_thai = $this->getTrangThai();
+                // Lấy giá trị
+                $ten        = $this->getTenDanhMuc();
+                $mo_ta      = $this->getMoTa();
+                $trang_thai = $this->getTrangThai();
 
-            // Sử dụng bindValue để an toàn hơn cho các giá trị đơn lẻ
-            $stmt->bindValue(":ten", $ten);
-            $stmt->bindValue(":mo_ta", $mo_ta);
-            $stmt->bindValue(":trang_thai", $trang_thai, PDO::PARAM_INT);
-            
-            return $stmt->execute();
+                // Bind giá trị
+                $stmt->bindValue(":ten", $ten);
+                $stmt->bindValue(":mo_ta", $mo_ta);
+                $stmt->bindValue(":trang_thai", $trang_thai, PDO::PARAM_INT);
+                
+                return $stmt->execute();
+
+            } catch (PDOException $e) {
+                // Kiểm tra mã lỗi 23000 (Integrity constraint violation - ví dụ: trùng lặp UNIQUE)
+                if ($e->getCode() == 23000) {
+                    $_SESSION['error'] = "Lỗi: Danh mục '{$this->getTenDanhMuc()}' đã tồn tại trong hệ thống!";
+                } else {
+                    // Ghi log lỗi để dev kiểm tra, không hiện chi tiết lỗi cho người dùng
+                    error_log("Database Error: " . $e->getMessage());
+                    $_SESSION['error'] = "Có lỗi xảy ra, vui lòng thử lại sau.";
+                }
+                return false;
+            }
         }
         public function updateDanhMuc() {
             $query = "UPDATE " . $this->table_name . " 

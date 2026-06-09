@@ -6,8 +6,7 @@ class SanPham {
     // Các thuộc tính ánh xạ
     public $id_san_pham;
     public $ten_san_pham;
-    public $gia;
-    public $giam_gia;
+    public $gia_co_ban; // Thay cho 'gia'
     public $mo_ta;
     public $hinh_anh;
     public $trang_thai;
@@ -20,33 +19,34 @@ class SanPham {
         $this->conn = $db;
     }
 
-    // Ánh xạ dữ liệu từ mảng/đối tượng vào thuộc tính
-    public function setData($ten, $gia, $giam, $mota, $img, $id_dm, $id_th, $trang_thai) {
+    // Ánh xạ dữ liệu
+    public function setData($ten, $gia_cb, $mota, $img, $id_dm, $id_th, $trang_thai) {
         $this->ten_san_pham = $ten;
-        $this->gia = $gia;
-        $this->giam_gia = $giam;
+        $this->gia_co_ban = $gia_cb;
         $this->mo_ta = $mota;
         $this->hinh_anh = $img;
         $this->id_danh_muc = $id_dm;
         $this->id_thuong_hieu = $id_th;
         $this->trang_thai = $trang_thai;
     }
-    // Lấy tất cả sản phẩm
-    public function LayTatCaSanPham() {
-        $query = "SELECT sp.*, dm.ten_danh_muc, th.ten_thuong_hieu 
-                  FROM " . $this->table_name . " sp
-                  LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
-                  LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
-                  ORDER BY sp.id_san_pham DESC";
-
+    public function getSanPhamHome($limit = 8) {
+        $query = "SELECT sp.*, 
+              GROUP_CONCAT(DISTINCT bt.kich_co SEPARATOR ', ') as danh_sach_size,
+              GROUP_CONCAT(DISTINCT bt.mau_sac SEPARATOR ', ') as danh_sach_mau
+              FROM san_pham sp
+              LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
+              GROUP BY sp.id_san_pham
+              ORDER BY sp.id_san_pham DESC 
+              LIMIT :limit";
         $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-   // THÊM SẢN PHẨM
+    // THÊM SẢN PHẨM (Đã bỏ cột 'giam_gia' và 'gia')
     public function ThemSanPham() {
         $query = "INSERT INTO " . $this->table_name . " 
-                  SET ten_san_pham=:ten, gia=:gia, giam_gia=:giam, mo_ta=:mota, 
+                  SET ten_san_pham=:ten, gia_co_ban=:gia, mo_ta=:mota, 
                       hinh_anh=:hinh, id_danh_muc=:id_dm, id_thuong_hieu=:id_th, 
                       trang_thai=:tt, ngay_tao=NOW()";
         
@@ -54,8 +54,7 @@ class SanPham {
         
         return $stmt->execute([
             ':ten'  => $this->ten_san_pham,
-            ':gia'  => $this->gia,
-            ':giam' => $this->giam_gia,
+            ':gia'  => $this->gia_co_ban,
             ':mota' => $this->mo_ta,
             ':hinh' => $this->hinh_anh,
             ':id_dm'=> $this->id_danh_muc,
@@ -63,11 +62,33 @@ class SanPham {
             ':tt'   => $this->trang_thai
         ]);
     }
-
+    // 1. Đếm tổng để hiện trên thẻ Card
+    public function countAllProducts() {
+        return $this->conn->query("SELECT COUNT(*) FROM san_pham")->fetchColumn();
+    }
+    public function getTotalRevenue() {
+        // Chỉ tính những đơn hàng đã thanh toán hoặc hoàn tất
+        $sql = "SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai = 'Hoàn Thành'";
+        return $this->conn->query($sql)->fetchColumn() ?? 0;
+    }
+    public function countNewOrders() {
+        // Đếm những đơn hàng đang ở trạng thái 'Chờ Duyệt'
+        $sql = "SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'Chờ Duyệt'";
+        return $this->conn->query($sql)->fetchColumn();
+    }
+    // 2. Thống kê theo thương hiệu để vẽ biểu đồ/bảng
+    public function getStatsByBrand() {
+        $sql = "SELECT t.ten_thuong_hieu, COUNT(s.id_san_pham) as so_luong
+                FROM thuong_hieu t
+                LEFT JOIN san_pham s ON t.id_thuong_hieu = s.id_thuong_hieu
+                GROUP BY t.id_thuong_hieu
+                ORDER BY so_luong DESC"; // Thương hiệu nhiều SP nhất lên đầu
+        return $this->conn->query($sql)->fetchAll();
+    }
     // CẬP NHẬT SẢN PHẨM
     public function CapNhatSanPham() {
         $query = "UPDATE " . $this->table_name . " 
-                  SET ten_san_pham=:ten, gia=:gia, giam_gia=:giam, mo_ta=:mota, 
+                  SET ten_san_pham=:ten, gia_co_ban=:gia, mo_ta=:mota, 
                       hinh_anh=:hinh, id_danh_muc=:id_dm, id_thuong_hieu=:id_th, 
                       trang_thai=:tt, ngay_cap_nhat=NOW()
                   WHERE id_san_pham=:id";
@@ -76,8 +97,7 @@ class SanPham {
         
         return $stmt->execute([
             ':ten'  => $this->ten_san_pham,
-            ':gia'  => $this->gia,
-            ':giam' => $this->giam_gia,
+            ':gia'  => $this->gia_co_ban,
             ':mota' => $this->mo_ta,
             ':hinh' => $this->hinh_anh,
             ':id_dm'=> $this->id_danh_muc,
@@ -87,6 +107,25 @@ class SanPham {
         ]);
     }
 
+    // Lấy danh sách sản phẩm (Kết hợp lấy giá biến thể rẻ nhất nếu cần)
+    public function LayTatCaSanPhamPhanTrang($limit, $offset) {
+        $query = "SELECT sp.*, dm.ten_danh_muc, th.ten_thuong_hieu, 
+                        COALESCE(SUM(bt.so_luong_ton), 0) AS so_luong_kho
+                FROM " . $this->table_name . " sp
+                LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
+                LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
+                LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
+                GROUP BY sp.id_san_pham
+                ORDER BY sp.id_san_pham DESC 
+                LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt;
+    }
+
     // XÓA SẢN PHẨM
     public function XoaSanPham() {
         $query = "DELETE FROM " . $this->table_name . " WHERE id_san_pham = :id";
@@ -94,5 +133,13 @@ class SanPham {
         
         return $stmt->execute([':id' => $this->id_san_pham]);
     }
+        // Đếm tổng số sản phẩm
+    public function countSanPham() {
+        $query = "SELECT COUNT(*) FROM " . $this->table_name;
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
 }
 ?>

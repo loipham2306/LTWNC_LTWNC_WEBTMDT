@@ -1,4 +1,7 @@
-<?php session_start(); ?>
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+} ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -7,9 +10,9 @@
     <title>Đăng Nhập - LuLoShop</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="../assets/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/style.css">
-    <link rel="stylesheet" href="../assets/AuthPages.css">
+    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/bootstrap.min.css">
+    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/style.css">
+    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/AuthPages.css">
 </head>
 <body style="background-color: #111;">
 
@@ -22,9 +25,7 @@
                 </h1>
                 <p class="text-muted mt-2">Chào mừng bạn quay trở lại!</p>
             </div>
-
-            <form action="../controllers/DangNhapController.php" method="POST">
-                
+            <form action="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=xuly_dangnhap" method="POST">
                 <div class="mb-3 auth-input-group">
                     <label class="form-label fw-bold text-white">Tên đăng nhập hoặc Email</label>
                     <div class="input-group">
@@ -66,6 +67,6 @@
 
         </div>
     </div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 </body>
 </html>

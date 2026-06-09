@@ -1,30 +1,43 @@
 <?php
-session_start();
-ob_start(); 
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    ob_start(); 
+    if (isset($data) && is_array($data)) {
+        extract($data);
+    } else {
+        // Nếu $data bị null, gán giá trị mặc định để không lỗi
+        $total_revenue = 0;
+        $new_orders = 0;
+        $total_products = 0;
+        $total_users = 0;
+        $brand_stats = [];
+    }
+?>
+<?php
+    $stats = [
+        ['title' => 'Tổng Doanh Thu', 'value' => number_format($total_revenue) . ' đ', 'icon' => 'fa-wallet', 'color' => 'text-success'],
+        ['title' => 'Đơn Hàng Mới', 'value' => $new_orders, 'icon' => 'fa-shopping-cart', 'color' => 'text-warning'],
+        ['title' => 'Sản Phẩm', 'value' => $total_products, 'icon' => 'fa-box', 'color' => 'text-primary'],
+        ['title' => 'Khách Hàng', 'value' => $total_users, 'icon' => 'fa-users', 'color' => 'text-info'],
 
-// --- DỮ LIỆU TỔNG QUAN (Giả lập) ---
-$stats = [
-    ['title' => 'Tổng Doanh Thu', 'value' => '125.400.000 đ', 'icon' => 'fa-wallet', 'color' => 'text-success'],
-    ['title' => 'Đơn Hàng Mới', 'value' => '45', 'icon' => 'fa-shopping-cart', 'color' => 'text-warning'],
-    ['title' => 'Sản Phẩm', 'value' => '128', 'icon' => 'fa-box', 'color' => 'text-primary'],
-    ['title' => 'Khách Hàng', 'value' => '1.204', 'icon' => 'fa-users', 'color' => 'text-info']
-];
+    ];
 
-$revenueData = [
-    ['name' => 'Tháng 1', 'revenue' => 45000000],
-    ['name' => 'Tháng 2', 'revenue' => 52000000],
-    ['name' => 'Tháng 3', 'revenue' => 38000000],
-    ['name' => 'Tháng 4', 'revenue' => 65000000],
-    ['name' => 'Tháng 5', 'revenue' => 85000000],
-    ['name' => 'Tháng 6', 'revenue' => 125400000],
-];
+    $revenueData = [
+        ['name' => 'Tháng 1', 'revenue' => 45000000],
+        ['name' => 'Tháng 2', 'revenue' => 52000000],
+        ['name' => 'Tháng 3', 'revenue' => 38000000],
+        ['name' => 'Tháng 4', 'revenue' => 65000000],
+        ['name' => 'Tháng 5', 'revenue' => 85000000],
+        ['name' => 'Tháng 6', 'revenue' => 125400000],
+    ];
 
-$recentOrders = [
-    ['id' => '#ORD-001', 'customer' => 'Nguyễn Văn A', 'date' => '25/05/2026', 'total' => '3.350.000 đ', 'status' => 'Chờ Duyệt'],
-    ['id' => '#ORD-002', 'customer' => 'Trần Thị B', 'date' => '24/05/2026', 'total' => '10.500.000 đ', 'status' => 'Đang Giao'],
-    ['id' => '#ORD-003', 'customer' => 'Lê Hoàng C', 'date' => '23/05/2026', 'total' => '850.000 đ', 'status' => 'Hoàn Thành'],
-    ['id' => '#ORD-004', 'customer' => 'Phạm D', 'date' => '22/05/2026', 'total' => '1.250.000 đ', 'status' => 'Đã Hủy'],
-];
+    $recentOrders = [
+        ['id' => '#ORD-001', 'customer' => 'Nguyễn Văn A', 'date' => '25/05/2026', 'total' => '3.350.000 đ', 'status' => 'Chờ Duyệt'],
+        ['id' => '#ORD-002', 'customer' => 'Trần Thị B', 'date' => '24/05/2026', 'total' => '10.500.000 đ', 'status' => 'Đang Giao'],
+        ['id' => '#ORD-003', 'customer' => 'Lê Hoàng C', 'date' => '23/05/2026', 'total' => '850.000 đ', 'status' => 'Hoàn Thành'],
+        ['id' => '#ORD-004', 'customer' => 'Phạm D', 'date' => '22/05/2026', 'total' => '1.250.000 đ', 'status' => 'Đã Hủy'],
+    ];
 ?>
 
 <h3 class="text-white fw-bold mb-4">Dashboard Tổng Quan</h3>
@@ -45,6 +58,17 @@ $recentOrders = [
             </div>
         </div>
     <?php endforeach; ?>
+    <?php foreach ($stats as $stat): ?>
+        <div class="col-md-6 col-xl-3">
+            </div>
+    <?php endforeach; ?>
+    
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 rounded p-4 h-100 shadow-sm" style="background-color: #1a1a1a;">
+            <p class="text-muted fw-bold mb-1">Số lượng Thương Hiệu</p>
+            <h4 class="text-white fw-bold mb-0"><?= count($brand_stats) ?></h4>
+        </div>
+    </div>
 </div>
 
 <div class="card border-0 rounded p-4 mb-4" style="background-color: #1a1a1a;">

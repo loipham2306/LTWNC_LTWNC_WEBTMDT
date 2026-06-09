@@ -1,73 +1,280 @@
 <?php
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
-
-include_once '../config/database.php';
 include_once '../model/SanPham.php';
+include_once '../model/BienTheSanPham.php'; 
+include_once '../model/Danhmuc.php';
+include_once '../model/ThuongHieu.php';
 
-$database = new Database();
-$db = $database->getConnection();
-$sp = new SanPham($db);
+class SanPhamController {
+    private $db;
+    private $sp_model;
+    private $bt_model; // Model biến thể
 
-$method = $_SERVER['REQUEST_METHOD'];
+    public function __construct($db) {
+        $this->db = $db;
+        $this->sp_model = new SanPham($db);
+        $this->bt_model = new BienTheSanPham($db);
+    }
 
-switch($method) {
-    case 'GET':
-        $stmt = $sp->LayTatCaSanPham(); // Hàm này đã có JOIN
+    public function handle($act) {
+        switch ($act) {
+            case 'San_Pham':
+                $this->danhSach();
+                break;
+            case 'themSP':
+                $this->xuLyThem();
+                break;
+            case 'suaSP':
+                $this->xuLySua();
+                break;
+            case 'xoaSP':
+                $this->xuLyXoa();
+                break;
+            case 'layBienThe':
+                $id = $_GET['id'] ?? null; 
+    
+                if ($id) {
+                    $this->hienThiBienThe($id);
+                } else {
+                    echo "Không tìm thấy sản phẩm";
+                }
+                break;
+            default:
+                $this->danhSach();
+                break;
+        }
+    }
+    // Trong Controller (index.php)
+    public function hienThiBienThe($id_sp) {
+        $danh_sach_bien_the = $this->bt_model->LayBienTheTheoSanPham($id_sp);
+        
+        // Đừng gọi require_once trang Admin nữa! 
+        // Hãy tạo file: views/components/render_bien_the.php
+        require_once '../views/components/render_bien_the.php'; 
+        exit; // Dừng lại ở đây, không in thêm gì nữa
+    }  
+    // Ví dụ tại SanPhamController.php     
+    private function danhSach() {
+        // 1. Cấu hình phân trang
+        $limit = 10; // Số sản phẩm mỗi trang
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($page - 1) * $limit;
+
+        // 2. Lấy dữ liệu
+        // Bạn cần viết thêm hàm đếm tổng sản phẩm trong Model (ví dụ: countSanPham)
+        $totalProducts = $this->sp_model->countSanPham(); 
+        $totalPages = ceil($totalProducts / $limit);
+
+        // Lấy danh sách sản phẩm có phân trang (Cần sửa query trong model thêm LIMIT và OFFSET)
+        $stmt = $this->sp_model->LayTatCaSanPhamPhanTrang($limit, $offset);
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode($products ? $products : array());
-        break;
 
-    case 'POST':
-        $data = json_decode(file_get_contents("php://input"));
-        if(!empty($data->ten_san_pham)) {
-            $sp->setData($data->ten_san_pham, $data->gia, $data->giam_gia, $data->mo_ta, $data->hinh_anh, $data->id_danh_muc, $data->id_thuong_hieu, $data->trang_thai);
+        // 3. Lấy dữ liệu cho dropdown
+        $dmModel = new DanhMuc($this->db);
+        $thModel = new ThuongHieu($this->db);
+        $categories = $dmModel->getDanhMuc()->fetchAll(PDO::FETCH_ASSOC);
+        $brands = $thModel->getTatCaThuongHieu();
+
+        include "../views/pages/admin/QuanLySanPham.php";
+    }
+     // Trong SanPhamController.php
+    public function hienThiTrangChu() {
+        // 1. Lấy dữ liệu từ Model
+        $raw_products = $this->sp_model->getSanPhamHome(8);
+        
+        // 2. Chuyển đổi dữ liệu
+        $products = [];
+        foreach ($raw_products as $row) {
+            // Kiểm tra xem key có tồn tại hay không để tránh lỗi Warning
+            $gia_km = isset($row['gia_khuyen_mai']) ? $row['gia_khuyen_mai'] : 0;
             
-            if($sp->ThemSanPham()) {
-                http_response_code(201);
-                echo json_encode(array("message" => "Thêm sản phẩm thành công!"));
-            } else {
-                http_response_code(500);
-                echo json_encode(array("message" => "Lỗi tạo sản phẩm."));
+            $products[] = [
+                'name'      => $row['ten_san_pham'],
+                'img'       => 'assets/images/products/' . $row['hinh_anh'], 
+                'price'     => number_format($row['gia_co_ban'], 0, ',', '.') . ' đ',
+                'badge'     => ($gia_km > 0) ? 'Sale' : ''
+            ];
+        }
+        
+        include "../views/components/product-card.php";
+        if (file_exists($viewPath)) {
+            include $viewPath;
+        } else {
+            die("Lỗi: Không tìm thấy file giao diện tại: " . $viewPath);
+        }
+    }   
+    private function xuLyThem() {
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            try {
+                $this->db->beginTransaction(); // Bắt đầu transaction
+                if ($_POST['gia_co_ban'] < 0) {
+                    throw new Exception("Giá sản phẩm không hợp lệ!");
+                }
+                $img = $this->uploadFile();
+                
+                // 1. Lưu sản phẩm chính
+                $this->sp_model->setData(
+                    $_POST['ten_san_pham'],
+                    $_POST['gia_co_ban'], // Đã đổi tên
+                    $_POST['mo_ta'],
+                    $img,
+                    $_POST['id_danh_muc'],
+                    $_POST['id_thuong_hieu'],
+                    $_POST['trang_thai']
+                );
+
+                if ($this->sp_model->ThemSanPham()) {
+                    $id_san_pham_moi = $this->db->lastInsertId();
+
+                    // 2. Lưu danh sách biến thể
+                    if (!empty($_POST['size'])) {
+                        foreach ($_POST['size'] as $index => $size) {
+                            $gia_ban = $_POST['gia_ban'][$index] ?? 0;
+                            $ton_kho = $_POST['ton_kho'][$index] ?? 0;
+                            if ($gia_ban < 0 || $ton_kho < 0) {
+                                throw new Exception("Biến thể tại dòng " . ($index + 1) . " có giá hoặc số lượng âm!");
+                            }
+                            $this->bt_model->id_san_pham = $id_san_pham_moi;
+                            $this->bt_model->kich_co = $size;
+                            $this->bt_model->mau_sac = $_POST['mau'][$index];
+                            $this->bt_model->gia_ban = $_POST['gia_ban'][$index] ?? 0;
+                            $this->bt_model->so_luong_ton = $_POST['so_luong'][$index] ?? 0;
+                            $this->bt_model->hinh_anh_bien_the = ''; // Xử lý nếu có upload ảnh riêng
+                            $this->bt_model->hinh_anh_bien_the = $this->uploadFileBienThe($index) ?? '';
+                            $this->bt_model->ThemBienThe();
+                        }
+                    }
+                    $this->db->commit();
+                    $_SESSION['success'] = "Thêm sản phẩm và biến thể thành công!";
+                }
+            } catch (Exception $e) {
+                $this->db->rollBack();
+                $_SESSION['error'] = "Lỗi hệ thống: " . $e->getMessage();
+            }
+            header('Location: index.php?act=QuanLySanPham');
+            exit();
+        }
+    }
+
+    private function xuLySua() {
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            try {
+                $this->db->beginTransaction();
+                
+                $id_sp = $_POST['id_san_pham'];
+                // FIX: Lấy ảnh cũ từ input hidden của form
+                if ($_POST['gia_co_ban'] < 0) {
+                    throw new Exception("Giá sản phẩm không không hợp lệ!");
+                }
+                $img_cu = $_POST['hinh_anh_cu'] ?? ''; // Đảm bảo khớp với name="hinh_anh_cu" trong HTML
+                // Gọi hàm upload
+                $img_moi = $this->uploadFile(); 
+                // Logic: Nếu có upload ảnh mới thì dùng ảnh mới, nếu không thì dùng ảnh cũ
+                $img = (!empty($img_moi)) ? $img_moi : $img_cu;
+                // 1. Cập nhật SP chính
+                $this->sp_model->id_san_pham = $id_sp;
+                $this->sp_model->setData(
+                    $_POST['ten_san_pham'],
+                    $_POST['gia_co_ban'],
+                    $_POST['mo_ta'],
+                    $img, // Dùng biến $img đã xử lý ở trên
+                    $_POST['id_danh_muc'],
+                    $_POST['id_thuong_hieu'],
+                    $_POST['trang_thai']
+                );
+                $this->sp_model->CapNhatSanPham();
+
+                // 2. Xử lý cập nhật biến thể
+                $this->bt_model->XoaBienTheTheoSanPham($id_sp);
+                if (!empty($_POST['size'])) {
+                    // Trong vòng lặp foreach của biến thể:
+                    foreach ($_POST['size'] as $index => $size) {
+                        $gia_ban = $_POST['gia_ban'][$index] ?? 0;
+                        $ton_kho = $_POST['ton_kho'][$index] ?? 0;
+
+                        // RÀNG BUỘC: Kiểm tra số âm cho biến thể
+                        if ($gia_ban < 0 || $ton_kho < 0) {
+                            throw new Exception("Giá bán hoặc tồn kho của biến thể không hợp lệ!");
+                        }
+                        // 1. Lấy tên ảnh cũ từ input hidden
+                        $anh_bt_cu = $_POST['anh_cu_bien_the'][$index] ?? '';
+                        
+                        // 2. Thử upload ảnh mới cho dòng này
+                        $anh_bt_moi = $this->uploadFileBienThe($index);
+                        
+                        // 3. Quyết định dùng ảnh nào: nếu có ảnh mới thì dùng, không thì lấy ảnh cũ
+                        $img_bt = (!empty($anh_bt_moi)) ? $anh_bt_moi : $anh_bt_cu;
+
+                        // 4. Gán dữ liệu vào model
+                        $this->bt_model->id_san_pham = $id_sp;
+                        $this->bt_model->kich_co = $size;
+                        $this->bt_model->mau_sac = $_POST['mau'][$index];
+                        $this->bt_model->gia_ban = $_POST['gia_ban'][$index] ?? 0;
+                        $this->bt_model->so_luong_ton = $_POST['ton_kho'][$index] ?? 0;
+                        $this->bt_model->hinh_anh_bien_the = $img_bt; // Lưu tên ảnh vào DB
+                        
+                        $this->bt_model->ThemBienThe();
+                    }
+                }
+                
+                $this->db->commit();
+                $_SESSION['success'] = "Cập nhật sản phẩm thành công!";
+            } catch (Exception $e) {
+                $this->db->rollBack();
+                $_SESSION['error'] = $e->getMessage();
+            }
+            header('Location: index.php?act=QuanLySanPham');
+            exit();
+        }
+    }
+
+    private function xuLyXoa() {
+        if (isset($_POST['id_san_pham'])) {
+            try {
+                $this->sp_model->id_san_pham = $_POST['id_san_pham'];
+                
+                // Thực hiện xóa
+                $this->sp_model->XoaSanPham();
+                
+                // Nếu không có lỗi xảy ra, nghĩa là xóa thành công
+                $_SESSION['success'] = "Đã xóa sản phẩm thành công!";
+                
+            } catch (PDOException $e) {
+                // Kiểm tra mã lỗi 1451 (ràng buộc khóa ngoại)
+                if ($e->getCode() == '23000') {
+                    $_SESSION['error'] = "Không thể xóa: Sản phẩm này đang có biến thể tồn tại, vui lòng xóa biến thể trước!";
+                } else {
+                    $_SESSION['error'] = "Xóa thất bại: " . $e->getMessage();
+                }
             }
         }
-        break;
-
-    case 'PUT':
-        $data = json_decode(file_get_contents("php://input"));
-        if(!empty($data->id_san_pham)) {
-            $sp->id_san_pham = $data->id_san_pham;
-            $sp->setData($data->ten_san_pham, $data->gia, $data->giam_gia, $data->mo_ta, $data->hinh_anh, $data->id_danh_muc, $data->id_thuong_hieu, $data->trang_thai);
+        header('Location: index.php?act=QuanLySanPham');
+        exit();
+    }
+    private function uploadFile() {
+        if (isset($_FILES['hinh_anh_file']) && $_FILES['hinh_anh_file']['error'] == 0) {
+            $targetDir = "../assets/images/products/";
+            $fileName = time() . '_' . basename($_FILES['hinh_anh_file']['name']);
+            move_uploaded_file($_FILES['hinh_anh_file']['tmp_name'], $targetDir . $fileName);
+            return $fileName;
+        }
+        return '';
+    }
+    private function uploadFileBienThe($index) {
+        // Kiểm tra xem có tồn tại file và không có lỗi
+        if (isset($_FILES['anh_bien_the']) && $_FILES['anh_bien_the']['error'][$index] === UPLOAD_ERR_OK) {
             
-            if($sp->CapNhatSanPham()) {
-                http_response_code(200);
-                echo json_encode(array("message" => "Cập nhật sản phẩm thành công!"));
-            } else {
-                http_response_code(500);
-                echo json_encode(array("message" => "Cập nhật thất bại."));
+            $file_name = $_FILES['anh_bien_the']['name'][$index];
+            $tmp_name = $_FILES['anh_bien_the']['tmp_name'][$index];
+            
+            // Đặt tên file mới để tránh trùng lặp
+            $new_name = time() . '_' . $file_name;
+            $upload_dir = '../assets/images/products/Bien_The_Products/'; 
+            
+            // Di chuyển file
+            if (move_uploaded_file($tmp_name, $upload_dir . $new_name)) {
+                return $new_name; // Trả về tên file đã upload thành công
             }
         }
-        break;
-
-    case 'DELETE':
-        $data = json_decode(file_get_contents("php://input"));
-        if(!empty($data->id_san_pham)) {
-            $sp->id_san_pham = $data->id_san_pham;
-            if($sp->XoaSanPham()) {
-                http_response_code(200);
-                echo json_encode(array("message" => "Đã xóa sản phẩm!"));
-            } else {
-                http_response_code(500);
-                echo json_encode(array("message" => "Không thể xóa sản phẩm."));
-            }
-        }
-        break;
+        return null; // Trả về null nếu không có file hoặc lỗi
+    }
 }
-?>
