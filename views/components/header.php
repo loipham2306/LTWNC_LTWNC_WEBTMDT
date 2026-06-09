@@ -2,9 +2,8 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-if (!isset($brands)) { $brands = []; }
 
-$BASE_URL = '/LTWNC_LTWNC_WEBTMDT/';
+$BASE_URL = '/LTWNC_BAN_HANG/';
 
 // Lấy chính xác tên file hiện tại đang chạy (VD: index.php, Shop.php...)
 $currentPage = basename($_SERVER['PHP_SELF']);
@@ -53,7 +52,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
     <div class="row gx-0 align-items-center text-center">
         <div class="col-md-4 col-lg-3 text-center text-lg-start">
             <div class="d-inline-flex align-items-center">
-                <a href="index.php" class="navbar-brand p-0 text-decoration-none">
+                <a href="<?= $BASE_URL ?>index.php" class="navbar-brand p-0 text-decoration-none">
                     <h1 class="display-5 m-0" style="color: #F28B00;">
                         <img src="<?= $BASE_URL ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> 
                     </h1>
@@ -73,7 +72,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
         </div>
         
         <div class="col-md-4 col-lg-3 text-center text-lg-end">
-            <div class="d-flex align-items-center justify-content-end gap-3 w-100">
+            <div class="d-inline-flex align-items-center gap-3 justify-content-end w-100">
                 
                 <a href="#" class="text-decoration-none">
                     <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
@@ -81,32 +80,16 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     </span>
                 </a>
 
-                <a class="text-white position-relative text-decoration-none" href="#">
-                    <i class="fas fa-shopping-cart fs-5"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                        3
+                <a href="<?= $BASE_URL ?>views/pages/Cart.php" class="text-decoration-none position-relative">
+                    <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
+                        <i class="fas fa-shopping-cart"></i>
                     </span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">3</span>
                 </a>
 
-                <?php if (isset($_SESSION['user']) && !empty($_SESSION['user'])): ?>
-                    <div class="dropdown">
-                        <a class="text-white fw-bold d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" href="#" id="userMenu" data-bs-toggle="dropdown">
-                            <img src="https://ui-avatars.com/api/?name=<?= urlencode($_SESSION['user']['ten']) ?>&background=F28B00&color=fff" class="rounded-circle" width="30" height="30">
-                            <?= $_SESSION['user']['ten'] ?>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" style="background-color: #1a1a1a; border: 1px solid #333;">
-                            <?php if ($_SESSION['user']['vai_tro'] === 'admin'): ?>
-                                <li><a class="dropdown-item text-white" href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=admin_dashboard"><i class="fas fa-tachometer-alt me-2 text-warning"></i>Trang Admin</a></li>
-                            <?php endif; ?>
-                            <li><a class="dropdown-item text-white" href="#"><i class="fas fa-user me-2 text-info"></i>Hồ sơ</a></li>
-                            <li><a class="dropdown-item text-white" href="#"><i class="fas fa-box me-2 text-success"></i>Đơn hàng</a></li>
-                            <li><hr class="dropdown-divider border-secondary"></li>
-                            <li><a class="dropdown-item text-danger fw-bold" href="index.php?act=logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-                        </ul>
-                    </div>
-                <?php else: ?>
-                    <a class="btn btn-outline-light rounded-pill px-3" href="index.php?act=login">Đăng Nhập</a>
-                <?php endif; ?>
+                <a href="<?= $BASE_URL ?>views/pages/UserProfile.php" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
+                    <i class="fas fa-user text-white"></i>
+                </a>
 
             </div>
         </div>
@@ -122,28 +105,11 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <div class="navbar-nav py-0">
-                        <a href="index.php" class="nav-item nav-link <?= $isHomeActive ?>">Trang Chủ</a>
+                        <a href="<?= $BASE_URL ?>index.php" class="nav-item nav-link <?= $isHomeActive ?>">Trang Chủ</a>
                         <a href="<?= $BASE_URL ?>views/pages/Shop.php" class="nav-item nav-link <?= $isShopActive ?>">Cửa hàng</a>
                         <a href="<?= $BASE_URL ?>views/pages/Cart.php" class="nav-item nav-link <?= $isCartActive ?>">Giỏ Hàng</a>
                         <a href="<?= $BASE_URL ?>views/pages/Checkout.php" class="nav-item nav-link <?= $isCheckoutActive ?>">Thanh Toán</a>
                         <a href="<?= $BASE_URL ?>views/pages/Contact.php" class="nav-item nav-link me-2 <?= $isContactActive ?>">Liên Hệ</a>
-                        <div class="nav-item dropdown">
-                            <a href="#" 
-                            class="nav-link dropdown-toggle" 
-                            id="brandDropdown" 
-                            role="button" 
-                            data-bs-toggle="dropdown" 
-                            aria-expanded="false">
-                            Thương Hiệu
-                            </a>
-                            <div class="dropdown-menu" aria-labelledby="brandDropdown">
-                                <?php foreach ($brands as $brand): ?>
-                                    <a class="dropdown-item" href="<?= $BASE_URL ?>index.php?act=thuong_hieu&id=<?= $brand['id_thuong_hieu'] ?>">
-                                        <?= htmlspecialchars($brand['ten_thuong_hieu']) ?>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="ms-auto d-none d-lg-block">

@@ -1,214 +1,56 @@
-<?php 
-/** * @var array $products 
- */
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-if (!isset($products)) { $products = []; }
-if (!isset($brands)) { $brands = []; }
-
-$IMAGE_BASE_URL = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/';
-
-?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Chủ - LuLoShop</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/style.css">
+    <title>LuLoShop - Cửa Hàng Gaming & Công Nghệ</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css" rel="stylesheet">
+
     <style>
+        /* Tông nền tối eSports cho toàn bộ Trang Chủ */
         body { background-color: #111; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        /* Navbar */
-        .navbar-custom { background-color: #1a1a1a !important; border-bottom: 2px solid #F28B00; }
-        .search-bar { background-color: #222; border: 1px solid #444; color: #fff; }
-        .search-bar:focus { background-color: #333; border-color: #F28B00; color: #fff; box-shadow: none; }
+        .home-section { background-color: #111; }
+        .text-orange { color: #F28B00 !important; }
         
-        /* Banner */
-        .hero-banner {
-            background: linear-gradient(45deg, #111 0%, #2a1800 100%);
-            border: 1px solid #333;
-            border-radius: 15px;
-            overflow: hidden;
+        /* Hiệu ứng gạch chân tiêu đề màu cam độc quyền */
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background-color: #F28B00;
+            margin: 15px auto 0;
         }
-
-        /* Product Card */
-        .product-card {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 16px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-6px);
-            border-color: #F28B00;
-            box-shadow: 0 8px 20px rgba(242, 139, 0, 0.25);
-        }
-
-        /* Khung ảnh */
-        .product-img-wrapper {
-            position: relative;
-            height: 280px;
-            background: #fff;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Ảnh sản phẩm */
-        .product-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transform: scale(1.0);
-        }
-
-        .product-card:hover .product-img {
-            transform: scale(1.05);
-        }
-
-        /* Tên sản phẩm */
-        .product-title {
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            line-height: 1.5;
-
-            min-height: 48px;
-
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-
-            overflow: hidden;
-        }
-
-        /* Giá */
-        .price-text {
-            color: #F28B00;
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-
-        /* Nút */
-        .btn-cart {
-            border: 2px solid #F28B00;
-            color: #F28B00;
-            border-radius: 999px;
-            font-weight: 600;
-            transition: all .3s ease;
-        }
-
-        .btn-cart:hover {
-            background: #F28B00;
-            color: #fff;
-        }
-
-        /* Badge giảm giá */
-        .product-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 2;
-            background: #dc3545;
-            color: white;
-            font-size: 0.75rem;
-            padding: 6px 10px;
-            border-radius: 20px;
-        }
-       .brand-section{
-    margin: 40px 0;
-}
-
-.brand-slider{
-    overflow: hidden;
-    position: relative;
-    height: 120px;
-    background: linear-gradient(
-        90deg,
-        #111 0%,
-        #1a1a1a 50%,
-        #111 100%
-    );
-    border-top: 1px solid #333;
-    border-bottom: 1px solid #333;
-
-    display: flex;
-    align-items: center;
-}
-
-.brand-track{
-    display: flex;
-    align-items: center;
-    gap: 80px;
-    width: max-content;
-
-    animation: scrollBrand 25s linear infinite;
-}
-
-.brand-track img{
-    height: 70px;
-    width: auto;
-
-    object-fit: contain;
-
-    filter: brightness(0) invert(1) opacity(0.7);
-    transition: all .35s ease;
-}
-
-.brand-track img:hover{
-    filter: brightness(0) invert(1);
-    opacity: 1;
-    transform: scale(1.15);
-}
-
-.brand-slider:hover .brand-track{
-    animation-play-state: paused;
-}
-
-@keyframes scrollBrand{
-    from{
-        transform: translateX(0);
-    }
-    to{
-        transform: translateX(-50%);
-    }
-}
-
-        /* Buttons */
-        .btn-custom { background-color: #F28B00; color: #fff; font-weight: bold; }
-        .btn-custom:hover { background-color: #d67a00; color: #fff; }
-        .btn-outline-custom { border-color: #F28B00; color: #F28B00; }
-        .btn-outline-custom:hover { background-color: #F28B00; color: #fff; }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #F28B00; }
     </style>
 </head>
 <body>
-    <?php
-    include "views/components/header.php"
-    ?>
 
     <?php
+    // 1. MẢNG DỮ LIỆU SẢN PHẨM (Thay thế cho state products trong React)
+    // Đã thêm /images/ trước /img/ theo đúng cấu trúc thư mục mới của bạn
+    $products = [
+        [ 'id' => 1, 'name' => 'Smart Camera Pro Max', 'category' => 'Điện Tử', 'price' => 3350000, 'oldPrice' => 4110000, 'img' => '/LTWNC_BAN_HANG/assets/images/img/product-4.png' ],
+        [ 'id' => 2, 'name' => 'Apple iPad Mini G2356', 'category' => 'Tablet', 'price' => 10500000, 'oldPrice' => 12500000, 'img' => '/LTWNC_BAN_HANG/assets/images/img/product-3.png' ],
+        [ 'id' => 3, 'name' => 'Microphone Đa Hướng', 'category' => 'Phụ Kiện', 'price' => 850000, 'oldPrice' => 1000000, 'img' => '/LTWNC_BAN_HANG/assets/images/img/product-5.png' ],
+        [ 'id' => 4, 'name' => 'Tai nghe Bluetooth 5.0', 'category' => 'Âm Thanh', 'price' => 1250000, 'oldPrice' => 1500000, 'img' => '/LTWNC_BAN_HANG/assets/images/img/product-6.png' ]
+    ];
+
+    // 2. NHÚNG COMPONENT HEADER (THANH MENU)
+    include 'views/components/Header.php';
+
+    // 3. NHÚNG BANNER SLIDER CHÍNH
     include 'views/components/HeroSlider.php';
-    ?>
 
-    <?php
-        include 'views/components/ServiceFeatures.php';
-    ?>
-    <?php
-        include 'views/components/FeaturedProducts.php';
-    ?>
+    // 4. NHÚNG DẢI TÍNH NĂNG DỊCH VỤ (FREE SHIP, ĐỔI TRẢ...)
+    include 'views/components/ServiceFeatures.php';
 
+    // 5. NHÚNG KHỐI DANH MỤC SẢN PHẨM DUYỆT THEO TAB TAB-TABS (NẾU CÓ)
+    include 'views/components/FeaturedProducts.php';
+    ?>
 
     <div class="container-fluid home-section py-5">
         <div class="container py-5">
@@ -220,58 +62,45 @@ $IMAGE_BASE_URL = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/';
             
             <div class="row g-4">
                 <?php 
-                    // Xử lý giới hạn 4 sản phẩm
-                    $limitedProducts = array_slice($products, 0, 4);
-                    
-                    foreach ($limitedProducts as $product): 
-                        // Nhúng ProductCard, mỗi lần chạy biến $product sẽ có sẵn trong file đó
-                        include 'views/components/ProductCard.php';
-                    endforeach; 
+                // Vòng lặp foreach thay cho hàm .map() của React
+                // Chỉ lấy tối đa 4 sản phẩm đầu tiên giống products.slice(0, 4)
+                $limitedProducts = array_slice($products, 0, 4);
+                foreach ($limitedProducts as $product): 
+                    // Nhúng ProductCard, mỗi lần chạy vòng lặp biến $product sẽ được truyền vào card đó
+                    include 'views/components/ProductCard.php';
+                endforeach; 
                 ?>
             </div>
 
         </div>
     </div>
-    <div class="brand-section">
-        <div class="brand-slider">
-            <div class="brand-track">
 
-                <?php foreach($brands as $brand): ?>
-                    <img
-                        src="/LTWNC_LTWNC_WEBTMDT/assets/images/brands/<?= htmlspecialchars($brand['hinh_anh_logo']) ?>"
-                        alt="<?= htmlspecialchars($brand['ten_thuong_hieu']) ?>"
-                        title="<?= htmlspecialchars($brand['ten_thuong_hieu']) ?>"
-                    >
-                <?php endforeach; ?>
+    <?php 
+    // 7. NHÚNG COMPONENT FOOTER
+    include 'views/components/Footer.php'; 
+    ?>
 
-                <!-- lặp lại để chạy vô hạn -->
-                <?php foreach($brands as $brand): ?>
-                    <img
-                        src="/LTWNC_LTWNC_WEBTMDT/assets/images/brands/<?= htmlspecialchars($brand['hinh_anh_logo']) ?>"
-                        alt="<?= htmlspecialchars($brand['ten_thuong_hieu']) ?>"
-                        title="<?= htmlspecialchars($brand['ten_thuong_hieu']) ?>"
-                    >
-                <?php endforeach; ?>
-
-            </div>
-        </div>
-    </div>
-    <div class="container mt-5 mb-5">
-        <div class="d-flex justify-content-between align-items-end border-bottom border-secondary pb-2 mb-4">
-            <h3 class="fw-bold m-0 text-white border-start border-4 ps-3" style="border-color: #F28B00 !important;">SẢN PHẨM NỔI BẬT</h3>
-            <a href="#" class="text-decoration-none" style="color: #F28B00;">Xem tất cả <i class="fas fa-chevron-right ms-1"></i></a>
-        </div>
-
-        <div class="row g-4">   
-            <?php foreach ($products as $item): ?>
-                <?php include 'views/components/product-card.php';?>
-            <?php endforeach; ?>
-        </div>
-    </div>
-
-<?php
-    include 'views/components/footer.php'
-?>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+    
+    <script>
+        // CHUYỂN ĐỔI HOÀN HẢO TỪ USEEFFECT KHỞI TẠO WOW.JS CỦA REACT
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                if (window.WOW) {
+                    console.log("🟢 Đã tìm thấy thư viện WOW.js, đang kích hoạt hiệu ứng tại Trang Chủ!");
+                    new window.WOW({
+                        boxClass: 'wow',
+                        animateClass: 'animated',
+                        offset: 0,
+                        mobile: true,
+                        live: false
+                    }).init();
+                } else {
+                    console.error("🔴 Không tìm thấy WOW.js. Trình duyệt chưa đọc được file script!");
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>

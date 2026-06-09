@@ -48,15 +48,15 @@
                         <div class="banner-main">
                             <div class="row w-100 align-items-center">
                                <div class="col-md-6 text-center wow fadeInLeft" data-wow-delay="0.1s">
-                                    <img src="/LTWNC_BAN_HANG/assets/images/img/carousel-1.png" class="img-fluid" alt="Banner Khuyến Mãi">
-                                </div>
+    <img src="/LTWNC_BAN_HANG/assets/images/img/carousel-1.png" class="img-fluid" alt="Banner Khuyến Mãi">
+</div>
 
-                                <div class="col-md-6 text-white ps-4 wow fadeInRight" data-wow-delay="0.3s">
-                                    <h5 class="text-orange text-uppercase fw-bold" style="letter-spacing: 2px;">Tiết kiệm lên đến 10 Triệu VNĐ</h5>
-                                    <h1 class="fw-bold fs-1 my-3">Cho Các Dòng Laptop, PC & Smartphone Chọn Lọc</h1>
-                                    <p class="text-white-50 mb-4">Áp dụng theo các điều khoản và điều kiện của shop.</p>
-                                    <button class="btn btn-orange rounded-pill px-5 py-3">Mua Ngay Hôm Nay</button>
-                                </div>
+<div class="col-md-6 text-white ps-4 wow fadeInRight" data-wow-delay="0.3s">
+    <h5 class="text-orange text-uppercase fw-bold" style="letter-spacing: 2px;">Tiết kiệm lên đến 10 Triệu VNĐ</h5>
+    <h1 class="fw-bold fs-1 my-3">Cho Các Dòng Laptop, PC & Smartphone Chọn Lọc</h1>
+    <p class="text-white-50 mb-4">Áp dụng theo các điều khoản và điều kiện của shop.</p>
+    <button class="btn btn-orange rounded-pill px-5 py-3">Mua Ngay Hôm Nay</button>
+</div>
                             </div>
                         </div>
                     </div>
