@@ -27,6 +27,16 @@ switch ($act) {
         // Chỉ hiển thị giao diện login, không gọi controller xử lý ở đây
         include '../views/pages/login.php';
         break;
+    // --- profile ---
+    case 'trangcanhan':
+        if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] === 'khach hang') {
+            include '../views/pages/UserProfile.php';
+            exit();
+        } else {
+            // Nếu không phải admin thì đá về trang chủ
+            header("Location: index.php");
+        }
+        break;
 
     case 'xuly_dangnhap':
         // Chỉ dành cho việc xử lý logic POST

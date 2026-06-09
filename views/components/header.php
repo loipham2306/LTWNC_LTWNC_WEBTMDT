@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$BASE_URL = '/LTWNC_BAN_HANG/';
+$BASE_URL = '/LTWNC_LTWNC_WEBTMDT/';
 
 // Lấy chính xác tên file hiện tại đang chạy (VD: index.php, Shop.php...)
 $currentPage = basename($_SERVER['PHP_SELF']);
@@ -52,7 +52,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
     <div class="row gx-0 align-items-center text-center">
         <div class="col-md-4 col-lg-3 text-center text-lg-start">
             <div class="d-inline-flex align-items-center">
-                <a href="<?= $BASE_URL ?>index.php" class="navbar-brand p-0 text-decoration-none">
+                <a href="index.php" class="navbar-brand p-0 text-decoration-none">
                     <h1 class="display-5 m-0" style="color: #F28B00;">
                         <img src="<?= $BASE_URL ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> 
                     </h1>
@@ -87,7 +87,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">3</span>
                 </a>
 
-                <a href="<?= $BASE_URL ?>views/pages/UserProfile.php" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
+                <a href="index.php?act=trangcanhan" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
                     <i class="fas fa-user text-white"></i>
                 </a>
 
