@@ -2,7 +2,7 @@
     <div class="container py-5">
         <div class="row g-5">
             <div class="col-md-6 col-lg-3">
-                <h1 class="fw-bold mb-4" style="color: #F28B00;">LuLo<span class="text-white">Shop</span></h1>
+                <h1 class="fw-bold mb-4" style="color: #F28B00;"> <img src="<?= $BASE_URL ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> </h1>
                 <p class="mb-4">Hệ thống mua sắm trực tuyến hàng đầu, mang đến cho bạn trải nghiệm mua sắm tuyệt vời nhất với nhiều loại mặt hàng chính hãng 100%.</p>
                 <div class="d-flex pt-2">
                     <a class="btn btn-square btn-outline-warning rounded-circle me-1" href="#"><i class="fab fa-twitter"></i></a>
@@ -40,7 +40,7 @@
     <div class="container border-top border-secondary py-4">
         <div class="row">
             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                &copy; <a class="border-bottom text-white text-decoration-none" href="#">LuLoShop</a>. Tất cả quyền được bảo lưu.
+                &copy; <a class="border-bottom text-white text-decoration-none" href="#">Trạm Hiệu</a>. Tất cả quyền được bảo lưu.
             </div>
             <div class="col-md-6 text-center text-md-end text-white-50">
                 Thiết kế bởi <a class="border-bottom text-white text-decoration-none" href="#">..</a>

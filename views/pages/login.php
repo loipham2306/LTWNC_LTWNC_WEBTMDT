@@ -19,9 +19,9 @@ if (session_status() === PHP_SESSION_NONE) {
     <div class="container-fluid d-flex auth-page-container">
         <div class="card p-4 rounded border auth-card login-card pb-0">
 
-            <div class="text-center mb-4">
+            <div class="text-center mb-10">
                 <h1 class="fw-bold m-0 lkstore-logo-text">
-                    <i class="fas fa-shopping-bag me-2"></i>LuLoShop
+                      <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/th.png" alt="Logo" style="height: 60px; object-fit: contain;">
                 </h1>
                 <p class="text-muted mt-2">Chào mừng bạn quay trở lại!</p>
             </div>

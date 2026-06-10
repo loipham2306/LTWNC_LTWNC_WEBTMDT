@@ -87,7 +87,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">3</span>
                 </a>
 
-                <a href="index.php?act=UserProfile" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
+                <a href="<?= $BASE_URL ?>views/pages/login.php" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
                     <i class="fas fa-user text-white"></i>
                 </a>
 
