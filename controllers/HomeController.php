@@ -1,4 +1,7 @@
 <?php
+require_once '../model/DanhMuc.php'; 
+require_once '../model/SanPham.php';
+require_once '../model/ThuongHieu.php';
 class HomeController {
 
     private $spModel;

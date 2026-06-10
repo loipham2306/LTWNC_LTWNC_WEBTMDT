@@ -1,15 +1,22 @@
-// Dùng biến để lưu trữ instance của Modal
 let catModalInstance;
 
-function openAddModal() {
-    document.getElementById('modalTitle').innerText = 'Thêm Danh Mục Mới';
+// Thêm tham số isRoot để phân biệt
+function openAddModal(isRoot = true) {
+    document.getElementById('modalTitle').innerText = isRoot ? 'Thêm Danh Mục Gốc' : 'Thêm Danh Mục Con';
     document.getElementById('formAction').value = 'themDM';
     document.getElementById('catId').value = '';
     document.getElementById('catName').value = '';
     document.getElementById('catDesc').value = '';
     document.getElementById('catStatus').value = '1';
 
-    // Khởi tạo và hiển thị
+    // Xử lý ẩn/hiện ô chọn danh mục cha
+    const parentField = document.getElementById('parentCategoryField');
+    const selectElement = document.querySelector('select[name="id_danh_muc_cha"]');
+    selectElement.value = "";
+    if (parentField) {
+        parentField.style.display = isRoot ? 'none' : 'block';
+    }
+
     catModalInstance = new bootstrap.Modal(document.getElementById('categoryModal'));
     catModalInstance.show();
 }
@@ -25,7 +32,15 @@ function openEditModal(button) {
     document.getElementById('catDesc').value = category.mo_ta;
     document.getElementById('catStatus').value = category.trang_thai;
 
-    // Khởi tạo và hiển thị
+    // Hiện ô chọn cha khi sửa để admin có thể thay đổi cha cho danh mục
+    const parentField = document.getElementById('parentCategoryField');
+    if (parentField) {
+        parentField.style.display = 'block';
+        // Chọn giá trị cha hiện tại (nếu có)
+        const selectElement = document.querySelector('select[name="id_danh_muc_cha"]');
+        selectElement.value = category.id_danh_muc_cha || "";
+    }
+
     catModalInstance = new bootstrap.Modal(document.getElementById('categoryModal'));
     catModalInstance.show();
 }
@@ -44,4 +59,17 @@ function filterCategories() {
             rows[i].style.display = 'none';
         }
     }
+}
+function viewCategoryDesc(title, desc) {
+
+    document.getElementById("descTitle").innerText = title;
+
+    document.getElementById("descContent").innerText =
+        desc || "Chưa có mô tả";
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("descModal")
+    );
+
+    modal.show();
 }

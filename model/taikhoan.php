@@ -134,9 +134,6 @@
         }
         public function countTotalCustomers() {
             try {
-                // Thay 'admin' bằng giá trị thực tế trong cột vai_tro của bạn
-                // Nếu vai_tro là kiểu số: ... WHERE vai_tro != 1
-                // Nếu vai_tro là kiểu chuỗi: ... WHERE vai_tro != 'admin'
                 $query = "SELECT COUNT(*) FROM " . $this->table_name . " WHERE vai_tro != 'admin'";
                 
                 $stmt = $this->conn->prepare($query);

@@ -18,26 +18,47 @@ class DanhMucController {
 
     private function danhSach() {
         $stmt = $this->model->getDanhMuc();
-        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: []; // Gán mảng rỗng nếu không có dữ liệu
+        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        // Tính toán thống kê an toàn
-        $total = count($categories);
+        // Khởi tạo các biến
+        $danh_muc_goc = [];
+        $danh_muc_con = [];
         $active = 0;
         $hidden = 0;
 
-        foreach($categories as $c) {
-            if (isset($c['trang_thai'])) {
-                $c['trang_thai'] == 1 ? $active++ : $hidden++;
+        // Chỉ duyệt 1 vòng lặp duy nhất cho tất cả
+        foreach ($categories as $item) {
+            // 1. Phân loại cha/con
+            if (is_null($item['id_danh_muc_cha']) || $item['id_danh_muc_cha'] == 0) {
+                $danh_muc_goc[] = $item;
+            } else {
+                $danh_muc_con[] = $item;
+            }
+
+            // 2. Đếm trạng thái
+            if (isset($item['trang_thai'])) {
+                $item['trang_thai'] == 1 ? $active++ : $hidden++;
             }
         }
 
-        // Giờ thì include file View, các biến này sẽ tồn tại sẵn
+        $total = count($categories);
+        $total_parent = count($danh_muc_goc);
+
+        // Bây giờ tất cả các biến này đều có sẵn trong file include
         include '../views/pages/admin/QuanLyDanhMuc.php';
     }
-
     private function them() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $this->model->setData($_POST['ten_danh_muc'], $_POST['mo_ta'], $_POST['trang_thai']);
+            $id_cha = !empty($_POST['id_danh_muc_cha']) ? $_POST['id_danh_muc_cha'] : null;
+        
+            // Cập nhật setData để nhận thêm tham số thứ 5
+            $this->model->setData(
+                $_POST['ten_danh_muc'], 
+                $_POST['mo_ta'], 
+                $_POST['trang_thai'],
+                null, // id = null vì là thêm mới
+                $id_cha
+            );
             if ($this->model->themDanhMuc()) {
                 $_SESSION['success'] = "Thêm danh mục thành công!";
             }
@@ -76,30 +97,34 @@ class DanhMucController {
     exit();
 }
     private function sua() {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $id = $_POST['id_danh_muc'] ?? null;
-        if (!$id) {
-            $_SESSION['error'] = "Lỗi: Không tìm thấy ID danh mục!";
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['id_danh_muc'] ?? null;
+            if (!$id) {
+                $_SESSION['error'] = "Lỗi: Không tìm thấy ID danh mục!";
+                header("Location: index.php?act=QuanLyDanhMuc");
+                exit();
+            }
+            $ten = $_POST['ten_danh_muc'];
+            $mo_ta = $_POST['mo_ta'];
+            $trang_thai = $_POST['trang_thai'];
+            $id_cha = !empty($_POST['id_danh_muc_cha']) ? $_POST['id_danh_muc_cha'] : null;
+            $this->model->setData(
+                $ten, 
+                $mo_ta, 
+                $trang_thai, 
+                $id,    // id truyền vào đây
+                $id_cha // id_cha truyền vào đây
+            );
+            if ($this->model->updateDanhMuc()) {
+                $_SESSION['success'] = "Cập nhật danh mục thành công!";
+            } else {
+                $_SESSION['error'] = "Có lỗi xảy ra khi cập nhật.";
+            }
+            
+            // Quay về trang danh sách
             header("Location: index.php?act=QuanLyDanhMuc");
             exit();
         }
-        $ten = $_POST['ten_danh_muc'];
-        $mo_ta = $_POST['mo_ta'];
-        $trang_thai = $_POST['trang_thai'];
-
-        // Cập nhật dữ liệu vào model
-        $this->model->setData($ten, $mo_ta, $trang_thai, $id);
-        
-        if ($this->model->updateDanhMuc()) {
-            $_SESSION['success'] = "Cập nhật danh mục thành công!";
-        } else {
-            $_SESSION['error'] = "Có lỗi xảy ra khi cập nhật.";
-        }
-        
-        // Quay về trang danh sách
-        header("Location: index.php?act=QuanLyDanhMuc");
-        exit();
     }
-}
 }
 ?>  

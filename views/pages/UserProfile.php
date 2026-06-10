@@ -51,10 +51,8 @@
     // Gán dữ liệu cấu hình cho PageHeader cha
     $pageTitle = "Tài Khoản Của Tôi";
     $pageBreadcrumb = "Tài Khoản";
-
-    // Gọi các thành phần giao diện dạng PascalCase
-    include '../components/Header.php';
-    include '../components/PageHeader.php';
+    include __DIR__ . '/../components/Header.php'; 
+    include __DIR__ . '/../components/PageHeader.php';
     ?>
 
     <div class="container-fluid profile-wrapper py-5">
@@ -178,7 +176,7 @@
         </div>
     </div>
 
-    <?php include '../components/Footer.php'; ?>
+  <?php include __DIR__ . '/../components/Footer.php'; ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
@@ -199,7 +197,7 @@
         ];
 
         // Khởi chạy ngay khi cây DOM tải xong (Tương đương useEffect trong React)
-        document.addEventListener('DOMContentLoaded', () => {
+       /* document.addEventListener('DOMContentLoaded', () => {
             const storedUser = localStorage.getItem('user');
             
             if (storedUser) {
@@ -213,9 +211,9 @@
             } else {
                 // Nếu chưa đăng nhập, đá người dùng về trang login
                 alert("Vui lòng đăng nhập để xem thông tin!");
-                window.location.href = '/LTWNC_BAN_HANG/views/pages/Login.php';
+                window.location.href = '/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Login';
             }
-        });
+        });*/
 
         // Đổ dữ liệu từ Object vào các trường form input và sidebar hiển thị
         function fillUserData() {
@@ -312,7 +310,7 @@
             if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
                 localStorage.removeItem('user');
                 alert("Đăng xuất thành công!");
-                window.location.href = '/LTWNC_BAN_HANG/views/pages/Login.php';
+                window.location.href = '/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Login';
             }
         }
     </script>

@@ -112,47 +112,39 @@ function toggleEditMode(btn) {
 function closeModal() {
     document.getElementById('productModal').style.display = 'none';
 }
-// Lọc bảng ngay trên Front-end
 function filterProducts() {
-    // 1. Lấy giá trị từ các bộ lọc
+    // 1. Lấy tất cả các hàng sản phẩm dựa trên class đúng là 'product-row'
+    let rows = Array.from(document.querySelectorAll('.product-row'));
+
+    console.log("Số sản phẩm tìm thấy:", rows.length); // Sẽ hiển thị số lượng thực tế
+
+    if (rows.length === 0) return;
+
     let searchInput = document.getElementById('searchInput').value.toLowerCase();
     let catInput = document.getElementById('categoryFilter').value.toLowerCase();
-    let statusInput = document.getElementById('statusFilter').value; // Trả về '1', '0' hoặc ''
-    let sortInput = document.getElementById('sortOrder').value; // 'newest', 'price_asc', 'price_desc'
+    let statusInput = document.getElementById('statusFilter').value; // '1' hoặc '0'
 
-    let table = document.querySelector('table tbody');
-    let rows = Array.from(document.getElementsByClassName('product-row'));
-
-    // 2. Lọc dữ liệu
     rows.forEach(row => {
+        // Lấy dữ liệu từ các cột
         let name = row.querySelector('.product-name').innerText.toLowerCase();
-        let id = row.querySelector('.product-id').innerText.toLowerCase();
         let cat = row.querySelector('.product-category').innerText.toLowerCase();
-        // Lấy trạng thái từ class badge hoặc thuộc tính ẩn nếu bạn có
-        let status = row.querySelector('.badge').innerText.includes('Đang Bán') ? '1' : '0';
 
-        let matchText = name.includes(searchInput) || id.includes(searchInput);
+        // Trạng thái: Kiểm tra badge (Đang bán = '1', Ngừng bán = '0')
+        let statusBadge = row.querySelector('.badge.rounded-pill');
+        let status = statusBadge.innerText.includes('Đang bán') ? '1' : '0';
+
+        // Điều kiện lọc
+        let matchText = name.includes(searchInput);
         let matchCat = (catInput === "") || (cat === catInput);
         let matchStatus = (statusInput === "") || (status === statusInput);
 
-        row.style.display = (matchText && matchCat && matchStatus) ? '' : 'none';
+        // Hiển thị hoặc ẩn dòng
+        if (matchText && matchCat && matchStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
     });
-
-    // 3. Sắp xếp (Chỉ sắp xếp các hàng đang hiển thị)
-    if (sortInput !== "newest") {
-        let visibleRows = rows.filter(r => r.style.display !== 'none');
-
-        visibleRows.sort((a, b) => {
-            // Lấy giá từ thẻ, loại bỏ chữ "đ", "." và khoảng trắng
-            let priceA = parseInt(a.querySelector('.text-primary').innerText.replace(/\D/g, ''));
-            let priceB = parseInt(b.querySelector('.text-primary').innerText.replace(/\D/g, ''));
-
-            return sortInput === 'price_asc' ? priceA - priceB : priceB - priceA;
-        });
-
-        // Vẽ lại bảng theo thứ tự mới
-        visibleRows.forEach(row => table.appendChild(row));
-    }
 }
 function addVariantRow(data = null, defaultPrice = 0) {
     const container = document.getElementById('variantsContainer');
