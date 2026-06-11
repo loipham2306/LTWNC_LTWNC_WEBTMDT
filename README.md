@@ -24,9 +24,9 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [ ] Thêm khách hàng
 - [ ] Cập nhật thông tin khách hàng
 - [ ] Xem chi tiết khách hàng
-- [ ] Khóa khách hàng
-- [ ] Danh sách khách hàng
-- [ ] Tìm kiếm khách hàng
+- [X] Khóa khách hàng
+- [X] Danh sách khách hàng
+- [X] Tìm kiếm khách hàng
 - [ ] Thống kê khách hàng mới
 
 ---
@@ -70,13 +70,13 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [x] Thêm sản phẩm
 - [x] Sửa sản phẩm
 - [x] Xóa sản phẩm
-- [ ] Chi tiết sản phẩm
+- [X] Chi tiết sản phẩm
 - [ ] Upload ảnh sản phẩm
-- [ ] Tìm kiếm sản phẩm
-- [ ] Lọc theo danh mục
-- [ ] Lọc theo thương hiệu
-- [ ] Lọc theo trạng thái
-- [ ] Phân trang sản phẩm
+- [x] Tìm kiếm sản phẩm
+- [x] Lọc theo danh mục
+- [x] Lọc theo thương hiệu
+- [x] Lọc theo trạng thái
+- [x] Phân trang sản phẩm
 
 ---
 
@@ -128,9 +128,9 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 # 🎁 11. Voucher (voucher)
 
-- [ ] Thêm voucher
-- [ ] Sửa voucher
-- [ ] Xóa voucher
+- [x] Thêm voucher
+- [x] Sửa voucher
+- [x] Xóa voucher
 - [ ] Kiểm tra hạn sử dụng
 - [ ] Kiểm tra số lần sử dụng
 - [ ] Áp dụng voucher khi thanh toán
