@@ -2,6 +2,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
+// index.php
+require_once __DIR__ . '/../vendor/autoload.php';
 // 1. Nhúng cấu hình và khởi tạo kết nối DB duy nhất
 require_once '../config/database.php';
 $database = new Database();
@@ -10,7 +12,8 @@ require_once '../controllers/DanhMucController.php';
 require_once '../controllers/SanPhamController.php';
 require_once '../controllers/KhachHangController.php';
 require_once '../controllers/ThuongHieuController.php';
-
+require_once '../controllers/DangKyController.php';
+require_once '../controllers/VoucherController.php';
 // 2. Lấy action (act) từ URL
 $act = $_REQUEST['act'] ?? 'trangchu';
 
@@ -24,8 +27,24 @@ switch ($act) {
         break;
     // --- NHÓM ĐĂNG NHẬP / TÀI KHOẢN ---
     case 'Login':
-        // Chỉ hiển thị giao diện login, không gọi controller xử lý ở đây
         include '../views/pages/Login.php';
+        break;
+    case 'layChiTiet':
+        require_once 'KhachHangController.php'; // Đảm bảo gọi đúng file Controller
+        $khController = new KhachHangController($db);
+        $khController->layChiTiet(); 
+        // KHÔNG ĐƯỢC CÓ BẤT KỲ LỆNH ECHO HOẶC INCLUDE HTML NÀO Ở ĐÂY
+        break;
+    // --- NHÓM ĐĂNG NHẬP / TÀI KHOẢN ---
+    case 'Register':
+    case 'xulydangky': 
+    case 'form_otp':
+    case 'xacnhanotp':
+    case 'form_matkhau':
+    case 'hoantatdangky':
+        require_once 'DangKyController.php';
+        $dangKyController = new DangKyController($db);
+        $dangKyController->handle($act);
         break;
     // --- profile ---
     case 'UserProfile':
@@ -59,14 +78,6 @@ switch ($act) {
     case 'Order_Management':
         if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] == 'admin') {
             include '../views/pages/admin/OrderAdmin.php'; 
-        } else {
-            header("Location: index.php?act=login");
-            exit();
-        }
-        break;
-    case 'Voucher_Management':
-        if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] == 'admin') {
-            include '../views/pages/admin/VoucherAdmin.php'; 
         } else {
             header("Location: index.php?act=login");
             exit();
@@ -128,6 +139,15 @@ switch ($act) {
         include_once 'KhachHangController.php';
         $khController = new KhachHangController($db);
         $khController->handle($act);
+        break;
+    // --- Voucher ---
+    case 'QuanLyVoucher':
+    case 'ThemVoucher':
+    case 'CapNhatVoucher':
+    case 'XoaVoucher':
+        include_once 'VoucherController.php';
+        $voucherController = new VoucherController($db);
+        $voucherController->handle($act); 
         break;
     // --- MẶC ĐỊNH ---
     default:

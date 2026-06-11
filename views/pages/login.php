@@ -21,7 +21,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
             <div class="text-center mb-4">
                 <h1 class="fw-bold m-0 lkstore-logo-text">
-                    <i class="fas fa-shopping-bag me-2"></i>LuLoShop
+                    <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 80px; object-fit: contain;" onerror="this.style.display='none';"> 
                 </h1>
                 <p class="text-muted mt-2">Chào mừng bạn quay trở lại!</p>
             </div>
@@ -58,7 +58,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <div class="text-center mt-3 d-flex flex-column gap-2 pb-3">
                     <div>
                         <span class="text-muted">Chưa có tài khoản? </span>
-                        <a href="register.php" class="auth-switch-link fw-bold">Đăng ký ngay</a>
+                        <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Register" class="auth-switch-link fw-bold">Đăng ký ngay</a>
                     </div>
                     <a href="#" class="padding text-decoration-none small text-warning">Quên mật khẩu?</a>
                 </div>

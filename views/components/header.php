@@ -3,8 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$BASE_URL = '/LTWNC_LTWNC_WEBTMDT/';
-
+$BASE_URL_IMAGE = '/LTWNC_LTWNC_WEBTMDT/';
+$BASE_URL = '/LTWNC_LTWNC_WEBTMDT/controllers/';
 // Lấy chính xác tên file hiện tại đang chạy (VD: index.php, Shop.php...)
 $currentPage = basename($_SERVER['PHP_SELF']);
 
@@ -54,7 +54,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
             <div class="d-inline-flex align-items-center">
                 <a href="index.php" class="navbar-brand p-0 text-decoration-none">
                     <h1 class="display-5 m-0" style="color: #F28B00;">
-                        <img src="<?= $BASE_URL ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> 
+                        <img src="<?= $BASE_URL_IMAGE ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> 
                     </h1>
                 </a>
             </div>
@@ -86,12 +86,20 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     </span>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">3</span>
                 </a>
-
-                <a href="index.php?act=UserProfile" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
-                    <i class="fas fa-user text-white"></i>
-                </a>
+                <?php
+                    // Kiểm tra trạng thái đăng nhập (đảm bảo session_start() đã được gọi ở đầu file)
+                    if (isset($_SESSION['user']) && !empty($_SESSION['user'])): ?>
+                        <a href="index.php?act=UserProfile" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;" title="Trang cá nhân">
+                            <i class="fas fa-user text-white"></i>
+                        </a>
+                    <?php else: ?>
+                        <a href="index.php?act=Login" class="btn btn-warning rounded-pill px-3 py-2 fw-bold text-white shadow-sm" style="height: 45px; line-height: 30px;">
+                            Đăng nhập
+                        </a>
+                <?php endif; ?>
 
             </div>
+            
         </div>
     </div>
 </div>

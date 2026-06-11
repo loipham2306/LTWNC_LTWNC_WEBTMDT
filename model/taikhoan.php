@@ -77,7 +77,17 @@
             $this->trang_thai = $trang_thai;
             $this->ngay_tao = $ngay_tao;
         }
-
+        public function checkUserExists($email, $so_dien_thoai) {
+                // Lưu ý: Đảm bảo bảng 'khach_hang' của bạn có cột 'id_tai_khoan' làm khóa ngoại
+                $sql = "SELECT t.email, k.so_dien_thoai 
+                        FROM tai_khoan t
+                        LEFT JOIN khach_hang k ON t.id_tai_khoan = k.id_tai_khoan 
+                        WHERE t.email = ? OR k.so_dien_thoai = ?";
+                        
+                $stmt = $this->conn->prepare($sql);
+                $stmt->execute([$email, $so_dien_thoai]);
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            }
         public function TimKiemTaiKhoan($ten_dang_nhap){
             // Câu lệnh truy vấn
             $query ="SELECT id_tai_khoan, ten_dang_nhap, email, mat_khau, vai_tro, trang_thai
@@ -132,6 +142,10 @@
                 return false;
             }
         }
+        public function softDeleteTaiKhoan($id_tai_khoan) {
+            // Cập nhật trạng thái = -1 để "ẩn" tài khoản khỏi danh sách
+            return $this->updateTrangThaiTaiKhoan($id_tai_khoan, -1);
+        }
         public function countTotalCustomers() {
             try {
                 $query = "SELECT COUNT(*) FROM " . $this->table_name . " WHERE vai_tro != 'admin'";
@@ -144,6 +158,12 @@
                 error_log("Lỗi đếm tài khoản: " . $e->getMessage());
                 return 0;
             }
+        }
+        public function themTaiKhoan($user, $email, $pass) {
+            $query = "INSERT INTO tai_khoan (ten_dang_nhap, email, mat_khau) VALUES (?, ?, ?)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([$user, $email, $pass]);
+            return $this->conn->lastInsertId(); // Trả về ID vừa tạo
         }
     }
 ?>

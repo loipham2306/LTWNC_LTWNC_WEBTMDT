@@ -7,7 +7,43 @@ function getJsStatusBadge(status) {
         default: return 'bg-secondary';
     }
 }
+// 1. Hàm Lọc: Kiểm tra tất cả điều kiện
+function filterCustomers() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const hangFilter = document.getElementById('hangFilter').value;
 
+    const rows = document.getElementsByClassName('customer-row');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+
+        const name =
+            row.querySelector('.customer-name')?.innerText.toLowerCase() || '';
+
+        const phone =
+            row.querySelector('.customer-phone')?.innerText.toLowerCase() || '';
+
+        const status = row.getAttribute('data-status');
+        const hang = (row.getAttribute('data-hang') || '').toLowerCase();
+
+        const matchesSearch =
+            name.includes(input) || phone.includes(input);
+
+        const matchesStatus =
+            statusFilter === '' || status === statusFilter;
+
+        const matchesHang =
+            hangFilter === 'all' || hang === hangFilter.toLowerCase();
+
+        row.style.display =
+            (matchesSearch && matchesStatus && matchesHang)
+                ? ''
+                : 'none';
+    }
+}
+
+// 2. Hàm Xem chi tiết
 function viewCustomerDetail(customer) {
     const fullName = customer.ho_ten_dem + ' ' + customer.ten;
     document.getElementById('modalAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=F28B00&color=fff&size=100`;
@@ -24,35 +60,22 @@ function viewCustomerDetail(customer) {
     document.getElementById('modalDate').innerText = customer.ngay_tao ? customer.ngay_tao.split(' ')[0] : 'N/A';
 
     let lockBtnContainer = document.getElementById('lockBtnContainer');
-    // Dùng thẻ <a> để điều hướng thẳng về PHP
-    if (isHoatDong) {
-        lockBtnContainer.innerHTML = `<a href="index.php?act=xuLyKhoaMo&id=${customer.id_tai_khoan}&status=0" class="btn btn-outline-danger fw-bold rounded-pill" onclick="return confirm('Bạn có chắc muốn khóa TK này?')"><i class="fas fa-ban me-2"></i>Khóa TK</a>`;
-    } else {
-        lockBtnContainer.innerHTML = `<a href="index.php?act=xuLyKhoaMo&id=${customer.id_tai_khoan}&status=1" class="btn btn-outline-success fw-bold rounded-pill" onclick="return confirm('Bạn có chắc muốn mở khóa TK này?')"><i class="fas fa-unlock me-2"></i>Mở Khóa TK</a>`;
-    }
+    lockBtnContainer.innerHTML = isHoatDong
+        ? `<a href="index.php?act=toggleStatus&id_tai_khoan=${customer.id_tai_khoan}&status=0" class="btn btn-outline-danger fw-bold rounded-pill" onclick="return confirm('Bạn có chắc muốn khóa TK này?')"><i class="fas fa-ban me-2"></i>Khóa TK</a>`
+        : `<a href="index.php?act=toggleStatus&id_tai_khoan=${customer.id_tai_khoan}&status=1" class="btn btn-outline-success fw-bold rounded-pill" onclick="return confirm('Bạn có chắc muốn mở khóa TK này?')"><i class="fas fa-unlock me-2"></i>Mở Khóa TK</a>`;
 
     document.getElementById('detailModal').style.display = 'flex';
+}
+
+function closeDetailModal() {
+    document.getElementById('detailModal').style.display = 'none';
+}
+
+function closeDetailModal() {
+    document.getElementById('detailModal').style.display = 'none';
 }
 
 // Đóng Popup
 function closeDetailModal() {
     document.getElementById('detailModal').style.display = 'none';
-}
-
-// Lọc khách hàng trực tiếp bằng JS
-function filterCustomers() {
-    let input = document.getElementById('searchInput').value.toLowerCase();
-    let rows = document.getElementsByClassName('customer-row');
-
-    for (let i = 0; i < rows.length; i++) {
-        let name = rows[i].querySelector('.customer-name').innerText.toLowerCase();
-        let email = rows[i].querySelector('.customer-email').innerText.toLowerCase();
-        let phone = rows[i].querySelector('.customer-phone').innerText.toLowerCase();
-
-        if (name.includes(input) || email.includes(input) || phone.includes(input)) {
-            rows[i].style.display = '';
-        } else {
-            rows[i].style.display = 'none';
-        }
-    }
 }

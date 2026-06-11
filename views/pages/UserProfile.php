@@ -196,25 +196,28 @@
             { id: '#LK1988', date: '12/05/2026', total: '1.250.000 đ', status: 'Hoàn Thành' },
         ];
 
-        // Khởi chạy ngay khi cây DOM tải xong (Tương đương useEffect trong React)
-       /* document.addEventListener('DOMContentLoaded', () => {
-            const storedUser = localStorage.getItem('user');
-            
-            if (storedUser) {
-                try {
-                    userData = JSON.parse(storedUser);
-                    fillUserData();
-                    renderOrders();
-                } catch (error) {
-                    console.error("Lỗi parse dữ liệu user:", error);
-                }
-            } else {
-                // Nếu chưa đăng nhập, đá người dùng về trang login
-                alert("Vui lòng đăng nhập để xem thông tin!");
-                window.location.href = '/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Login';
-            }
-        });*/
+        document.addEventListener("DOMContentLoaded", function() {
+            // Gọi AJAX để lấy dữ liệu từ Server/Controller
+            // Giả sử ID được lấy từ session PHP, bạn có thể truyền thẳng vào đây
+            const taiKhoanId = "<?= $_SESSION['user']['id_tai_khoan'] ?? 0 ?>";
 
+            if (taiKhoanId > 0) {
+                fetch(`index.php?act=layChiTiet&id_tai_khoan=${taiKhoanId}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && !data.error) { // Kiểm tra nếu data tồn tại và không phải là thông báo lỗi
+                            userData = data;
+                            fillUserData();
+                        } else {
+                            console.warn('Không tìm thấy dữ liệu người dùng');
+                        }
+                    })
+                    .catch(error => console.error('Lỗi khi lấy thông tin:', error));
+            }
+        });
         // Đổ dữ liệu từ Object vào các trường form input và sidebar hiển thị
         function fillUserData() {
             document.getElementById('ho_ten_dem').value = userData.ho_ten_dem || '';
@@ -305,12 +308,14 @@
             this.reset();
         });
 
-        // XỬ LÝ ĐĂNG XUẤT TÀI KHOẢN (Xóa dữ liệu bộ nhớ sạch sẽ)
         function handleLogout() {
             if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                // 1. Xóa dữ liệu tạm ở trình duyệt (nếu bạn vẫn muốn dùng)
                 localStorage.removeItem('user');
-                alert("Đăng xuất thành công!");
-                window.location.href = '/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Login';
+                
+                // 2. Chuyển hướng đến hành động logout của Controller PHP
+                // Việc này sẽ gọi case 'logout' trong switch-case của index.php
+                window.location.href = 'index.php?act=logout';
             }
         }
     </script>

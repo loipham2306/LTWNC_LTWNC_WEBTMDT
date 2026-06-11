@@ -26,12 +26,27 @@ class KhachHangController {
             case 'toggleStatus':
                 $this->xuLyKhoaMo();
                 break;
+            case 'deleteKH':
+                $this->xuLyXoa();
+                break;
             default:
                 $this->danhSach();
                 break;
         }
     }
-
+    private function xuLyXoa() {
+        $id = $_GET['id_tai_khoan'] ?? 0;
+        if ($id > 0) {
+            // Gọi hàm xóa mềm thay cho xóa vật lý
+            if ($this->tk_model->softDeleteTaiKhoan($id)) {
+                $_SESSION['success'] = "Đã ẩn tài khoản thành công!";
+            } else {
+                $_SESSION['error'] = "Có lỗi xảy ra khi xóa!";
+            }
+        }
+        header("Location: index.php?act=QuanLyKhachHang");
+        exit();
+    }
     private function danhSach() {
         $limit = 10;
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -71,26 +86,34 @@ class KhachHangController {
         }
     }
 
-    private function layChiTiet() {
+    public function layChiTiet() {
+        // 1. Kiểm tra quyền truy cập (Quan trọng)
+        if (!isset($_SESSION['user'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Chưa đăng nhập']);
+            exit();
+        }
+
+        // 2. Lấy ID từ GET
         $id = $_GET['id_tai_khoan'] ?? 0;
+        
+        // 3. Gọi model
         $data = $this->kh_model->getThongTinByTaiKhoanId($id);
         
-        // Trả về JSON để xử lý ở phía Client (Modal)
+        // 4. Trả về JSON
         header('Content-Type: application/json');
         echo json_encode($data);
         exit();
     }
     private function xuLyKhoaMo() {
-        $id = $_POST['id_tai_khoan'] ?? 0;
-        $status = $_POST['status'] ?? 0; 
+        $id = $_GET['id_tai_khoan'] ?? 0; // Chuyển sang dùng GET
+        $status = $_GET['status'] ?? 0; 
 
         if ($id > 0) {
-            // Cập nhật trạng thái
             $this->tk_model->updateTrangThaiTaiKhoan($id, $status);
+            $_SESSION['success'] = "Cập nhật trạng thái thành công!";
         }
-        
-        // Chuyển hướng về trang quản lý khách hàng thay vì trả về JSON
         header("Location: index.php?act=QuanLyKhachHang");
-        exit(); 
+        exit();
     }
 }

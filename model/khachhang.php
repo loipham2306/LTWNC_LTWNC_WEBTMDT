@@ -24,45 +24,26 @@
             $this->id_tai_khoan = $id_tai_khoan;
         }
         // Hàm lấy thông tin cá nhân dựa vào ID tài khoản đã đăng nhập thành công
-        public function getThongTinByTaiKhoanId($id_tai_khoan){
-            // 1. Khởi tạo câu lệnh truy vấn SQL với tham số ẩn (:id_tai_khoan) để bảo mật
-            $query = "SELECT ho_ten_dem, ten, so_dien_thoai, dia_chi, hang_thanh_vien
-                    FROM " . $this->table_name . "
-                    WHERE id_tai_khoan = :id_tai_khoan 
-                    LIMIT 1";
+        public function getThongTinByTaiKhoanId($id_tai_khoan) {
+            // JOIN bảng khach_hang (k) và tai_khoan (t)
+            $query = "SELECT k.ho_ten_dem, k.ten, k.so_dien_thoai, k.dia_chi, k.hang_thanh_vien, 
+                            t.email, t.ten_dang_nhap 
+                    FROM khach_hang k
+                    JOIN tai_khoan t ON k.id_tai_khoan = t.id_tai_khoan
+                    WHERE k.id_tai_khoan = :id_tai_khoan LIMIT 1";
+                    
             try {
-                // 2. Chuẩn bị câu lệnh truy vấn (Prepare statement) thông qua kết nối DB
                 $stmt = $this->conn->prepare($query);
-                // 3. Ép kiểu dữ liệu an toàn (Chuyển đầu vào chắc chắn thành Số Nguyên) để chống hack
                 $id_tai_khoan = intval($id_tai_khoan);
-                // 4. Ràng buộc tham số (Bind giá trị ID thật vào tham số ẩn trong câu SQL)
                 $stmt->bindParam(':id_tai_khoan', $id_tai_khoan);
-                // 5. Thực thi câu lệnh truy vấn trong MySQL
                 $stmt->execute();
-                // 6. Kiểm tra nếu tìm thấy thông tin khách hàng ứng với ID tài khoản đó
+
                 if($stmt->rowCount() > 0) {
-                    // Lấy dòng dữ liệu tìm được ra dưới dạng mảng kết hợp
-                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                    // 7. Ánh xạ (Mapping) dữ liệu từ DB vào các thuộc tính nội bộ của Class khachhang
-                    $this->ho_ten_dem = $row['ho_ten_dem'];
-                    $this->ten = $row['ten'];
-                    $this->sdt = $row['so_dien_thoai'];
-                    $this->diachi = $row['dia_chi'];
-                    $this->hang_thanh_vien = $row['hang_thanh_vien'];
-                    $this->id_tai_khoan = $id_tai_khoan;
-                    // 8. Đóng gói và trả về một mảng dữ liệu "sạch", đẹp để Controller xuất sang React
-                    return [
-                        "ten_day_du" => $this->ho_ten_dem . " " . $this->ten, // Tự động gộp họ và tên
-                        "sdt" => $this->sdt,
-                        "diachi" => $this->diachi,
-                        "hang_thanh_vien" => $this->hang_thanh_vien
-                    ];
+                    return $stmt->fetch(PDO::FETCH_ASSOC); // Trả về tất cả cột đã select
                 }
-                // Trả về null nếu tài khoản này không có thông tin trong bảng Khach_hang
-                return null; 
+                return null;
             } catch(PDOException $e) {
-                // Dừng chương trình và xuất thông báo lỗi nếu truy vấn thất bại
-                die("Lỗi lấy thông tin khách hàng: " . $e->getMessage());
+                return null;
             }
         }
         public function CapNhatThongTinKhachHang() {
@@ -131,6 +112,11 @@
             
             // Trả về số lượng là một số nguyên
             return (int)$stmt->fetchColumn();
+        }
+        public function themKhachHang($id_tk, $ho, $ten, $sdt, $diachi) {
+            $query = "INSERT INTO khach_hang (id_tai_khoan, ho_ten_dem, ten, so_dien_thoai, dia_chi) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([$id_tk, $ho, $ten, $sdt, $diachi]);
         }
     }
 ?>

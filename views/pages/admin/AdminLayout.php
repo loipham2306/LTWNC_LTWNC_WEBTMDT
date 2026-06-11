@@ -9,8 +9,10 @@ if (session_status() === PHP_SESSION_NONE) {
 $current_page = basename($_SERVER['PHP_SELF']);
 
 // Hàm phụ trợ kiểm tra menu nào đang active
-function isActive($path, $current_page) {
-    return ($current_page === $path);
+function isActive($act_check) {
+    // Lấy giá trị 'act' từ URL, nếu không có thì mặc định là 'admin_dashboard'
+    $current_act = isset($_GET['act']) ? $_GET['act'] : 'admin_dashboard';
+    return ($current_act === $act_check);
 }
 
 // Lấy thông tin admin từ session (nếu có)
@@ -59,7 +61,7 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
 <div class="d-flex" style="min-height: 100vh; background-color: #111;">
 
     <div class="d-flex flex-column flex-shrink-0 p-3 shadow-lg" style="width: 260px; background-color: #1a1a1a; border-right: 1px solid #333;">
-        <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=admin_dashboard" class="d-flex align-items-center mb-4 mb-md-0 me-md-auto text-decoration-none justify-content-center w-100 mt-2">
+        <a href="index.php?act=admin_dashboard" class="d-flex align-items-center mb-4 mb-md-0 me-md-auto text-decoration-none justify-content-center w-100 mt-2">
             <h2 class="fw-bold m-0" style="color: #F28B00;">
                 <i class="fas fa-user-shield me-2"></i>Admin
             </h2>
@@ -68,7 +70,7 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
 
         <ul class="nav nav-pills flex-column mb-auto gap-2">
             <li class="nav-item">
-                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=admin_dashboard" 
+                <a href="index.php?act=admin_dashboard" 
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('Dashboard.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('Dashboard.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-tachometer-alt me-3" style="width: 20px;"></i> Tổng Quan
@@ -111,7 +113,7 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
                 </a>
             </li>
             <li>
-                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Voucher_Management" 
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyVoucher" 
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('VoucherAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('VoucherAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-ticket-alt me-3" style="width: 20px;"></i> Quản Lý Voucher

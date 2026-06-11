@@ -21,12 +21,18 @@ $totalCustomers = $totalCustomers ?? 0;
                     <span class="input-group-text bg-dark border-secondary text-muted"><i class="fas fa-search"></i></span>
                     <input type="text" id="searchInput" onkeyup="filterCustomers()" class="form-control bg-dark border-secondary text-white" placeholder="Tìm theo tên, email, SĐT...">
                 </div>
-                <select class="form-select bg-dark border-secondary text-white" style="max-width: 160px;">
+                <select id="statusFilter" onchange="filterCustomers()" class="form-select bg-dark border-secondary text-white" style="max-width: 160px;">
                     <option value="">Tất cả trạng thái</option>
-                    <option value="hoatdong">Hoạt động</option>
-                    <option value="vip">Khách VIP</option>
-                    <option value="khoa">Bị khóa</option>
+                    <option value="1">Hoạt động</option> 
+                    <option value="0">Bị khóa</option>
                 </select>
+                <select id="hangFilter" onchange="filterCustomers()" class="form-select bg-dark border-secondary text-white">
+                    <option value="all">Tất cả hạng</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Diamond">Diamond</option>
+                    <option value="Gold">Gold</option>
+                </select>
+                
             </div>
             <button class="btn fw-bold text-white shadow-sm" style="background-color: #F28B00;">
                 <i class="fas fa-user-plus me-2"></i> Thêm Khách Hàng
@@ -34,6 +40,11 @@ $totalCustomers = $totalCustomers ?? 0;
         </div>
 
         <div class="table-responsive">
+            <?php if(isset($_SESSION['success'])): ?>
+            <div class="alert alert-success">
+                <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+            </div>
+        <?php endif; ?>
             <table class="table table-dark table-hover align-middle mb-0">
                 <thead>
                     <tr style="border-bottom: 2px solid #F28B00;">
@@ -49,7 +60,10 @@ $totalCustomers = $totalCustomers ?? 0;
                 <tbody>
                     <?php if (!empty($customers)): ?>
                         <?php foreach ($customers as $customer): ?>
-                            <tr class="customer-row">
+                           <tr
+                                class="customer-row"
+                                data-status="<?= $customer['trang_thai'] ?>"
+                                data-hang="<?= htmlspecialchars($customer['hang_thanh_vien'] ?? 'Silver') ?>">
                                 <td class="py-3 px-3">
                                     <div class="fw-bold text-white customer-name">
                                         <?= htmlspecialchars($customer['ho_ten_dem'] . ' ' . $customer['ten']) ?>
@@ -57,7 +71,7 @@ $totalCustomers = $totalCustomers ?? 0;
                                 </td>
                                 
                                 <td class="py-3">
-                                    <div class="text-muted small"><?= htmlspecialchars($customer['so_dien_thoai']) ?></div>
+                                    <div class="text-muted small customer-phone"><?= htmlspecialchars($customer['so_dien_thoai']) ?></div>
                                 </td>
 
                                 <td class="py-3 text-center text-white">
@@ -71,13 +85,13 @@ $totalCustomers = $totalCustomers ?? 0;
                                 <td class="py-3 text-end text-warning">
                                     <?= number_format($customer['tong_chi_tieu'] ?? 0, 0, ',', '.') ?>đ
                                 </td>
-
+                               
                                 <td class="py-3 text-center">
                                     <span class="badge <?= ($customer['trang_thai'] == 1) ? 'bg-success' : 'bg-danger' ?>">
                                         <?= ($customer['trang_thai'] == 1) ? 'Hoạt động' : 'Bị khóa' ?>
                                     </span>
                                 </td>
-
+                                
                                 <td class="py-3 text-center">
                                     <button onclick='viewCustomerDetail(<?= json_encode($customer) ?>)' class="btn btn-sm btn-outline-info">
                                         Xem
