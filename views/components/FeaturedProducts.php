@@ -7,7 +7,7 @@ $products = [
         [ 'id' => 4, 'name' => 'Tai nghe Bluetooth 5.0', 'category' => 'Âm Thanh', 'price' => 1250000, 'oldPrice' => 1500000, 'img' => '/LTWNC_BAN_HANG/assets/images/img/product-6.png' ]
     ];
 
-$tabs = ['Tất Cả', 'Điện Tử', 'Quần Áo', 'Giày Dép', 'Phụ Kiện'];
+$tabs = ['Tất Cả', 'Quần Áo', 'Giày Dép', 'Phụ Kiện'];
 ?>
 
 <div class="container-fluid py-5" style="background-color: #1a1a1a;">
