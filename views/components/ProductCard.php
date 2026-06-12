@@ -1,11 +1,20 @@
 <?php
-// 1. XỬ LÝ GIÁ TIỀN CHUẨN ĐỊNH DẠNG
-$oldPrice = !empty($product['oldPrice']) ? number_format($product['oldPrice'], 0, ',', '.') . ' đ' : '&nbsp;';
-$currentPrice = number_format($product['price'], 0, ',', '.') . ' đ';
+/** @var array $product */
 
-// 2. XỬ LÝ ĐƯỜNG DẪN ẢNH THÔNG MINH (Bẻ gãy mọi đường dẫn lỗi để ép về đúng assets/images/img/)
-$imgName = !empty($product['img']) ? basename($product['img']) : 'default.png';
-$productImg = '/LTWNC_BAN_HANG/assets/images/img/' . $imgName;
+// Ánh xạ (Map) dữ liệu từ DB sang biến hiển thị
+$name = $product['ten_san_pham'] ?? 'Sản phẩm không tên';
+$category = $product['ten_danh_muc'] ?? 'Chưa phân loại';
+$id = $product['id_san_pham'] ?? '#';
+
+// Xử lý giá (DB trả về gia_co_ban)
+$price = $product['gia_co_ban'] ?? 0;
+// Vì bạn chưa có bảng khuyến mãi, tạm thời để oldPrice là 0
+$oldPrice = '&nbsp;'; 
+$currentPrice = number_format($price, 0, ',', '.') . ' đ';
+
+// Xử lý ảnh (DB trả về hinh_anh)
+$imgName = !empty($product['hinh_anh']) ? basename($product['hinh_anh']) : 'default.png';
+$productImg = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $imgName;
 ?>
 
 <style>
@@ -71,19 +80,22 @@ $productImg = '/LTWNC_BAN_HANG/assets/images/img/' . $imgName;
             <img src="<?= $productImg ?>" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="<?= htmlspecialchars($product['name']) ?>">
             
             <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center img-overlay">
-                <a href="/LTWNC_BAN_HANG/views/pages/ProductDetail.php?id=<?= $product['id'] ?>" class="btn rounded-circle d-flex align-items-center justify-content-center shadow eye-btn" style="width: 50px; height: 50px;">
-                    <i class="fa fa-eye fs-5"></i>
+                <a href="index.php?act=ProductDetail&id=<?= htmlspecialchars($id) ?>" 
+                    class="btn rounded-circle d-flex align-items-center justify-content-center" 
+                    style="width: 50px; height: 50px; background-color: #1a1a1a; color: #F28B00; border: 1px solid #F28B00;">
+                        <i class="fa fa-eye fs-5"></i>
                 </a>
             </div>
         </div>
 
         <div class="card-body text-center d-flex flex-column p-4">
-            <p class="text-white-50 small mb-1"><?= htmlspecialchars($product['category']) ?></p>
+            <p class="text-white-50 small mb-1"><?= htmlspecialchars($category) ?></p>
             
-            <a href="/LTWNC_BAN_HANG/views/pages/ProductDetail.php?id=<?= $product['id'] ?>" class="card-title h6 fw-bold mb-2 text-white text-decoration-none d-block">
-                <?= htmlspecialchars($product['name']) ?>
+            <a href="/LTWNC_LTWNC_WEBTMDT/views/pages/ProductDetail.php?id=<?= htmlspecialchars($id) ?>" 
+                class="card-title h6 fw-bold mb-2 text-white text-decoration-none d-block">
+                    <?= htmlspecialchars($name) ?>
             </a>
-            
+                            
             <div class="d-flex justify-content-center align-items-center">
                 <del class="me-2 text-white-50 small"><?= $oldPrice ?></del>
                 <span class="text-orange fs-5 fw-bold"><?= $currentPrice ?></span>

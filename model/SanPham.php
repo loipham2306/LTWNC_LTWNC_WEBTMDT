@@ -29,6 +29,75 @@ class SanPham {
         $this->id_thuong_hieu = $id_th;
         $this->trang_thai = $trang_thai;
     }
+    // lấy sản phẩm cho cửa hàng
+    // Trong class SanPham, cập nhật hàm này:
+    public function getAllProductsForShop() {
+        $sql = "SELECT 
+                    sp.id_san_pham, 
+                    sp.ten_san_pham, 
+                    sp.gia_co_ban, 
+                    sp.hinh_anh, 
+                    sp.ngay_tao,
+                    dm.ten_danh_muc, 
+                    th.ten_thuong_hieu, 
+                    COALESCE(SUM(bt.so_luong_ton), 0) AS so_luong_kho
+                FROM san_pham sp
+                LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
+                LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
+                LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
+                GROUP BY sp.id_san_pham
+                ORDER BY sp.id_san_pham DESC;";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getChiTietSanPham($id) {
+        // Truy vấn lấy thông tin sản phẩm và tất cả biến thể liên quan
+        $query = "SELECT sp.*, 
+                        dm.ten_danh_muc, 
+                        th.ten_thuong_hieu,
+                        bt.id_bien_the, bt.kich_co, bt.mau_sac, 
+                        bt.gia_ban, bt.so_luong_ton, bt.hinh_anh_bien_the
+                FROM san_pham sp
+                LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
+                LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
+                LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
+                WHERE sp.id_san_pham = :id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':id' => $id]);
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$data) return null;
+
+        // Tổ chức lại dữ liệu: Thông tin chính + Mảng các biến thể
+        $sanPham = [
+            'id_san_pham'    => $data[0]['id_san_pham'],
+            'ten_san_pham'   => $data[0]['ten_san_pham'],
+            'gia_co_ban'     => $data[0]['gia_co_ban'],
+            'mo_ta'          => $data[0]['mo_ta'],
+            'hinh_anh'       => $data[0]['hinh_anh'],
+            'ten_danh_muc'   => $data[0]['ten_danh_muc'],
+            'ten_thuong_hieu'=> $data[0]['ten_thuong_hieu'],
+            'bien_the'       => []
+        ];
+
+        foreach ($data as $row) {
+            if ($row['id_bien_the']) {
+                $sanPham['bien_the'][] = [
+                    'id_bien_the'       => $row['id_bien_the'],
+                    'kich_co'           => $row['kich_co'],
+                    'mau_sac'           => $row['mau_sac'],
+                    'gia_ban'           => $row['gia_ban'],
+                    'so_luong_ton'      => $row['so_luong_ton'],
+                    'hinh_anh_bien_the' => $row['hinh_anh_bien_the']
+                ];
+            }
+        }
+
+        return $sanPham;
+    }
     public function getSanPhamHome($limit = 8) {
         $query = "SELECT sp.*, 
               GROUP_CONCAT(DISTINCT bt.kich_co SEPARATOR ', ') as danh_sach_size,

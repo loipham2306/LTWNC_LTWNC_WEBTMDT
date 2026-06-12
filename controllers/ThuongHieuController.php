@@ -51,7 +51,7 @@ class ThuongHieuController {
             } else {
                 $_SESSION['error'] = "Thêm thất bại!";
             }
-            header('Location: index.php?act=thuonghieu');
+            header('Location: index.php?act=QuanLyThuongHieu');
             exit();
         }
     }

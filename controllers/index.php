@@ -14,6 +14,8 @@ require_once '../controllers/KhachHangController.php';
 require_once '../controllers/ThuongHieuController.php';
 require_once '../controllers/DangKyController.php';
 require_once '../controllers/VoucherController.php';
+require_once '../controllers/QuanLyKhuyenMaiController.php';
+include_once '../controllers/ShopController.php';
 // 2. Lấy action (act) từ URL
 $act = $_REQUEST['act'] ?? 'trangchu';
 
@@ -29,6 +31,7 @@ switch ($act) {
     case 'Login':
         include '../views/pages/Login.php';
         break;
+        
     case 'layChiTiet':
         require_once 'KhachHangController.php'; // Đảm bảo gọi đúng file Controller
         $khController = new KhachHangController($db);
@@ -66,7 +69,12 @@ switch ($act) {
             header("Location: index.php");
         }
         break;
-    
+    //render cửa hàng
+    case 'Shop':
+        include_once 'ShopController.php'; // Đảm bảo đường dẫn đúng
+        $ShopController = new ShopController($db); // Bỏ dấu $ ở tên class
+        $ShopController->handle($act);
+        break;
     case 'Product_Management':
         if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] == 'admin') {
             include '../views/pages/admin/ProductAdmin.php'; 
@@ -131,6 +139,21 @@ switch ($act) {
         $spController = new SanPhamController($db);
         $spController->handle($act);
         break;
+    // chi tiết sản phẩm
+    case 'ProductDetail':
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+            $spModel = new SanPham($db);
+            // Lưu ý tên biến ở đây phải khớp với tên biến trong file View
+            $product = $spModel->getChiTietSanPham($id); 
+            
+            // Gán giá hiện tại mặc định bằng giá cơ bản (hoặc giá biến thể đầu tiên)
+            $gia_hien_tai = $product['gia_co_ban']; 
+            $imgPath = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $product['hinh_anh'];
+            
+            include '../views/pages/ProductDetail.php';
+        }
+        break;
     // --- NHÓM KHÁCH HÀNG ---
     case 'QuanLyKhachHang':
     case 'updateKH':
@@ -148,6 +171,17 @@ switch ($act) {
         include_once 'VoucherController.php';
         $voucherController = new VoucherController($db);
         $voucherController->handle($act); 
+        break;
+   // --- Nhóm quản lý khuyến mãi ---
+    case 'QuanLyKhuyenMai':
+    case 'updateKH':
+    case 'detailKH':
+    case 'toggleStatus':
+    case 'deleteKH':
+    case 'themKM': // Action này nhận dữ liệu từ form thêm mới
+        include_once 'QuanLyKhuyenMaiController.php';
+        $kmController= new QuanLyKhuyenMaiController($db);
+        $kmController->handle($act);
         break;
     // --- MẶC ĐỊNH ---
     default:

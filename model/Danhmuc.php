@@ -55,7 +55,12 @@
             }
             $this->setIdDanhMucCha($id_cha);
         }
-
+        public function getDanhMucShop() {
+            $sql = "SELECT * FROM danh_muc ORDER BY id_danh_muc_cha ASC, id_danh_muc ASC";            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute();
+            return $stmt; // Trả về statement để Controller fetch
+        }
         // Trong file DanhMuc.php
         public function getDanhMuc() {
             // Sử dụng LEFT JOIN để lấy cả tên danh mục cha

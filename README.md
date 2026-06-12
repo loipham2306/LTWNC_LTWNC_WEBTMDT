@@ -71,7 +71,7 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [x] Sửa sản phẩm
 - [x] Xóa sản phẩm
 - [X] Chi tiết sản phẩm
-- [ ] Upload ảnh sản phẩm
+- [X] Upload ảnh sản phẩm
 - [x] Tìm kiếm sản phẩm
 - [x] Lọc theo danh mục
 - [x] Lọc theo thương hiệu
@@ -178,10 +178,10 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 - [X] Đăng ký
 - [x] Đăng nhập
-- [ ] Xem sản phẩm
-- [ ] Tìm kiếm sản phẩm
-- [ ] Lọc sản phẩm
-- [ ] Xem chi tiết sản phẩm
+- [x] Xem sản phẩm
+- [x] Tìm kiếm sản phẩm
+- [x] Lọc sản phẩm
+- [x] Xem chi tiết sản phẩm
 - [ ] Thêm giỏ hàng
 - [ ] Thanh toán
 - [ ] Theo dõi đơn hàng

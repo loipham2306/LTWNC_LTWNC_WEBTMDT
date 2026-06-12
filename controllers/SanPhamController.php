@@ -78,30 +78,25 @@ class SanPhamController {
     }
      // Trong SanPhamController.php
     public function hienThiTrangChu() {
-        // 1. Lấy dữ liệu từ Model
         $raw_products = $this->sp_model->getSanPhamHome(8);
-        
-        // 2. Chuyển đổi dữ liệu
         $products = [];
+        
         foreach ($raw_products as $row) {
-            // Kiểm tra xem key có tồn tại hay không để tránh lỗi Warning
-            $gia_km = isset($row['gia_khuyen_mai']) ? $row['gia_khuyen_mai'] : 0;
-            
             $products[] = [
-                'name'      => $row['ten_san_pham'],
-                'img'       => 'assets/images/products/' . $row['hinh_anh'], 
-                'price'     => number_format($row['gia_co_ban'], 0, ',', '.') . ' đ',
-                'badge'     => ($gia_km > 0) ? 'Sale' : ''
+                'id'       => $row['id_san_pham'], // Cần có ID để link chi tiết
+                'name'     => $row['ten_san_pham'],
+                'img'      => $row['hinh_anh'], // Chỉ lưu tên file, để View xử lý path
+                'price'    => $row['gia_co_ban'], // Lưu dạng số để number_format trong View
+                'oldPrice' => $row['gia_khuyen_mai'] ?? 0,
+                'category' => $row['ten_danh_muc'] ?? 'Chưa phân loại' // Đảm bảo có key này
+                
             ];
         }
         
-        include "../views/components/product-card.php";
-        if (file_exists($viewPath)) {
-            include $viewPath;
-        } else {
-            die("Lỗi: Không tìm thấy file giao diện tại: " . $viewPath);
+        foreach ($products as $product) {
+            include "../views/components/ProductCard.php";
         }
-    }   
+    }
     private function xuLyThem() {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             try {

@@ -1,16 +1,15 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+
 
 $BASE_URL_IMAGE = '/LTWNC_LTWNC_WEBTMDT/';
 $BASE_URL = '/LTWNC_LTWNC_WEBTMDT/controllers/';
 // Lấy chính xác tên file hiện tại đang chạy (VD: index.php, Shop.php...)
+$act = $_GET['act'] ?? '';
 $currentPage = basename($_SERVER['PHP_SELF']);
 
 // Xử lý logic làm sáng Menu - Phân biệt rõ chữ hoa/chữ thường
-$isHomeActive     = ($currentPage == 'index.php' || $currentPage == '') ? 'active' : '';
-$isShopActive     = ($currentPage == 'Shop.php' || $currentPage == 'ProductDetail.php') ? 'active' : '';
+$isHomeActive     = ($currentPage == 'index.php' && $act == '') ? 'active' : '';
+$isShopActive     = ($act == 'Shop' || $currentPage == 'ProductDetail.php') ? 'active' : '';
 $isCartActive     = ($currentPage == 'Cart.php') ? 'active' : '';
 $isCheckoutActive = ($currentPage == 'Checkout.php') ? 'active' : '';
 $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
@@ -114,7 +113,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <div class="navbar-nav py-0">
                         <a href="<?= $BASE_URL ?>index.php" class="nav-item nav-link <?= $isHomeActive ?>">Trang Chủ</a>
-                        <a href="<?= $BASE_URL ?>views/pages/Shop.php" class="nav-item nav-link <?= $isShopActive ?>">Cửa hàng</a>
+                        <a href="index.php?act=Shop" class="nav-item nav-link <?= $isShopActive ?>">Cửa hàng</a>
                         <a href="<?= $BASE_URL ?>views/pages/Cart.php" class="nav-item nav-link <?= $isCartActive ?>">Giỏ Hàng</a>
                         <a href="<?= $BASE_URL ?>views/pages/Checkout.php" class="nav-item nav-link <?= $isCheckoutActive ?>">Thanh Toán</a>
                         <a href="<?= $BASE_URL ?>views/pages/Contact.php" class="nav-item nav-link me-2 <?= $isContactActive ?>">Liên Hệ</a>

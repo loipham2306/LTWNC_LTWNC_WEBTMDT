@@ -119,6 +119,13 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
                     <i class="fas fa-ticket-alt me-3" style="width: 20px;"></i> Quản Lý Voucher
                 </a>
             </li>
+            <li>
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyKhuyenMai" 
+                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('VoucherAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
+                   style="background-color: <?= isActive('VoucherAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
+                    <i class="fas fa-ticket-alt me-3" style="width: 20px;"></i> Quản Lý Khuyến Mãi
+                </a>
+            </li>
         </ul>
 
         <hr class="text-secondary" />
