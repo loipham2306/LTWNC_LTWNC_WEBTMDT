@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -27,6 +28,10 @@
         .btn-orange { background-color: #F28B00 !important; color: #fff !important; border: none; }
         .btn-orange:hover { background-color: #d67a00 !important; }
         .control-bar { background-color: #222; border: 1px solid #333; }
+        /* Làm nổi bật số tiền */
+.price-highlight { color: #F28B00 !important; font-weight: bold; }
+/* Đảm bảo chữ trong bảng rõ ràng */
+.table-dark-custom td { color: #ccc !important; }
     </style>
 </head>
 <body>
@@ -37,22 +42,22 @@
     $pageBreadcrumb = "Giỏ Hàng";
 
     // Gọi Component Header & PageHeader
-    include '../components/Header.php';
-    include '../components/PageHeader.php';
+    include_once __DIR__ . '/../components/Header.php';
+    include_once __DIR__ . '/../components/PageHeader.php';
     ?>
 
     <div class="container-fluid py-5 cart-wrapper">
         <div class="container py-5">
             
-            <div id="empty-state" class="text-center py-5" style="display: none;">
+            <div id="empty-state" class="text-center py-5" style="display: <?= empty($_SESSION['cart']) ? 'block' : 'none' ?>;">
                 <img src="https://cdn-icons-png.flaticon.com/512/11329/11329060.png" alt="Empty Cart" style="width: 120px; opacity: 0.5;" class="mb-4"/>
                 <h4 class="text-white-50 mb-4">Giỏ hàng của bạn đang trống!</h4>
-                <a href="/LTWNC_BAN_HANG/views/pages/shop.php" class="btn btn-orange rounded-pill px-5 py-3 fw-bold">
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Shop" class="btn btn-orange rounded-pill px-5 py-3 fw-bold">
                     <i class="fas fa-arrow-left me-2"></i> Quay lại Cửa Hàng
                 </a>
             </div>
 
-            <div id="cart-content" style="display: none;">
+            <div id="cart-content" style="display: <?= !empty($_SESSION['cart']) ? 'block' : 'none' ?>;">
                 <div class="table-responsive">
                     <table class="table table-dark-custom text-center align-middle wow fadeInUp" data-wow-delay="0.1s">
                         <thead>
@@ -67,23 +72,80 @@
                             </tr>
                         </thead>
                         <tbody id="cart-tbody">
-                            </tbody>
+                            <?php if (empty($_SESSION['cart'])): ?>
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">Giỏ hàng của bạn đang trống!</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($_SESSION['cart'] as $key => $item): 
+                        
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <input
+                                                class="form-check-input custom-checkbox product-checkbox"
+                                                type="checkbox"
+                                                value="<?= $key ?>"
+                                                data-price="<?= $item['gia'] * $item['so_luong'] ?>"
+                                                checked
+                                                onchange="updateTotal()"
+                                            >
+                                        </td>
+                                        <td><img src="/LTWNC_LTWNC_WEBTMDT/assets/images/products/Bien_The_Products/<?= $item['hinh_anh'] ?>" class="img-fluid rounded" style="width: 80px; height: 80px; object-fit: cover;"></td>
+                                        <td class="text-start">
+                                            <p class="mb-0 fw-bold text-white"><?= $item['ten_san_pham'] ?></p>
+                                            <small class="text-white-50">
+                                                Size: <?= $item['size'] ?> | 
+                                                Màu: <?= (!empty($item['ten_mau'])) ? $item['ten_mau'] : getColorName($item['mau']) ?>
+                                            </small>
+                                        </td>
+                                        <td><?= number_format($item['gia'], 0, ',', '.') ?> đ</td>
+                                        <td>
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <a href="index.php?act=CapNhatSoLuong&id=<?= $key ?>&type=minus" class="btn btn-sm btn-qty"><i class="fa fa-minus"></i></a>
+                                                <input type="text" class="input-qty mx-2" value="<?= $item['so_luong'] ?>" readonly>
+                                                <a href="index.php?act=CapNhatSoLuong&id=<?= $key ?>&type=plus" class="btn btn-sm btn-qty"><i class="fa fa-plus"></i></a>
+                                            </div>
+                                        </td>
+                                        <td><?= number_format($item['gia'] * $item['so_luong'], 0, ',', '.') ?> đ</td>
+                                        <td>
+                                            <a href="index.php?act=XoaGioHang&id=<?= $key ?>" 
+                                            class="btn btn-sm btn-outline-danger border-0" 
+                                            title="Xóa sản phẩm"
+                                            style="transition: 0.3s; padding: 5px 10px; border-radius: 5px;">
+                                            <i class="fas fa-trash-alt"></i>
+                                            </a>                                      
+                                         </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
                     </table>
                 </div>
 
-                <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 p-4 rounded control-bar wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="form-check d-flex align-items-center mb-3 mb-md-0">
-                        <input class="form-check-input custom-checkbox me-3" type="checkbox" id="selectAllBottom" onchange="toggleSelectAll(this)">
-                        <label class="form-check-label fw-bold text-white fs-5" for="selectAllBottom" style="cursor: pointer;" id="selectCountLabel">
-                            Chọn tất cả (0)
-                        </label>
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-4 p-4 rounded control-bar">
+                    <div class="form-check d-flex align-items-center">
+                        <input class="form-check-input custom-checkbox me-3" type="checkbox" id="selectAllBottom" onclick="toggleAll(this)">
+                        <label class="form-check-label fw-bold text-white" for="selectAllBottom">Chọn tất cả</label>
                     </div>
                     
+                    <div class="text-end">
+                        <span class="text-white-50">Tổng thanh toán: </span>
+                        <span class="fs-3 fw-bold text-orange" id="total-price" style="color: #F28B00;">
+                            <?php 
+                            $tong = 0;
+                            foreach ($_SESSION['cart'] as $item) $tong += ($item['gia'] * $item['so_luong']);
+                            echo number_format($tong, 0, ',', '.') . ' đ';
+                            ?>
+                        </span>
+                    </div>
+
                     <div class="d-flex align-items-center gap-3">
-                        <button id="deleteBtn" class="btn btn-outline-danger px-4 py-3 fw-bold rounded-pill" onclick="handleRemoveSelected()">
-                            <i class="fa fa-trash me-2"></i> Xóa Đã Chọn
-                        </button>
-                        <button id="checkoutBtn" class="btn btn-orange px-5 py-3 text-uppercase fw-bold rounded-pill" onclick="handleCheckout()">
+                        <a href="index.php?act=XoaGioHang" class="btn btn-outline-danger px-4 py-3 fw-bold rounded-pill">Xóa đã chọn</a>
+                        <button
+                            type="button"
+                            class="btn btn-orange px-5 py-3 fw-bold rounded-pill"
+                            onclick="goToCheckout()">
                             Thanh Toán
                         </button>
                     </div>
@@ -93,147 +155,103 @@
         </div>
     </div>
 
-    <?php include '../components/Footer.php'; ?>
+    <?php include_once __DIR__. '/../components/Footer.php'; ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
     <script>
-        // Kích hoạt hiệu ứng WOW
-        new WOW().init();
+        function updateTotal() {
+            let total = 0;
+            // Lấy tất cả checkbox sản phẩm đang được tích
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+            
+            checkedBoxes.forEach(function(box) {
+                // Cộng giá trị data-price vào tổng
+                total += parseFloat(box.getAttribute('data-price'));
+            });
 
-        // LOGIC GIỎ HÀNG
-        let cartItems = JSON.parse(localStorage.getItem('cart')) || [];
-
-        function saveCart() {
-            localStorage.setItem('cart', JSON.stringify(cartItems));
-            renderCart();
-            if (typeof updateCartBadge === 'function') updateCartBadge();
+            // Định dạng lại tiền tệ (ví dụ: 1.000.000 đ)
+            document.getElementById('total-price').innerText = 
+                total.toLocaleString('vi-VN') + ' đ';
         }
 
-        function renderCart() {
-            const tbody = document.getElementById('cart-tbody');
-            const emptyState = document.getElementById('empty-state');
-            const cartContent = document.getElementById('cart-content');
+        // Cập nhật hàm toggleAll để gọi luôn hàm tính tổng
+        function toggleAll(source) {
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = source.checked;
+            });
+            updateTotal(); // Gọi lại hàm tính tổng sau khi chọn tất cả
+        }
+        function selectColor(colorName, element) {
+            // 1. Cập nhật dòng chữ hiển thị
+            document.getElementById('selected-color-text').innerText = "Đã chọn: " + colorName;
+            
+            // 2. Hiệu ứng: Thêm viền nổi bật cho ô màu được chọn
+            const options = document.querySelectorAll('.color-option');
+            options.forEach(opt => opt.style.borderColor = '#666'); // Reset tất cả về màu cũ
+            element.style.borderColor = '#F28B00'; // Đổi màu viền ô được chọn sang cam
+        }
+        function goToCheckout() {
+            let selected = [];
+            document.querySelectorAll('.product-checkbox:checked').forEach(item => {
+                selected.push(item.value);
+            });
 
-            if (cartItems.length === 0) {
-                emptyState.style.display = 'block';
-                cartContent.style.display = 'none';
+            if(selected.length === 0) {
+                alert("Vui lòng chọn ít nhất 1 sản phẩm!");
                 return;
             }
 
-            emptyState.style.display = 'none';
-            cartContent.style.display = 'block';
-
-            let html = '';
-            let selectedCount = 0;
-            let total = 0;
-
-            cartItems.forEach(item => {
-                if (item.selected) {
-                    selectedCount++;
-                    total += (item.price * item.quantity);
-                }
-
-                const rowBg = item.selected ? 'background-color: #2a2a2a;' : '';
-
-                html += `
-                    <tr style="${rowBg}">
-                        <td>
-                            <input class="form-check-input custom-checkbox" type="checkbox" 
-                                ${item.selected ? 'checked' : ''} 
-                                onchange="toggleSelection(${item.id})">
-                        </td>
-                        <td>
-                            <img src="${item.img || '/LTWNC_BAN_HANG/assets/images/img/default.png'}" class="img-fluid rounded" style="width: 80px; height: 80px; object-fit: cover;" alt="${item.name}">
-                        </td>
-                        <td class="text-start">
-                            <p class="mb-0 fw-bold text-white">${item.name}</p>
-                        </td>
-                        <td>
-                            <p class="mb-0 text-white-50">${item.price.toLocaleString('vi-VN')} đ</p>
-                        </td>
-                        <td>
-                            <div class="d-flex justify-content-center align-items-center">
-                                <button onclick="handleQuantity(${item.id}, 'minus')" class="btn btn-sm rounded-circle btn-qty"><i class="fa fa-minus"></i></button>
-                                <input type="text" class="input-qty mx-2" value="${item.quantity}" readonly>
-                                <button onclick="handleQuantity(${item.id}, 'plus')" class="btn btn-sm rounded-circle btn-qty"><i class="fa fa-plus"></i></button>
-                            </div>
-                        </td>
-                        <td>
-                            <p class="mb-0 fw-bold" style="color: #F28B00;">${(item.price * item.quantity).toLocaleString('vi-VN')} đ</p>
-                        </td>
-                        <td>
-                            <button onclick="handleRemove(${item.id})" class="btn btn-sm text-danger bg-transparent border-0 fs-5">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+            let formData = new FormData();
+            // Đảm bảo dữ liệu gửi đi đúng định dạng mảng
+            selected.forEach(id => {
+                formData.append('selected_products[]', id);
             });
 
-            tbody.innerHTML = html;
-
-            document.getElementById('selectCountLabel').innerText = `Chọn tất cả (${cartItems.length})`;
-            document.getElementById('selectAllBottom').checked = (selectedCount === cartItems.length);
-
-            const checkoutBtn = document.getElementById('checkoutBtn');
-            const deleteBtn = document.getElementById('deleteBtn');
-
-            if (selectedCount > 0) {
-                checkoutBtn.className = 'btn btn-orange px-5 py-3 text-uppercase fw-bold rounded-pill';
-                checkoutBtn.innerHTML = `Thanh Toán (${total.toLocaleString('vi-VN')} đ)`;
-                deleteBtn.disabled = false;
-            } else {
-                checkoutBtn.className = 'btn btn-secondary px-5 py-3 text-uppercase fw-bold rounded-pill disabled';
-                checkoutBtn.innerHTML = `Thanh Toán`;
-                deleteBtn.disabled = true;
-            }
-        }
-
-        function toggleSelection(id) {
-            cartItems = cartItems.map(item => item.id === id ? { ...item, selected: !item.selected } : item);
-            saveCart();
-        }
-
-        function toggleSelectAll(el) {
-            const isChecked = el.checked;
-            cartItems = cartItems.map(item => ({ ...item, selected: isChecked }));
-            saveCart();
-        }
-
-        function handleRemoveSelected() {
-            if (confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?')) {
-                cartItems = cartItems.filter(item => !item.selected);
-                saveCart();
-            }
-        }
-
-        function handleRemove(id) {
-            cartItems = cartItems.filter(item => item.id !== id);
-            saveCart();
-        }
-
-        function handleQuantity(id, type) {
-            cartItems = cartItems.map(item => {
-                if (item.id === id) {
-                    let newQuantity = item.quantity;
-                    if (type === 'plus') newQuantity += 1;
-                    if (type === 'minus' && newQuantity > 1) newQuantity -= 1;
-                    return { ...item, quantity: newQuantity };
+            fetch('index.php?act=LuuSanPhamThanhToan', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    window.location.href = 'index.php?act=ThanhToan';
+                } else {
+                    alert(data.message || "Có lỗi xảy ra khi lưu đơn hàng!");
                 }
-                return item;
+            })
+            .catch(err => console.error(err));
+        }
+        // Trong file Cart.php, phía Client
+        function guiDuLieuThanhToan() {
+            // Lấy tất cả checkbox đã chọn
+            let selected = [];
+            document.querySelectorAll('.item-checkbox:checked').forEach(cb => {
+                selected.push(cb.value);
             });
-            saveCart();
-        }
 
-        function handleCheckout() {
-            const selectedItems = cartItems.filter(item => item.selected);
-            if (selectedItems.length === 0) return;
-            sessionStorage.setItem('checkoutItems', JSON.stringify(selectedItems));
-            window.location.href = '/LTWNC_BAN_HANG/views/pages/checkout.php';
-        }
+            if (selected.length === 0) {
+                alert("Vui lòng chọn ít nhất 1 sản phẩm!");
+                return;
+            }
 
-        document.addEventListener('DOMContentLoaded', renderCart);
+            // Gửi bằng AJAX
+            fetch('index.php?act=LuuSanPhamThanhToan', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'selected_products[]=' + selected.join('&selected_products[]=')
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Chuyển hướng sang trang thanh toán sau khi lưu session thành công
+                    window.location.href = 'index.php?act=ThanhToan';
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
     </script>
 </body>
 </html>

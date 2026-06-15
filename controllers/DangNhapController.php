@@ -37,7 +37,9 @@ class DangNhapController {
             } elseif (password_verify($mat_khau_nhap, $userRow['mat_khau'])) {
                 
                 $this->taoSessionUser($userRow);
-                // Chuyển hướng theo vai trò
+                require_once '../controllers/GioHangController.php'; // Đảm bảo đã include controller
+                $ghController = new GioHangController($this->db);
+                $ghController->syncCartFromDB();
                 $this->dieuHuong($userRow['vai_tro']);
                 exit;
             } else {

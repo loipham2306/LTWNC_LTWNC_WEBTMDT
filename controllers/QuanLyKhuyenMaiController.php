@@ -16,7 +16,10 @@ class QuanLyKhuyenMaiController {
                 case 'KhuyenMaiTheoSanPham':
                     $this->KhuyenMaiTheoBienThe();
                     break;
-                case 'toggle':
+                case 'toggleStatusKM':
+                    $this->toggleStatus();
+                    break;
+                case 'XoakhuyenMai':
                     $this->toggleStatus();
                     break;
                 default:
@@ -27,9 +30,10 @@ class QuanLyKhuyenMaiController {
     // Hiển thị danh sách
     private function index() {
         $listKM = $this->kmModel->getAllKhuyenMai();
+        $listBienThe = $this->kmModel->getDanhSachBienThe();
         include '../views/pages/admin/QuanLyKhuyenMai.php';
     }
-
+              
     private function TaoKhuyenMai() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ten = $_POST['ten_km'];
@@ -60,11 +64,14 @@ class QuanLyKhuyenMaiController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_km = (int)$_POST['id_km'];
             $id_sp = (int)$_POST['id_sp'];
+            // Lấy thêm id_bien_the từ form, nếu không chọn thì để null
+            $id_bt = !empty($_POST['id_bien_the']) ? (int)$_POST['id_bien_the'] : null;
 
-            if ($this->kmModel->addProductToKhuyenMai($id_km, $id_sp)) {
-                echo json_encode(['status' => 'success']);
+            // Gọi model đã được nâng cấp (nhận 3 tham số)
+            if ($this->kmModel->addProductToKhuyenMai($id_km, $id_sp, $id_bt)) {
+                echo json_encode(['status' => 'success', 'message' => 'Đã thêm thành công!']);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Sản phẩm đã có trong chương trình này']);
+                echo json_encode(['status' => 'error', 'message' => 'Lỗi hoặc đã tồn tại!']);
             }
         }
     }
@@ -75,5 +82,11 @@ class QuanLyKhuyenMaiController {
         $status = (int)$_GET['status'];
         $this->kmModel->toggleStatus($id, $status);
         header("Location: index.php?controller=khuyen_mai");
+    }
+    // Thêm vào QuanLyKhuyenMaiController.php
+    public function deleteKH() {
+        $id = (int)$_GET['id'];
+        $this->kmModel->removeProductFromKhuyenMai($id); 
+        header("Location: index.php?act=QuanLyKhuyenMai");
     }
 }

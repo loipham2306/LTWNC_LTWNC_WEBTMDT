@@ -145,7 +145,7 @@ $danhMucList = $danhMucList ?? [];
     $pageTitle = "Cửa Hàng Của Chúng Tôi";
     $pageBreadcrumb = "Cửa Hàng";
     include __DIR__ . '/../components/Header.php';
-    include __DIR__ . '/../components/PageHeader.php';
+    include __DIR__ . '/../components/HeroSlider.php';
     ?>
 
     <div class="mb-5">
@@ -345,9 +345,13 @@ $danhMucList = $danhMucList ?? [];
                                     ${formattedOldPrice}
                                     <span style="color: #F28B00;" class="fs-5 fw-bold">${formattedPrice}</span>
                                 </div>
-                                <button ${isOutOfStock ? 'disabled' : ''} onclick='handleAddToCartFromShop(${productJson})' class="btn ${isOutOfStock ? 'btn-secondary' : 'btn-orange'} w-100 rounded-pill py-2 fw-bold shadow-sm">
-                                    ${isOutOfStock ? 'Liên Hệ Đặt Hàng' : '<i class="fas fa-cart-plus me-2"></i> Thêm Giỏ Hàng'}
-                                </button>
+                               <a href="index.php?act=ProductDetail&id=${product.id}"
+                                class="btn ${isOutOfStock ? 'btn-secondary' : 'btn-orange'} w-100 rounded-pill py-2 fw-bold shadow-sm">
+
+                                ${isOutOfStock
+                                    ? 'Liên Hệ Đặt Hàng'
+                                    : '<i class="fas fa-eye me-2"></i> Xem Chi Tiết'}
+                                </a>
                             </div>
                         </div>
                     </div>

@@ -42,7 +42,7 @@
     <div class="container border-top border-secondary py-4">
         <div class="row">
             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                &copy; <a class="border-bottom text-white text-decoration-none" href="#">LuLoShop</a>. Tất cả quyền được bảo lưu.
+                &copy; <a class="border-bottom text-white text-decoration-none" href="#">TramHieu</a>. Tất cả quyền được bảo lưu.
             </div>
             <div class="col-md-6 text-center text-md-end text-white-50">
                 Thiết kế bởi <a class="border-bottom text-white text-decoration-none" href="#">..</a>

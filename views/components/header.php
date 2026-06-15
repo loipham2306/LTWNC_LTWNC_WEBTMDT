@@ -10,8 +10,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 // Xử lý logic làm sáng Menu - Phân biệt rõ chữ hoa/chữ thường
 $isHomeActive     = ($currentPage == 'index.php' && $act == '') ? 'active' : '';
 $isShopActive     = ($act == 'Shop' || $currentPage == 'ProductDetail.php') ? 'active' : '';
-$isCartActive     = ($currentPage == 'Cart.php') ? 'active' : '';
-$isCheckoutActive = ($currentPage == 'Checkout.php') ? 'active' : '';
+$isCartActive     = ($act == 'GioHang' || $currentPage == 'Cart.php') ? 'active' : '';
+$isCheckoutActive = ($act == 'ThanhToan' ||$currentPage == 'Checkout.php') ? 'active' : '';
 $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
 ?>
 
@@ -79,7 +79,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     </span>
                 </a>
 
-                <a href="<?= $BASE_URL ?>views/pages/Cart.php" class="text-decoration-none position-relative">
+                <a href="index.php?act=GioHang" class="text-decoration-none position-relative">
                     <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
                         <i class="fas fa-shopping-cart"></i>
                     </span>
@@ -114,8 +114,8 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     <div class="navbar-nav py-0">
                         <a href="<?= $BASE_URL ?>index.php" class="nav-item nav-link <?= $isHomeActive ?>">Trang Chủ</a>
                         <a href="index.php?act=Shop" class="nav-item nav-link <?= $isShopActive ?>">Cửa hàng</a>
-                        <a href="<?= $BASE_URL ?>views/pages/Cart.php" class="nav-item nav-link <?= $isCartActive ?>">Giỏ Hàng</a>
-                        <a href="<?= $BASE_URL ?>views/pages/Checkout.php" class="nav-item nav-link <?= $isCheckoutActive ?>">Thanh Toán</a>
+                        <a href="index.php?act=GioHang" class="nav-item nav-link <?= $isCartActive ?>">Giỏ Hàng</a>
+                        <a href="index.php?act=ThanhToan" class="nav-item nav-link <?= $isCheckoutActive ?>">Thanh Toán</a>
                         <a href="<?= $BASE_URL ?>views/pages/Contact.php" class="nav-item nav-link me-2 <?= $isContactActive ?>">Liên Hệ</a>
                     </div>
 
@@ -129,3 +129,42 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
         </div>
     </div>
 </div>
+<div id="mini-cart-drawer" style="position: fixed; top: 0; right: -400px; width: 350px; height: 100%; background: #1a1a1a; z-index: 9999; transition: 0.4s; padding: 20px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border-left: 2px solid #F28B00;">
+    <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+        <h5>Giỏ Hàng Của Bạn</h5>
+        <button onclick="closeMiniCart()" class="btn btn-link text-white"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="mini-cart-items" style="max-height: 70vh; overflow-y: auto;">
+        </div>
+    <div class="mt-3">
+        <a href="index.php?act=GioHang" class="btn btn-orange w-100">Xem Giỏ Hàng Chi Tiết</a>
+    </div>
+</div>
+<script>
+function openMiniCart() {
+    document.getElementById('mini-cart-drawer').style.right = '0';
+}
+
+function closeMiniCart() {
+    document.getElementById('mini-cart-drawer').style.right = '-400px';
+}
+
+function updateMiniCartUI() {
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let container = document.getElementById('mini-cart-items');
+    container.innerHTML = ''; // Xóa cũ
+
+    cart.forEach(item => {
+        container.innerHTML += `
+            <div class="d-flex align-items-center mb-3 text-white border-bottom border-secondary pb-2">
+                <img src="${item.img}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
+                <div>
+                    <div class="fw-bold" style="font-size: 0.9rem;">${item.name}</div>
+                    <small>Size: ${item.size} | Màu: ${item.color}</small>
+                    <div class="text-orange">${item.quantity} x ${item.price.toLocaleString()}đ</div>
+                </div>
+            </div>
+        `;
+    });
+}
+</script>

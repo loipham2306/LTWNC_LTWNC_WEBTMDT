@@ -16,6 +16,8 @@ require_once '../controllers/DangKyController.php';
 require_once '../controllers/VoucherController.php';
 require_once '../controllers/QuanLyKhuyenMaiController.php';
 include_once '../controllers/ShopController.php';
+include_once '../controllers/GioHangController.php';
+require_once '../controllers/ThanhToanController.php';
 // 2. Lấy action (act) từ URL
 $act = $_REQUEST['act'] ?? 'trangchu';
 
@@ -174,14 +176,36 @@ switch ($act) {
         break;
    // --- Nhóm quản lý khuyến mãi ---
     case 'QuanLyKhuyenMai':
-    case 'updateKH':
-    case 'detailKH':
-    case 'toggleStatus':
-    case 'deleteKH':
-    case 'themKM': // Action này nhận dữ liệu từ form thêm mới
+    case 'UpdateKM':
+    case 'detailKM':
+    case 'toggleStatusKM':
+    case 'XoakhuyenMai':
+    case 'TaoKhuyenMai': // Action này nhận dữ liệu từ form thêm mới
         include_once 'QuanLyKhuyenMaiController.php';
         $kmController= new QuanLyKhuyenMaiController($db);
         $kmController->handle($act);
+        break;
+    // --- Nhóm Giỏ Hàng ---
+    case 'GioHang':
+    case 'ThemGioHang':
+    case 'XoaGioHang':
+    case 'CapNhatSoLuong':
+        include_once 'GioHangController.php';
+        $GHController = new GioHangController($db);
+        $GHController->handle($act);
+        break;
+    case 'LuuSanPhamThanhToan':
+    case 'ThanhToan':
+    case 'XuLyThanhToan':
+        require_once '../controllers/ThanhToanController.php';
+        $controller = new ThanhToanController($db);
+        if ($act == 'LuuSanPhamThanhToan') {
+            $controller->luuSanPhamThanhToan();
+        } elseif ($act == 'XuLyThanhToan') {
+            $controller->xuLyThanhToan();
+        } else {
+            $controller->showCheckout();
+        }
         break;
     // --- MẶC ĐỊNH ---
     default:

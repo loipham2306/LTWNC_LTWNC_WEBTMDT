@@ -114,9 +114,10 @@ $productImg = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $imgName;
                     // Mã hóa array sản phẩm sang định dạng JSON chuẩn an toàn dữ liệu
                     $productJson = htmlspecialchars(json_encode($product), ENT_QUOTES, 'UTF-8'); 
                 ?>
-                <button onclick="handleAddToCart(<?= $productJson ?>)" class="btn btn-orange-solid w-100 rounded-pill py-2 fw-bold shadow-sm">
-                    <i class="fas fa-cart-plus me-2"></i> Thêm Giỏ Hàng
-                </button>
+                <a href="index.php?act=ProductDetail&id=<?= htmlspecialchars($id) ?>" 
+   class="btn btn-orange-solid w-100 rounded-pill py-2 fw-bold shadow-sm text-decoration-none">
+    <i class="fas fa-cart-plus me-2"></i> Thêm Giỏ Hàng
+</a>
             </div>
 
         </div>

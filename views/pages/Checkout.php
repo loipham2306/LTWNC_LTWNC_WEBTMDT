@@ -1,9 +1,15 @@
+
+<?php
+     // Debug: Bỏ comment dòng này để xem dữ liệu có trong session không
+
+    $hasItems = !empty($_SESSION['checkout_items']);
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thanh Toán - LuLoShop</title>
+    <title>Thanh Toán - TramHieu</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
@@ -41,47 +47,78 @@
     $pageTitle = "Thanh Toán Đơn Hàng";
     $pageBreadcrumb = "Thanh Toán";
 
-    include '../components/Header.php';
-    include '../components/PageHeader.php';
+    include __DIR__. '/../components/Header.php';
+    include __DIR__. '/../components/PageHeader.php';
     ?>
 
     <div class="container-fluid py-5 checkout-wrapper">
         <div class="container py-5">
             
-            <div id="empty-checkout" class="text-center py-5 checkout-box rounded wow fadeInUp" data-wow-delay="0.1s" style="display: none;">
+            <div id="empty-checkout" class="text-center py-5 checkout-box rounded wow fadeInUp" data-wow-delay="0.1s" style="display:<?= $hasItems ? 'none' : 'block' ?>;">
                 <img src="https://cdn-icons-png.flaticon.com/512/11329/11329060.png" alt="Empty" style="width: 100px; opacity: 0.5;" class="mb-4" />
                 <h4 class="text-white-50 mb-3">Không có mặt hàng nào đang chờ thanh toán!</h4>
                 <p class="text-muted mb-4">Vui lòng quay lại Giỏ hàng để lựa chọn các mặt hàng bạn muốn mua.</p>
-                <a href="/LTWNC_BAN_HANG/views/pages/Cart.php" class="btn btn-orange rounded-pill px-5 py-3 fw-bold">
+                <a href="index.php?act=GioHang" class="btn btn-orange rounded-pill px-5 py-3 fw-bold">
                     <i class="fas fa-shopping-cart me-2"></i> Quay lại Giỏ Hàng
                 </a>
             </div>
 
-            <form id="checkout-form" class="wow fadeInUp" data-wow-delay="0.2s" style="display: none;">
-                <div class="row g-5">
+                <form id="checkout-form" style="display: <?= $hasItems ? 'block' : 'none' ?>;">
+                    <div class="row g-5">
                     
                     <div class="col-md-12 col-lg-7">
                         <h3 class="mb-4 fw-bold text-uppercase text-orange">Thông Tin Nhận Hàng</h3>
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label fw-bold">Họ và tên người nhận <span class="text-danger">*</span></label>
-                                <input type="text" id="fullName" class="form-control py-3 rounded" placeholder="Nhập đầy đủ họ và tên" required>
+                                <input type="text"
+                                    name="fullName"
+                                    id="fullName"
+                                    class="form-control py-3 rounded"
+                                    placeholder="Nhập đầy đủ họ và tên"
+                                    value="<?= $_SESSION['user']['ho_ten'] ?? '' ?>"
+                                    required>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
-                                <input type="tel" id="phone" class="form-control py-3 rounded" placeholder="Số điện thoại nhận hàng" required>
+                                <input type="tel"
+                                    name="phone"
+                                    id="phone"
+                                    class="form-control py-3 rounded"
+                                    placeholder="Số điện thoại nhận hàng"
+                                    value="<?= $_SESSION['user']['so_dien_thoai'] ?? '' ?>"
+                                    required>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Địa chỉ Email (Nếu có)</label>
-                                <input type="email" id="email" class="form-control py-3 rounded" placeholder="example@gmail.com">
+                                <input type="email"
+                                    name="email"
+                                    id="email"
+                                    class="form-control py-3 rounded"
+                                    placeholder="example@gmail.com"
+                                    value="<?= $_SESSION['user']['email'] ?? '' ?>">
                             </div>
+
                             <div class="col-12">
                                 <label class="form-label fw-bold">Địa chỉ giao hàng chính xác <span class="text-danger">*</span></label>
-                                <input type="text" id="address" class="form-control py-3 rounded" placeholder="Số nhà, tên đường, phường/xã..." required>
+                                <input type="text"
+                                    name="address"
+                                    id="address"
+                                    class="form-control py-3 rounded"
+                                    placeholder="Số nhà, tên đường, phường/xã..."
+                                    value="<?= $_SESSION['user']['dia_chi'] ?? '' ?>"
+                                    required>
                             </div>
+
                             <div class="col-12 mt-4">
                                 <label class="form-label fw-bold">Ghi chú đơn hàng (Tùy chọn)</label>
-                                <textarea id="note" class="form-control p-3 rounded" rows="4" placeholder="Ghi chú thêm về đơn hàng..."></textarea>
+                                <textarea name="note"
+                                        id="note"
+                                        class="form-control p-3 rounded"
+                                        rows="4"
+                                        placeholder="Ghi chú thêm về đơn hàng..."><?= $_SESSION['user']['ghi_chu'] ?? '' ?></textarea>
                             </div>
                         </div>
                     </div>
@@ -97,9 +134,50 @@
                                             <th class="ps-0 fw-bold text-white fs-5">Sản phẩm</th>
                                             <th class="text-end pe-0 fw-bold text-white fs-5">Tạm tính</th>
                                         </tr>
-                                    </thead>
+                                    </thead>                                   
                                     <tbody id="checkout-items-list">
-                                        </tbody>
+                                        <?php 
+                                        $total = 0;
+                                        foreach ($_SESSION['checkout_items'] as $item): 
+                                            $subTotal = (float)$item['gia'] * (int)$item['so_luong'];
+                                            $total += $subTotal;
+                                        ?>
+                                            <tr>
+                                                <td class="ps-0 text-white-50">
+                                                    <?= htmlspecialchars($item['ten_san_pham']) ?> 
+                                                    <strong class="text-white">x <?= $item['so_luong'] ?></strong>
+                                                </td>
+                                                <td class="text-end pe-0 fw-bold text-white">
+                                                    <?= number_format($subTotal, 0, ',', '.') ?> đ
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        
+                                        <tr class="border-bottom">
+                                            <td class="ps-0 text-white-50">Phí vận chuyển</td>
+                                            <td class="text-end pe-0 text-success fw-bold">Miễn phí</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" class="pt-3">
+                                                <label class="form-label fw-bold text-white">Mã giảm giá</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="voucher" id="voucher"
+                                                        class="form-control"
+                                                        placeholder="Nhập mã voucher">
+                                                    <button type="button" class="btn btn-orange" id="applyVoucher">
+                                                        Áp dụng
+                                                    </button>
+                                                </div>
+                                                <small id="voucherMsg" class="text-warning"></small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="ps-0 fs-5 fw-bold text-white">Tổng tiền thanh toán</td>
+                                            <td class="text-end pe-0 fs-4 fw-bold text-orange">
+                                                <?= number_format($total, 0, ',', '.') ?> đ
+                                            </td>
+                                        </tr>
+                                    </tbody>
                                 </table>
                             </div>
 
@@ -125,87 +203,76 @@
         </div>
     </div>
 
-    <?php include '../components/Footer.php'; ?>
+    <?php include __DIR__ . '/../components/Footer.php'; ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
     
     <script>
         new WOW().init();
+        let baseTotal = <?= $total ?>;
+        let discount = 0;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Lấy dữ liệu sản phẩm được gắp từ Giỏ hàng sang
-            const checkoutItems = JSON.parse(sessionStorage.getItem('checkoutItems')) || [];
-            
-            const emptyState = document.getElementById('empty-checkout');
-            const formState = document.getElementById('checkout-form');
-            const itemsList = document.getElementById('checkout-items-list');
+        const voucherInput = document.getElementById('voucher');
+        const voucherMsg = document.getElementById('voucherMsg');
+        const totalBox = document.querySelector('.text-orange.fs-4');
 
-            // 2. Xử lý hiển thị
-            if (checkoutItems.length === 0) {
-                emptyState.style.display = 'block';
-                formState.style.display = 'none';
-                return;
-            } else {
-                emptyState.style.display = 'none';
-                formState.style.display = 'block';
+        document.getElementById('applyVoucher').addEventListener('click', () => {
+            const code = voucherInput.value.trim();
+
+            // demo voucher (sau này đổi qua DB)
+            if (code === 'SALE10') {
+                discount = baseTotal * 0.1;
+                voucherMsg.innerText = 'Áp dụng thành công -10%';
+                voucherMsg.style.color = 'lightgreen';
+            }
+            else if (code === 'FREESHIP') {
+                discount = 50000;
+                voucherMsg.innerText = 'Giảm 50.000đ';
+                voucherMsg.style.color = 'lightgreen';
+            }
+            else {
+                discount = 0;
+                voucherMsg.innerText = 'Mã không hợp lệ';
+                voucherMsg.style.color = 'orange';
             }
 
-            // 3. Render các mặt hàng và tính tiền
-            let html = '';
-            let total = 0;
+            updateTotal();
+        });
 
-            checkoutItems.forEach(item => {
-                const subTotal = item.price * item.quantity;
-                total += subTotal;
-                
-                html += `
-                    <tr>
-                        <td class="ps-0 text-white-50">
-                            ${item.name} <strong class="text-white">x ${item.quantity}</strong>
-                        </td>
-                        <td class="text-end pe-0 fw-bold text-white">
-                            ${subTotal.toLocaleString('vi-VN')} đ
-                        </td>
-                    </tr>
-                `;
-            });
+        function updateTotal() {
+            let finalTotal = baseTotal - discount;
+            if (finalTotal < 0) finalTotal = 0;
 
-            html += `
-                <tr class="border-bottom">
-                    <td class="ps-0 text-white-50">Phí vận chuyển</td>
-                    <td class="text-end pe-0 text-success fw-bold">Miễn phí</td>
-                </tr>
-                <tr>
-                    <td class="ps-0 fs-5 fw-bold text-white">Tổng tiền thanh toán</td>
-                    <td class="text-end pe-0 fs-4 fw-bold text-orange">
-                        ${total.toLocaleString('vi-VN')} đ
-                    </td>
-                </tr>
-            `;
+            totalBox.innerHTML = finalTotal.toLocaleString('vi-VN') + ' đ';
+        }                                    
+        document.addEventListener('DOMContentLoaded', () => {
 
-            itemsList.innerHTML = html;
+            const formState = document.getElementById('checkout-form');
 
-            // 4. Xử lý khi Submit form
+            // ❌ KHÔNG render lại giỏ hàng bằng JS nữa (đã có PHP render)
+
+            // 1. Submit form
             formState.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
-                const fullName = document.getElementById('fullName').value;
-                
-                // Hiển thị thông báo thành công
-                alert(`🎉 Đặt hàng thành công!\n👤 Khách hàng: ${fullName}\n💳 Tổng tiền: ${total.toLocaleString('vi-VN')} đ`);
-                
-                // (Tùy chọn) Xóa các món đã mua khỏi Giỏ hàng gốc trong localStorage
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-                cart = cart.filter(cartItem => !checkoutItems.find(checkoutItem => checkoutItem.id === cartItem.id));
-                localStorage.setItem('cart', JSON.stringify(cart));
-                
-                // Xóa bộ nhớ tạm
-                sessionStorage.removeItem('checkoutItems');
-                
-                // Đẩy người dùng về trang chủ
-                window.location.href = '/LTWNC_BAN_HANG/index.php';
+
+                const formData = new FormData(this);
+
+                fetch('index.php?act=XuLyDatHang', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Đặt hàng thành công!');
+                        window.location.href = 'index.php?act=LichSuDonHang';
+                    } else {
+                        alert('Có lỗi: ' + data.message);
+                    }
+                });
             });
+
         });
     </script>
 </body>

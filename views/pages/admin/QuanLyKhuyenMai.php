@@ -66,12 +66,13 @@ ob_start();
                 <h5 class="modal-title fw-bold text-primary">Chương Trình Khuyến Mãi</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="index.php?act=themKM" method="POST">
+            <form action="index.php?act=TaoKhuyenMai" method="POST" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label text-muted">Tên chương trình</label>
                         <input type="text" name="ten_km" class="form-control bg-dark border-secondary text-white" required>
                     </div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label text-muted">% Giảm giá</label>
@@ -85,6 +86,7 @@ ob_start();
                             </select>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label text-muted">Ngày bắt đầu</label>
@@ -95,8 +97,38 @@ ob_start();
                             <input type="date" name="ngay_ket_thuc" class="form-control bg-dark border-secondary text-white" required>
                         </div>
                     </div>
+
                     <div class="mb-3">
-                        <label class="form-label text-muted">Ảnh Banner Khuyến Mãi</label>
+                        <label class="form-label text-muted">Áp dụng cho (Sản phẩm / Biến thể)</label>
+                        <select name="selection" class="form-select bg-dark border-secondary text-white">
+                            <option value="">-- Chọn sản phẩm hoặc biến thể --</option>
+                            <?php 
+                                $current_sp = null;
+                                foreach($listBienThe as $item): 
+                                    // Tiêu đề sản phẩm
+                                    if ($current_sp !== $item['id_san_pham']): 
+                                        $current_sp = $item['id_san_pham'];
+                                ?>
+                                    <option value="sp_<?= $item['id_san_pham'] ?>" style="font-weight:bold; background-color: #333; color: #F28B00;">
+                                        <?= $item['ten_san_pham'] ?> (Tất cả biến thể)
+                                    </option>
+                                <?php endif; ?>
+
+                                <?php 
+                                    // Lấy màu từ database (giả sử $item['mau_sac'] là mã Hex như #FF0000)
+                                    $color = $item['mau_sac']; 
+                                ?>
+                                    <option value="bt_<?= $item['id_bien_the'] ?>" 
+                                            style="color: <?= $color ?>; font-weight: 600;">
+                                        &nbsp;&nbsp;&nbsp;&nbsp;⬤ <?= $item['mau_sac'] ?> / Size: <?= $item['kich_co'] ?> (Còn <?= $item['so_luong_ton'] ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                        </select>
+                        <small class="text-warning">*Chọn sản phẩm/biến thể cần đẩy hàng tồn</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Ảnh Banner</label>
                         <input type="file" name="hinh_anh_banner" class="form-control bg-dark border-secondary text-white" accept="image/*">
                     </div>
                 </div>

@@ -106,10 +106,63 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
     color: #F28B00;
     width: 30%;
 }
+.back-link {
+    color: #F28B00;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.back-link:hover {
+    color: #fff;
+    padding-left: 5px; /* Tạo hiệu ứng trượt nhẹ khi hover */
+}
+.color-option{
+    transition: all .3s ease;
+}
+
+.color-option:hover{
+    transform: scale(1.1);
+}
+
+.color-option.active{
+    border:3px solid #F28B00 !important;
+    box-shadow: 0 0 10px #F28B00;
+}
+.table-custom th, .table-custom td {
+        padding: 12px 15px !important;
+        vertical-align: middle;
+    }
         /* Tabs Styling */
         .nav-tabs { border-bottom: 1px solid #333; }
         .nav-tabs .nav-link { color: #aaa; border: none; font-weight: bold; padding: 12px 20px; }
         .nav-tabs .nav-link.active { background: transparent; color: #F28B00; border-bottom: 2px solid #F28B00; }
+    /* Nút size khi hết hàng */
+/* Nút size khi hết hàng */
+.btn-size-disabled {
+    position: relative;
+    background-color: #333 !important;
+    border-color: #444 !important;
+    color: #555 !important;
+    cursor: not-allowed !important;
+    overflow: hidden; /* Đảm bảo X không tràn ra ngoài */
+}
+
+/* Lớp phủ X che toàn bộ button */
+.btn-size-disabled::after {
+    content: '✕';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: rgba(255, 0, 0, 0.5); /* Màu đỏ mờ */
+    background: rgba(0, 0, 0, 0.2); /* Làm tối nền button */
+    pointer-events: none; /* Đảm bảo click không bị vướng */
+}
     </style>
 </head>
 <body>
@@ -117,13 +170,17 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
     <?php
     $pageTitle = "Chi Tiết Sản Phẩm";
     $pageBreadcrumb = "Chi Tiết";
-     include __DIR__ . '/../components/Header.php';
-    include __DIR__ . '/../components/PageHeader.php';
+    include __DIR__ . '/../components/Header.php';
+    include __DIR__ . '/../components/HeroSlider.php';
     ?>
 
     <div class="container-fluid detail-wrapper py-5">
         <div class="container py-4">
-            
+            <div class="mb-3">
+    <a href="index.php?act=Shop" class="back-link">
+        <i class="fas fa-arrow-left me-2"></i> Quay lại cửa hàng
+    </a>
+</div>
             <?php if (!$product): ?>
                 <div class="text-center py-5">
                     <i class="fas fa-box-open fs-1 text-secondary mb-3"></i>
@@ -181,9 +238,9 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
                                                 ?>
                                             </div>
 
-                                            <table class="table table-dark table-striped mb-4 border-secondary">
+                                            <table class="table table-dark table-striped mb-4 border-secondary table-custom">
                                                 <tr>
-                                                    <th class="text-orange">Thương hiệu</th>
+                                                    <th class="text-orange" style="width: 30%;">Thương hiệu</th>
                                                     <td><?= htmlspecialchars($product['ten_thuong_hieu'] ?? 'Đang cập nhật') ?></td>
                                                 </tr>
                                                 <tr>
@@ -195,8 +252,11 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
                                             <div class="mb-4">
                                                 <label class="text-white fw-bold mb-2">Chọn Size:</label>
                                                 <div class="d-flex gap-2">
-                                                    <?php foreach ($product['bien_the'] as $bt): ?>
-                                                        <button class="btn btn-outline-warning btn-sm px-3" 
+                                                    <?php foreach ($product['bien_the'] as $bt): 
+                                                        $isOutOfStock = ($bt['so_luong_ton'] <= 0);
+                                                    ?>
+                                                        <button class="btn btn-outline-warning btn-sm px-3 <?= $isOutOfStock ? 'btn-size-disabled' : '' ?>" 
+                                                                <?= $isOutOfStock ? 'disabled' : '' ?>
                                                                 onclick="selectVariant(<?= $bt['gia_ban'] ?>, <?= $bt['so_luong_ton'] ?>, '<?= $bt['kich_co'] ?>', this)">
                                                             <?= htmlspecialchars($bt['kich_co']) ?>
                                                         </button>
@@ -204,11 +264,35 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
                                                 </div>
                                                 <p id="stock-info" class="text-white-50 mt-2">Còn <?= $product['bien_the'][0]['so_luong_ton'] ?> sản phẩm</p>
                                             </div>
-
+                                             <div class="mb-4">
+                                                <label class="text-white fw-bold mb-2">Chọn Màu:</label>
+                                                <div class="d-flex gap-2 flex-wrap">
+                                                    <?php
+                                                    $displayedColors = [];
+                                                    foreach ($product['bien_the'] as $bt):
+                                                        $color = trim($bt['mau_sac']);
+                                                        if (!empty($color) && !in_array($color, $displayedColors)) {
+                                                            $displayedColors[] = $color;
+                                                    ?>
+                                                            <div
+                                                                class="color-option"
+                                                                data-color="<?= htmlspecialchars($color) ?>"
+                                                                onclick="selectColor('<?= $color ?>', this)"
+                                                                style=" width:40px; height:40px; border-radius:50%;  background:<?= $color ?>;  border:2px solid #666; cursor:pointer; ">
+                                                            </div>
+                                                    <?php
+                                                        }
+                                                    endforeach;
+                                                    ?>
+                                                </div>
+                                                <p id="selected-color-text" class="text-white-50 mt-2">
+                                                    Chưa chọn màu
+                                                </p>
+                                            </div>           
                                             <div class="d-flex align-items-center gap-3 mb-4">
                                                 <div class="qty-container">
                                                     <button class="qty-btn" onclick="updateQty(-1)">-</button>
-                                                    <input type="text" id="buyQty" class="qty-input" value="1" readonly>
+                                                    <input type="number" id="buyQty" class="qty-input" value="1" min="1" max="1" readonly>
                                                     <button class="qty-btn" onclick="updateQty(1)">+</button>
                                                 </div>
                                                 <button onclick="addToCartDetail()" class="btn btn-orange-lg flex-grow-1">
@@ -245,6 +329,8 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
+        const variants = <?= json_encode($product['bien_the']) ?>;
+        let selectedVariant = null;
         function updateQty(change) {
             let qtyInput = document.getElementById('buyQty');
             let currentVal = parseInt(qtyInput.value);
@@ -252,33 +338,46 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
             if (newVal >= 1) qtyInput.value = newVal;
         }
 
-        function addToCartDetail() {
-            <?php if ($product): ?>
-                const product = {
-                    id: <?= $product['id_san_pham'] ?>,
-                    name: "<?= addslashes($product['ten_san_pham']) ?>",
-                    price: <?= $gia_hien_tai ?>,
-                    img: "<?= $imgPath ?>",
-                    category: "<?= addslashes($product['ten_danh_muc'] ?? 'Khác') ?>"
-                };
-
-                const qty = parseInt(document.getElementById('buyQty').value);
-                let currentCart = JSON.parse(localStorage.getItem('cart')) || [];
-                let existingItemIndex = currentCart.findIndex(item => item.id === product.id);
-
-                if (existingItemIndex !== -1) {
-                    currentCart[existingItemIndex].quantity += qty;
-                } else {
-                    product.quantity = qty;
-                    product.selected = true;
-                    currentCart.push(product);
-                }
-
-                localStorage.setItem('cart', JSON.stringify(currentCart));
-                if (typeof updateCartBadge === 'function') updateCartBadge();
-                alert(`Thành công! Đã thêm ${qty} sản phẩm "${product.name}" vào giỏ hàng.`);
-            <?php endif; ?>
+       function addToCartDetail() {
+        if (!window.currentSelectedSize || !window.currentSelectedColor) {
+            alert("Vui lòng chọn Size và Màu!");
+            return;
         }
+
+        // Tìm ID biến thể (dựa vào mảng variants có sẵn trong trang)
+        const variant = variants.find(v => v.kich_co == window.currentSelectedSize && v.mau_sac == window.currentSelectedColor);
+
+        if (!variant) {
+            alert("Sản phẩm không hợp lệ!");
+            return;
+        }
+
+        // Gửi dữ liệu về Server bằng AJAX
+        const formData = new FormData();
+        formData.append('id_bien_the', variant.id_bien_the);
+        formData.append('so_luong', document.getElementById('buyQty').value);
+
+        fetch('index.php?act=ThemGioHang', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+
+            console.log(data);
+
+            if(data.trim() === 'success'){
+                alert('Đã thêm vào giỏ hàng');
+                window.location.href='index.php?act=GioHang';
+            }else{
+                alert(data);
+            }
+
+        })
+        .catch(error => {
+            console.error(error);
+        });
+    }
         function changeImage(src, element) {
             // 1. Thay đổi ảnh lớn
             const mainImg = document.getElementById('main-product-img');
@@ -291,6 +390,7 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
             element.classList.add('active');
         }
         function selectVariant(price, stock, size, element) {
+            if (stock <= 0) return;
             console.log("Size được chọn:", size); // Kiểm tra xem hàm có chạy không
             
             // Cập nhật giá
@@ -307,6 +407,19 @@ $gia_hien_tai = $gia_hien_tai ?? 0;
             // Lưu size vào biến toàn cục để khi thêm vào giỏ hàng lấy dữ liệu
             window.currentSelectedSize = size;
             window.currentSelectedPrice = price;
+        }
+        function selectColor(color, element)
+        {
+            document.querySelectorAll('.color-option').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            element.classList.add('active');
+
+            document.getElementById('selected-color-text').innerText =
+                'Màu đã chọn: ' + color;
+
+            window.currentSelectedColor = color;
         }
     </script>
 </body>

@@ -49,7 +49,6 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [x] Sửa danh mục
 - [x] Xóa danh mục
 - [x] Tìm kiếm danh mục
-- [ ] Hiển thị cây danh mục
 - [x] Lọc danh mục theo trạng thái
 
 ---
@@ -93,13 +92,13 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 # 🛒 8. Giỏ hàng (gio_hang, chi_tiet_gio_hang)
 
-- [ ] Thêm vào giỏ hàng
-- [ ] Cập nhật số lượng
-- [ ] Xóa sản phẩm khỏi giỏ
-- [ ] Xem giỏ hàng
-- [ ] Tính tổng tiền
+- [x] Thêm vào giỏ hàng
+- [x] Cập nhật số lượng
+- [x] Xóa sản phẩm khỏi giỏ
+- [x] Xem giỏ hàng
+- [x] Tính tổng tiền
 - [ ] Áp dụng voucher
-- [ ] Chọn biến thể sản phẩm
+- [x] Chọn biến thể sản phẩm
 
 ---
 
@@ -182,7 +181,7 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [x] Tìm kiếm sản phẩm
 - [x] Lọc sản phẩm
 - [x] Xem chi tiết sản phẩm
-- [ ] Thêm giỏ hàng
+- [x] Thêm giỏ hàng
 - [ ] Thanh toán
 - [ ] Theo dõi đơn hàng
 - [ ] Đánh giá sản phẩm
