@@ -7,9 +7,9 @@
     <title>Đăng Ký - LuLoShop</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="/LTWNC_BAN_HANG/assets/bootstrap.min.css">
-    <link rel="stylesheet" href="/LTWNC_BAN_HANG/assets/style.css">
-    <link rel="stylesheet" href="/LTWNC_BAN_HANG/assets/AuthPages.css">
+    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/bootstrap.min.css">
+    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/style.css">
+    <link rel="stylesheet" href="/LTWNC_LTWNC_WEBTMDT/assets/AuthPages.css">
 </head>
 <body style="background-color: #111;">
 
@@ -18,12 +18,12 @@
 
             <div class="text-center mb-4">
                 <h1 class="fw-bold m-0 lkstore-logo-text">
-                    <i class="fas fa-shopping-bag me-2"></i>LuLoShop
+                    <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/th.png" alt="Logo" style="height: 60px; object-fit: contain;">
                 </h1>
                 <p class="text-muted mt-2">Tạo tài khoản mới để mua sắm!</p>
             </div>
 
-            <form action="../controllers/DangKyController.php" method="POST">
+            <form action="/LTWNC_LTWNC_WEBTMDT/controllers/DangKyController.php" method="POST">
                 
                 <div class="mb-3 auth-input-group">
                     <label class="form-label fw-bold text-white">Tên đăng nhập</label>

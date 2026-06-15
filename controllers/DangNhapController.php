@@ -13,7 +13,6 @@ class DangNhapController {
         $this->kh_model = new khachhang($db);
     }
 
-
     public function xuLyDangNhap() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header("Location: ../views/pages/login.php");
@@ -52,59 +51,58 @@ class DangNhapController {
     }
 
     private function taoSessionUser($userRow) {
+        // 1. Xử lý tên: Ưu tiên lấy Tên thật trong DB (bảng tai_khoan). 
+        // Nếu trống thì mới lấy chữ "Khách Hàng" để tránh bị dính chữ.
+        $vai_tro_chu_thuong = trim(strtolower($userRow['vai_tro']));
+        $ten_mac_dinh = ($vai_tro_chu_thuong === 'admin') ? 'Admin' : 'Khách Hàng';
+        $ten_hien_tai = !empty($userRow['ten']) ? trim($userRow['ten']) : $ten_mac_dinh;
+
+        // 2. Lấy TRỰC TIẾP dữ liệu từ bảng tai_khoan mà ta vừa thêm cột lúc nãy
         $userData = [
             "id_tai_khoan"   => $userRow['id_tai_khoan'],
             "ten_dang_nhap"  => $userRow['ten_dang_nhap'],
             "vai_tro"        => $userRow['vai_tro'],
-            "ten"            => ($userRow['vai_tro'] === 'admin') ? 'Admin' : 'Khách Hàng',
-            "ho_ten_dem"     => "", // RESET VỀ RỖNG
-            "so_dien_thoai"  => "", // RESET VỀ RỖNG
-            "dia_chi"        => "", // RESET VỀ RỖNG
-            "hang_thanh_vien"=> ""  // RESET VỀ RỖNG
+            "ho_ten_dem"     => $userRow['ho_ten_dem'] ?? "",
+            "ten"            => $ten_hien_tai,
+            "so_dien_thoai"  => $userRow['so_dien_thoai'] ?? "",
+            "dia_chi"        => $userRow['dia_chi'] ?? "",
+            "hang_thanh_vien"=> "Thành Viên Mới" 
         ];
 
-        if ($userRow['vai_tro'] === 'khach hang') {
+        // 3. Nếu là khách hàng, chỉ lấy thêm "Hạng Thành Viên" từ bảng khachhang (nếu có dùng)
+        if ($vai_tro_chu_thuong === 'khach hang' || $vai_tro_chu_thuong === 'khach_hang') {
             $thongTinKhach = $this->kh_model->getThongTinByTaiKhoanId($userRow['id_tai_khoan']);
-           if ($thongTinKhach) {
-                // 1. Lấy thông tin cơ bản
-                $userData['so_dien_thoai']   = $thongTinKhach['sdt'] ?? '';
-                $userData['dia_chi']         = $thongTinKhach['diachi'] ?? '';
-                $userData['hang_thanh_vien'] = $thongTinKhach['hang_thanh_vien'] ?? 'silver';
-
-                // 2. Tách tên theo logic cũ của bạn
-                $ten_day_du = trim($thongTinKhach['ten_day_du'] ?? '');
-                if (!empty($ten_day_du)) {
-                    $parts = explode(' ', $ten_day_du);
-                    
-                    // Lấy từ cuối cùng làm "Tên"
-                    $userData['ten'] = array_pop($parts); 
-                    
-                    // Lấy các từ còn lại làm "Họ và tên đệm"
-                    $userData['ho_ten_dem'] = implode(' ', $parts); 
-                } else {
-                    $userData['ten'] = 'Khách Hàng';
-                    $userData['ho_ten_dem'] = '';
+            if ($thongTinKhach) {
+                // Lấy hạng
+                $userData['hang_thanh_vien'] = $thongTinKhach['hang_thanh_vien'] ?? 'Thành Viên Mới';
+                
+                // Backup: Nếu bảng tai_khoan đang trống mà bảng khachhang lại có sdt/địa chỉ thì lấy bù qua
+                if (empty($userData['so_dien_thoai'])) {
+                    $userData['so_dien_thoai'] = $thongTinKhach['sdt'] ?? '';
+                }
+                if (empty($userData['dia_chi'])) {
+                    $userData['dia_chi'] = $thongTinKhach['diachi'] ?? '';
                 }
             }
         }
+        
+        // 4. Lưu vào Session
         $_SESSION['user'] = $userData;
     }
 
     private function dieuHuong($vai_tro) {
-        // Ép kiểu về lowercase và bỏ khoảng trắng để so sánh chính xác
         $v = trim(strtolower($vai_tro));
         
         if ($v === 'admin') {
            header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=admin_dashboard");
-            exit;
         } elseif ($v === 'nhanvien') {
             header("Location: ../views/pages/employee/orders.php");
-        }elseif ($v === 'khach hang') {
+        } elseif ($v === 'khach hang' || $v === 'khach_hang') {
             header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php");
-        } 
-        else {
+        } else {
             header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php");
         }
         exit;
     }
 }
+?>
