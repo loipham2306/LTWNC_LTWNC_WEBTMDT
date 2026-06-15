@@ -1,7 +1,9 @@
 <?php
 require_once '../model/taikhoan.php'; 
 require_once '../model/khachhang.php';
-
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 class DangNhapController {
     private $db;
     private $tk_model;
@@ -54,44 +56,26 @@ class DangNhapController {
     }
 
     private function taoSessionUser($userRow) {
+        // 1. Luôn cố gắng lấy thông tin khách hàng từ bảng khach_hang
+        $thongTinKhach = $this->kh_model->getThongTinByTaiKhoanId($userRow['id_tai_khoan']);
+        
+        // 2. Khởi tạo mảng dữ liệu với các giá trị mặc định
         $userData = [
-            "id_tai_khoan"   => $userRow['id_tai_khoan'],
-            "ten_dang_nhap"  => $userRow['ten_dang_nhap'],
-            "vai_tro"        => $userRow['vai_tro'],
-            "ten"            => ($userRow['vai_tro'] === 'admin') ? 'Admin' : 'Khách Hàng',
-            "ho_ten_dem"     => "", // RESET VỀ RỖNG
-            "so_dien_thoai"  => "", // RESET VỀ RỖNG
-            "dia_chi"        => "", // RESET VỀ RỖNG
-            "hang_thanh_vien"=> ""  // RESET VỀ RỖNG
+            "id_tai_khoan"    => $userRow['id_tai_khoan'],
+            "ten_dang_nhap"   => $userRow['ten_dang_nhap'],
+            "vai_tro"         => $userRow['vai_tro'],
+            // Lấy id_khach_hang nếu có (quan trọng nhất cho giỏ hàng)
+            "id_khach_hang"   => $thongTinKhach['id_khach_hang'] ?? null, 
+            "ten"             => $thongTinKhach['ten'] ?? 'Khách Hàng',
+            "ho_ten_dem"      => $thongTinKhach['ho_ten_dem'] ?? '',
+            "so_dien_thoai"   => $thongTinKhach['so_dien_thoai'] ?? '',
+            "dia_chi"         => $thongTinKhach['dia_chi'] ?? '',
+            "hang_thanh_vien" => $thongTinKhach['hang_thanh_vien'] ?? 'silver',
+            "email"           => $thongTinKhach['email'] ?? ''
         ];
-
-        if ($userRow['vai_tro'] === 'khach hang') {
-            $thongTinKhach = $this->kh_model->getThongTinByTaiKhoanId($userRow['id_tai_khoan']);
-           if ($thongTinKhach) {
-                // 1. Lấy thông tin cơ bản
-                $userData['so_dien_thoai']   = $thongTinKhach['sdt'] ?? '';
-                $userData['dia_chi']         = $thongTinKhach['diachi'] ?? '';
-                $userData['hang_thanh_vien'] = $thongTinKhach['hang_thanh_vien'] ?? 'silver';
-
-                // 2. Tách tên theo logic cũ của bạn
-                $ten_day_du = trim($thongTinKhach['ten_day_du'] ?? '');
-                if (!empty($ten_day_du)) {
-                    $parts = explode(' ', $ten_day_du);
-                    
-                    // Lấy từ cuối cùng làm "Tên"
-                    $userData['ten'] = array_pop($parts); 
-                    
-                    // Lấy các từ còn lại làm "Họ và tên đệm"
-                    $userData['ho_ten_dem'] = implode(' ', $parts); 
-                } else {
-                    $userData['ten'] = 'Khách Hàng';
-                    $userData['ho_ten_dem'] = '';
-                }
-            }
-        }
+        
         $_SESSION['user'] = $userData;
-    }
-
+    }    
     private function dieuHuong($vai_tro) {
         // Ép kiểu về lowercase và bỏ khoảng trắng để so sánh chính xác
         $v = trim(strtolower($vai_tro));

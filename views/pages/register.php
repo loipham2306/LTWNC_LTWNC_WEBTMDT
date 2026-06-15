@@ -78,31 +78,20 @@
         </div>
     </div>
 <script>
-    // Thêm vào cuối file Register.php
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // CHẶN reload trang
-    
-    let formData = new FormData(this);
-    
-    fetch('index.php?act=xulydangky', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text()) // Nhận nội dung là HTML
-    .then(html => {
-        // Tìm thẻ card của bạn và thay nội dung bằng form mới
-        document.querySelector('.card').innerHTML = html;
-    })
-    .catch(error => console.error('Lỗi:', error));
-});
 document.addEventListener('submit', function(e) {
-    // Kiểm tra xem form được nhấn có phải là form trong .card không
     let form = e.target;
+    // Chỉ xử lý nếu form nằm trong .card
     if (form.closest('.card')) {
         e.preventDefault(); 
         
-        let formData = new FormData(form);
+        let submitBtn = form.querySelector('button[type="submit"]');
         let card = document.querySelector('.card');
+
+        // KHÓA NÚT NGAY LẬP TỨC ĐỂ TRÁNH BẤM NHIỀU LẦN
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+        
+        let formData = new FormData(form);
         
         fetch(form.action, {
             method: 'POST',
@@ -112,7 +101,11 @@ document.addEventListener('submit', function(e) {
         .then(html => {
             card.innerHTML = html;
         })
-        .catch(error => console.error('Lỗi:', error));
+        .catch(error => {
+            console.error('Lỗi:', error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'GỬI MÃ OTP';
+        });
     }
 });
 </script>

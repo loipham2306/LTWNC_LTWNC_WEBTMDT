@@ -97,7 +97,7 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [x] Xóa sản phẩm khỏi giỏ
 - [x] Xem giỏ hàng
 - [x] Tính tổng tiền
-- [ ] Áp dụng voucher
+- [x] Áp dụng voucher
 - [x] Chọn biến thể sản phẩm
 
 ---
@@ -130,9 +130,9 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [x] Thêm voucher
 - [x] Sửa voucher
 - [x] Xóa voucher
-- [ ] Kiểm tra hạn sử dụng
-- [ ] Kiểm tra số lần sử dụng
-- [ ] Áp dụng voucher khi thanh toán
+- [x] Kiểm tra hạn sử dụng
+- [x] Kiểm tra số lần sử dụng
+- [x] Áp dụng voucher khi thanh toán
 
 ---
 

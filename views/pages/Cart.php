@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -86,10 +87,11 @@
                                                 class="form-check-input custom-checkbox product-checkbox"
                                                 type="checkbox"
                                                 value="<?= $key ?>"
+                                                data-unit-price="<?= $item['gia'] ?>"
                                                 data-price="<?= $item['gia'] * $item['so_luong'] ?>"
                                                 checked
                                                 onchange="updateTotal()"
-                                            >
+                                            />
                                         </td>
                                         <td><img src="/LTWNC_LTWNC_WEBTMDT/assets/images/products/Bien_The_Products/<?= $item['hinh_anh'] ?>" class="img-fluid rounded" style="width: 80px; height: 80px; object-fit: cover;"></td>
                                         <td class="text-start">
@@ -100,21 +102,26 @@
                                             </small>
                                         </td>
                                         <td><?= number_format($item['gia'], 0, ',', '.') ?> đ</td>
-                                        <td>
+                                       <td>
                                             <div class="d-flex justify-content-center align-items-center">
-                                                <a href="index.php?act=CapNhatSoLuong&id=<?= $key ?>&type=minus" class="btn btn-sm btn-qty"><i class="fa fa-minus"></i></a>
-                                                <input type="text" class="input-qty mx-2" value="<?= $item['so_luong'] ?>" readonly>
-                                                <a href="index.php?act=CapNhatSoLuong&id=<?= $key ?>&type=plus" class="btn btn-sm btn-qty"><i class="fa fa-plus"></i></a>
+                                                <button type="button" class="btn btn-sm btn-qty" onclick="updateQty('<?= $key ?>', 'minus')">
+                                                    <i class="fa fa-minus"></i>
+                                                </button>
+                                                
+                                                <input type="text" class="input-qty mx-2" id="qty-<?= $key ?>" value="<?= $item['so_luong'] ?>" readonly>
+                                                
+                                                <button type="button" class="btn btn-sm btn-qty" onclick="updateQty('<?= $key ?>', 'plus')">
+                                                    <i class="fa fa-plus"></i>
+                                                </button>
                                             </div>
                                         </td>
                                         <td><?= number_format($item['gia'] * $item['so_luong'], 0, ',', '.') ?> đ</td>
                                         <td>
-                                            <a href="index.php?act=XoaGioHang&id=<?= $key ?>" 
-                                            class="btn btn-sm btn-outline-danger border-0" 
-                                            title="Xóa sản phẩm"
-                                            style="transition: 0.3s; padding: 5px 10px; border-radius: 5px;">
-                                            <i class="fas fa-trash-alt"></i>
-                                            </a>                                      
+                                            <button type="button" 
+                                                    onclick="xoaSanPham('<?= $key ?>')" 
+                                                    class="btn btn-sm btn-outline-danger border-0">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>                                    
                                          </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -141,7 +148,11 @@
                     </div>
 
                     <div class="d-flex align-items-center gap-3">
-                        <a href="index.php?act=XoaGioHang" class="btn btn-outline-danger px-4 py-3 fw-bold rounded-pill">Xóa đã chọn</a>
+                        <button type="button" 
+                                onclick="xoaDaChon()" 
+                                class="btn btn-outline-danger px-4 py-3 fw-bold rounded-pill">
+                            Xóa đã chọn
+                        </button>
                         <button
                             type="button"
                             class="btn btn-orange px-5 py-3 fw-bold rounded-pill"
@@ -160,6 +171,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
     <script>
+        function updateQty(id, type) {
+            let input = document.getElementById(`qty-${id}`);
+            let checkbox = document.querySelector(`.product-checkbox[value="${id}"]`);
+
+            let unitPrice = parseFloat(checkbox.dataset.unitPrice);
+
+            let currentQty = parseInt(input.value);
+            let newQty = (type === 'plus') ? currentQty + 1 : Math.max(1, currentQty - 1);
+
+            fetch(`index.php?act=CapNhatSoLuong&id=${id}&type=${type}`)
+            .then(res => res.text())
+            .then(() => {
+
+                // update UI
+                input.value = newQty;
+
+                let newTotalRow = newQty * unitPrice;
+
+                checkbox.dataset.price = newTotalRow;
+
+                let row = checkbox.closest('tr');
+                row.querySelectorAll('td')[5].innerText =
+                    newTotalRow.toLocaleString('vi-VN') + ' đ';
+
+                updateTotal();
+            });
+        }
         function updateTotal() {
             let total = 0;
             // Lấy tất cả checkbox sản phẩm đang được tích
@@ -251,6 +289,44 @@
                     alert(data.message);
                 }
             });
+        }
+        function xoaSanPham(id) {
+            if(!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
+
+            fetch('index.php?act=XoaGioHang&id=' + id)
+            .then(response => {
+                // Sau khi xóa xong, đơn giản nhất là reload lại trang 
+                // HOẶC gọi hàm để cập nhật lại giao diện (đề xuất reload để đảm bảo khớp dữ liệu session)
+                window.location.reload(); 
+            });
+        }
+        function xoaDaChon() {
+            // 1. Lấy danh sách ID các checkbox đã tích
+            let selected = [];
+            document.querySelectorAll('.product-checkbox:checked').forEach(item => {
+                selected.push(item.value);
+            });
+
+            if(selected.length === 0) {
+                alert("Vui lòng chọn ít nhất một sản phẩm để xóa!");
+                return;
+            }
+
+            if(!confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?')) return;
+
+            // 2. Gửi dữ liệu qua AJAX
+            let formData = new FormData();
+            selected.forEach(id => formData.append('selected_products[]', id));
+
+            fetch('index.php?act=XoaDaChon', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // 3. Xóa thành công thì tải lại trang để cập nhật giao diện
+                window.location.reload();
+            })
+            .catch(error => console.error('Lỗi:', error));
         }
     </script>
 </body>

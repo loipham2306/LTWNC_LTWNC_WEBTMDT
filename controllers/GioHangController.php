@@ -10,16 +10,15 @@ class GioHangController {
             session_start();
         }
     }
-
+    
    public function handle($act)
     {
-        if (!isset($_SESSION['user']['id_tai_khoan'])) {
+        if (!isset($_SESSION['user']['id_tai_khoan']) || $_SESSION['user']['id_tai_khoan'] <= 0) {
             header("Location: index.php?act=Login");
             exit();
         }
 
         switch ($act) {
-
             case 'GioHang':
                 $this->index();
                 break;
@@ -44,22 +43,26 @@ class GioHangController {
 
     // Hiển thị danh sách giỏ hàng
     private function index() {
-        $listSanPham = $_SESSION['cart'] ?? [];
-        
-        // Đảm bảo dữ liệu đã được gán tên màu trước khi truyền sang View
-        foreach ($listSanPham as $key => &$item) {
-            if (!isset($item['ten_mau'])) {
-                $item['ten_mau'] = getColorName($item['mau']);
-            }
+        if (!isset($_SESSION['cart'])) {
+            $_SESSION['cart'] = [];
         }
-        
+
+        $this->syncCartFromDB();
+
+        $listSanPham = $_SESSION['cart'];
+
+        foreach ($listSanPham as $key => &$item) {
+            $item['ten_mau'] = $item['ten_mau'] ?? getColorName($item['mau']);
+        }
+
         include '../views/pages/Cart.php';
-    }
+}
 
     private function addToCart() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             die("Request không hợp lệ");
         }
+        
         $id_bien_the = isset($_POST['id_bien_the'])
             ? (int)$_POST['id_bien_the']
             : 0;
@@ -69,13 +72,17 @@ class GioHangController {
         if ($id_bien_the <= 0) {
             die("ID biến thể không hợp lệ");
         }
-        $id_user = $_SESSION['user']['id_tai_khoan'] ?? 0;
+        $id_user = $_SESSION['user']['id_khach_hang'] ?? 0; 
         if ($id_user <= 0) {
             die("Bạn chưa đăng nhập");
         }
         try {
             // Lấy ID giỏ hàng
             $id_gio_hang = $this->ghModel->getGioHangId($id_user);
+
+            if (!$id_gio_hang) {
+                $id_gio_hang = $this->ghModel->createGioHang($id_user);
+            }
             // Thêm vào DB
             $result = $this->ghModel->addToGioHang(
                 $id_gio_hang,
@@ -87,30 +94,42 @@ class GioHangController {
             }
             // Đồng bộ Session từ DB
             $this->syncCartFromDB();
-            echo "success";
+            echo 'success'; 
+             exit();
         } catch (Exception $e) {
             die("Lỗi: " . $e->getMessage());
         }
     }
      // Ví dụ xử lý trong GioHangController
     public function capNhatSoLuong() {
+
         $id = $_GET['id'];
         $type = $_GET['type'];
 
+        $id_khach_hang = $_SESSION['user']['id_khach_hang'];
+        $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
+
         if ($type === 'plus') {
-            $_SESSION['cart'][$id]['so_luong']++;
-        } elseif ($type === 'minus' && $_SESSION['cart'][$id]['so_luong'] > 1) {
-            $_SESSION['cart'][$id]['so_luong']--;
+            $this->ghModel->updateQty($id_gio_hang, $id, 1);
+        } else {
+            $current = $_SESSION['cart'][$id]['so_luong'] ?? 1;
+
+            if ($current <= 1) {
+                $this->ghModel->removeFromGioHang($id_gio_hang, $id);
+            } else {
+                $this->ghModel->updateQty($id_gio_hang, $id, -1);
+            }
         }
-        header("Location: index.php?act=GioHang"); // Tải lại trang sau khi cập nhật
-        exit();
+
+        $this->syncCartFromDB();
+        echo "OK";
     }
     public function xoaGioHang() {
         $id_bien_the = $_GET['id'];
         // 1. Xóa trong Session
         unset($_SESSION['cart'][$id_bien_the]);
         // 2. Xóa trong Database (Cần thêm hàm này vào Model)
-        $id_user = $_SESSION['user']['id_tai_khoan'];
+        $id_user = $_SESSION['user']['id_khach_hang'];
         $id_gio_hang = $this->ghModel->getGioHangId($id_user);
         $this->ghModel->removeFromGioHang($id_gio_hang, $id_bien_the); 
         header("Location: index.php?act=GioHang");
@@ -118,21 +137,40 @@ class GioHangController {
     }         
     // Thêm hàm này vào Controller
     public function syncCartFromDB() {
-        $id_user = $_SESSION['user']['id_tai_khoan'];
-        $id_gio_hang = $this->ghModel->getGioHangId($id_user);
-        $items = $this->ghModel->getChiTietGioHang($id_gio_hang);
 
-        $_SESSION['cart'] = []; // Xóa giỏ cũ để cập nhật mới
-        foreach ($items as $item) {
-            $_SESSION['cart'][$item['id_bien_the']] = [
-                'id_bien_the'  => $item['id_bien_the'],
-                'ten_san_pham' => $item['ten_san_pham'],
-                'gia'          => $item['gia_ban'],
-                'size'         => $item['kich_co'],
-                'mau'          => $item['mau_sac'],
-                'hinh_anh'     => $item['hinh_anh_bien_the'],
-                'so_luong'     => $item['so_luong']
-            ];
-        }
+    $id_khach_hang = $_SESSION['user']['id_khach_hang'] ?? null;
+
+    if (!$id_khach_hang) {
+        $_SESSION['cart'] = [];
+        return;
     }
+    $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
+
+    if (!$id_gio_hang) {
+        $_SESSION['cart'] = [];
+        return;
+    }
+
+    $items = $this->ghModel->getChiTietGioHang($id_gio_hang);
+
+    // debug cực quan trọng
+    if (empty($items)) {
+        error_log("Giỏ hàng rỗng hoặc query sai");
+    }
+
+    $_SESSION['cart'] = [];
+
+    foreach ($items as $item) {
+
+        $_SESSION['cart'][$item['id_bien_the']] = [
+            'id_bien_the'  => $item['id_bien_the'],
+            'ten_san_pham' => $item['ten_san_pham'],
+            'gia'          => (float)$item['gia_ban'],
+            'size'         => $item['kich_co'],
+            'mau'          => $item['mau_sac'],
+            'hinh_anh'     => $item['hinh_anh_bien_the'],
+            'so_luong'     => (int)$item['so_luong']
+        ];
+    }
+}
 }

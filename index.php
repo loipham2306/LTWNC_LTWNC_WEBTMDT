@@ -26,6 +26,94 @@
             background-color: #F28B00;
             margin: 15px auto 0;
         }
+        .voucher-card{
+            background: linear-gradient(145deg,#0f0f0f,#1c1c1c);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 16px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .voucher-card:hover{
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255,193,7,0.15);
+            border-color: #ffc107;
+        }
+
+        .voucher-top{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:10px;
+        }
+
+        .voucher-code{
+            background:#ffc107;
+            color:#000;
+            padding:4px 10px;
+            border-radius:20px;
+            font-weight:700;
+            font-size:13px;
+        }
+
+        .voucher-status{
+            font-size:12px;
+            color:#00e676;
+            font-weight:600;
+        }
+
+        .voucher-discount{
+            font-size:18px;
+            font-weight:700;
+            margin-bottom:8px;
+        }
+
+        .voucher-discount span{
+            color:#ffc107;
+        }
+
+        .voucher-condition,
+        .voucher-exp{
+            font-size:13px;
+            color:#ccc;
+            margin-bottom:4px;
+        }
+
+        .voucher-footer{
+            margin-top:12px;
+            text-align:right;
+        }
+
+        .btn-copy{
+            background:#ffc107;
+            border:none;
+            padding:6px 12px;
+            border-radius:8px;
+            font-weight:600;
+            cursor:pointer;
+            transition:0.2s;
+        }
+
+        .btn-copy:hover{
+            background:#ffb300;
+            transform:scale(1.05);
+        }
+        .btn-copy {
+            background-color: #F28B00;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-copy:hover {
+            background-color: #d67a00;
+            color: white;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -54,7 +142,8 @@
 
     // 3. NHÚNG BANNER SLIDER CHÍNH
     include 'views/components/HeroSlider.php';
-
+    
+    include 'views/components/VoucherHome.php';
     // 4. NHÚNG DẢI TÍNH NĂNG DỊCH VỤ (FREE SHIP, ĐỔI TRẢ...)
     include 'views/components/ServiceFeatures.php';
 
@@ -114,6 +203,24 @@
                 }
             }, 500);
         });
+        function layVoucher(buttonElement, idVoucher) {
+            // buttonElement chính là cái nút bạn vừa bấm
+            fetch(`index.php?act=LuuVoucher&id_voucher=${idVoucher}`)
+                .then(response => response.text())
+                .then(data => {
+                    // Trim để loại bỏ khoảng trắng thừa
+                    if (data.trim() === "success") {
+                        // Chỉ đổi màu nút này
+                        buttonElement.innerText = "Đã lưu";
+                        buttonElement.style.backgroundColor = "#555";
+                        buttonElement.disabled = true;
+                        
+                        alert("🎉 Đã lưu mã thành công!");
+                    } else {
+                        alert("⚠️ Có lỗi xảy ra!");
+                    }
+                });
+        }
     </script>
 </body>
 </html>

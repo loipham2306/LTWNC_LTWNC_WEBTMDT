@@ -43,6 +43,56 @@
         .btn-outline-orange:hover { background-color: #F28B00; color: #fff; }
         .text-orange { color: #F28B00 !important; }
         .avatar-circle { background-color: #F28B00 !important; color: #fff; font-weight: bold; text-transform: uppercase; }
+        /* Nền tối của card */
+/* Tổng thể thẻ */
+.voucher-card { 
+    background: #1a1a1a; 
+    border: 1px solid #333; 
+    padding: 15px; 
+    border-radius: 8px; 
+    position: relative; 
+    transition: all 0.3s ease;
+    color: #fff;
+}
+
+/* Phần Mã Voucher - Làm nổi bật */
+.voucher-code {
+    color: #FFD700 !important; /* Vàng Gold rực rỡ */
+    font-weight: 800 !important;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+/* Phần trạng thái */
+.voucher-status.text-success { color: #28a745 !important; font-weight: bold; }
+
+/* Phần giảm giá */
+.voucher-discount { color: #fff; margin-bottom: 8px; font-weight: 600; }
+.voucher-discount span { color: #F28B00; font-size: 1.3rem; font-weight: 900; }
+
+/* Thông tin chi tiết */
+.voucher-condition, .voucher-exp {
+    color: #ffffff; /* Đổi thành màu trắng hoàn toàn để hết bị chìm */
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+/* Sửa nút bấm bị xấu */
+.btn-copy { 
+    width: 100%; 
+    margin-top: 15px; 
+    padding: 10px; 
+    background-color: #F28B00 !important; 
+    color: #fff !important; 
+    border: none !important; 
+    border-radius: 4px; 
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+.btn-copy:hover { background-color: #d67a00 !important; }
     </style>
 </head>
 <body>
@@ -75,6 +125,9 @@
                         <div class="list-group list-group-flush list-group-custom" id="profileTabs">
                             <button class="list-group-item py-3 fw-bold active" onclick="switchTab('info', this)">
                                 <i class="fas fa-user me-3"></i>Thông Tin Cá Nhân
+                            </button>
+                            <button class="list-group-item py-3 fw-bold" onclick="switchTab('vouchers', this)">
+                                <i class="fas fa-ticket-alt me-3"></i>Ví Voucher
                             </button>
                             <button class="list-group-item py-3 fw-bold" onclick="switchTab('orders', this)">
                                 <i class="fas fa-shopping-bag me-3"></i>Lịch Sử Đơn Hàng
@@ -143,10 +196,54 @@
                                 </table>
                             </div>
                         </div>
+                        
+                        <div id="tabContent-vouchers" class="tab-pane-custom" style="display: none;">
+                            <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Ví Voucher</h4>
+                            <div class="row g-3" id="voucherContainer">
+                                <?php 
+                            $danhSachVoucherCuaToi = $_SESSION['user']['vouchers'] ?? [];
+                            
+                            if (!empty($danhSachVoucherCuaToi)) : 
+                                foreach ($danhSachVoucherCuaToi as $vc) : 
+                                    $isUsed = ($vc['da_su_dung'] == 1);
+                            ?>
+                                <div class="col-12 col-md-6">
+                                    <div class="voucher-card <?= $isUsed ? 'opacity-50' : '' ?>">
+                                        <div class="voucher-top">
+                                            <span class="voucher-code">🎟 <?= htmlspecialchars($vc['ma_voucher']) ?></span>
+                                            <span class="voucher-status <?= $isUsed ? 'text-danger' : 'text-success' ?>">
+                                                <?= $isUsed ? 'Đã sử dụng' : 'Chưa sử dụng' ?>
+                                            </span>
+                                        </div>
 
+                                        <div class="voucher-body">
+                                            <div class="voucher-discount">
+                                                Giảm <span><?= $vc['loai_giam_gia'] == 'percent' ? $vc['gia_tri_giam'] . '%' : number_format($vc['gia_tri_giam']) . 'đ' ?></span>
+                                            </div>
+                                            <div class="voucher-condition">
+                                                🛒 Đơn tối thiểu: <?= number_format($vc['don_toi_thieu']) ?>đ
+                                            </div>
+                                            <div class="voucher-exp">
+                                                ⏳ HSD: <?= htmlspecialchars($vc['ngay_het_han']) ?>
+                                            </div>
+                                        </div>
+                                        
+                                        <?php if($isUsed): ?>
+                                            <button class="btn-copy btn-disabled" disabled>Đã dùng</button>
+                                        <?php else: ?>
+                                            <button class="btn-copy" onclick="window.location.href='index.php?act=Shop'">Sử dụng ngay</button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; 
+                            else : ?>
+                                <p class="text-white-50 p-3">Hiện tại bạn chưa có voucher nào trong ví.</p>
+                            <?php endif; ?>
+                            </div>
+                        </div>
                         <div id="tabContent-password" class="tab-pane-custom" style="display: none;">
                             <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Đổi Mật Khẩu</h4>
-                            <form id="passwordForm">
+                            <form action="index.php?act=changePassword" method="POST" id="passwordForm">
                                 <div class="row g-4" style="max-width: 600px;">
                                     <div class="col-12">
                                         <label class="form-label text-white-50 fw-bold">Mật khẩu hiện tại</label>
@@ -317,6 +414,35 @@
                 // Việc này sẽ gọi case 'logout' trong switch-case của index.php
                 window.location.href = 'index.php?act=logout';
             }
+        }
+        // Thêm hàm lấy dữ liệu Voucher từ Server
+        function loadVouchers() {
+            const container = document.getElementById('voucherContainer');
+            // Giả sử bạn đã có action 'layVoucherCuaToi' trong Controller
+            fetch('index.php?act=layVoucherCuaToi')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        container.innerHTML = '<p class="text-white-50">Bạn chưa có voucher nào.</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.forEach(vc => {
+                        html += `
+                        <div class="col-md-6">
+                            <div class="card p-3" style="background: #222; border-left: 5px solid #F28B00;">
+                                <h6 class="text-orange fw-bold">${vc.ma_voucher}</h6>
+                                <p class="text-white mb-1">Giảm: ${vc.gia_tri_giam} ${vc.loai_giam_gia == 1 ? '%' : 'đ'}</p>
+                                <small class="text-white-50">Hạn: ${vc.ngay_het_han}</small>
+                            </div>
+                        </div>`;
+                    });
+                    container.innerHTML = html;
+                })
+                .catch(err => {
+                    container.innerHTML = '<p class="text-danger">Không thể tải voucher.</p>';
+                });
         }
     </script>
 </body>

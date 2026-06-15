@@ -160,10 +160,27 @@
             }
         }
         public function themTaiKhoan($user, $email, $pass) {
-            $query = "INSERT INTO tai_khoan (ten_dang_nhap, email, mat_khau) VALUES (?, ?, ?)";
+            $query = "INSERT INTO tai_khoan (ten_dang_nhap, email, mat_khau,vai_tro) VALUES (?, ?, ?,'khach hang')";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([$user, $email, $pass]);
             return $this->conn->lastInsertId(); // Trả về ID vừa tạo
+        }
+        // 1. Hàm lấy thông tin tài khoản theo ID
+        public function getTaiKhoanById($id) {
+            $query = "SELECT * FROM " . $this->table_name . " WHERE id_tai_khoan = :id LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        // 2. Hàm cập nhật mật khẩu
+        public function updatePassword($id, $newHashedPassword) {
+            $query = "UPDATE " . $this->table_name . " SET mat_khau = :mat_khau WHERE id_tai_khoan = :id";
+            $stmt = $this->conn->prepare($query);
+            return $stmt->execute([
+                ':mat_khau' => $newHashedPassword,
+                ':id' => $id
+            ]);
         }
     }
 ?>

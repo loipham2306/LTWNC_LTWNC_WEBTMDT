@@ -26,7 +26,7 @@
         // Hàm lấy thông tin cá nhân dựa vào ID tài khoản đã đăng nhập thành công
         public function getThongTinByTaiKhoanId($id_tai_khoan) {
             // JOIN bảng khach_hang (k) và tai_khoan (t)
-            $query = "SELECT k.ho_ten_dem, k.ten, k.so_dien_thoai, k.dia_chi, k.hang_thanh_vien, 
+            $query = "SELECT  k.id_khach_hang, k.ho_ten_dem, k.ten, k.so_dien_thoai, k.dia_chi, k.hang_thanh_vien, 
                             t.email, t.ten_dang_nhap 
                     FROM khach_hang k
                     JOIN tai_khoan t ON k.id_tai_khoan = t.id_tai_khoan

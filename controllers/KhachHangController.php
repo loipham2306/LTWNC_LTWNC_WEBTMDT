@@ -1,6 +1,7 @@
 <?php
 include_once '../model/khachhang.php';
 include_once '../model/TaiKhoan.php';
+
 class KhachHangController {
     private $db;
     private $kh_model;
@@ -81,7 +82,7 @@ class KhachHangController {
             } else {
                 $_SESSION['error'] = "Cập nhật thất bại!";
             }
-            header('Location: index.php?act=Customer_ManagementPage');
+            header('Location: index.php?act=updateKH');
             exit();
         }
     }

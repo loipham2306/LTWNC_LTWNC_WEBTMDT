@@ -18,6 +18,7 @@ require_once '../controllers/QuanLyKhuyenMaiController.php';
 include_once '../controllers/ShopController.php';
 include_once '../controllers/GioHangController.php';
 require_once '../controllers/ThanhToanController.php';
+require_once '../controllers/UserProfileController.php';
 // 2. Lấy action (act) từ URL
 $act = $_REQUEST['act'] ?? 'trangchu';
 
@@ -53,7 +54,13 @@ switch ($act) {
         break;
     // --- profile ---
     case 'UserProfile':
-       include '../views/pages/UserProfile.php';
+    case 'updateProfile':
+    case 'changePassword':
+    // 1. Khởi tạo Controller
+        include_once 'UserProfileController.php';
+        $profileController = new UserProfileController($db);
+        // 2. Gọi hàm xử lý (hàm này sẽ tự load dữ liệu và include View)
+        $profileController->handle($act);
         break;
     case 'xuly_dangnhap':
         // Chỉ dành cho việc xử lý logic POST
@@ -104,13 +111,23 @@ switch ($act) {
             session_start();
         }
         
-        // Xóa sạch dữ liệu trong biến $_SESSION ngay lập tức
+        // 1. Xóa sạch dữ liệu
         $_SESSION = array(); 
         
+        // 2. Xóa Cookie của Session (Quan trọng để xóa hoàn toàn phiên cũ trên trình duyệt)
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        
+        // 3. Hủy Session
         session_unset();
         session_destroy();
-        // 3. Chuyển hướng về trang đăng nhập
-        // Đảm bảo đường dẫn này đúng với cấu trúc hiện tại của bạn
+        
+        // 4. Chuyển hướng
         header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php");
         exit();
     // Danh Mục
@@ -170,6 +187,8 @@ switch ($act) {
     case 'ThemVoucher':
     case 'CapNhatVoucher':
     case 'XoaVoucher':
+    case 'LuuVoucher': 
+    case 'ViVoucher':
         include_once 'VoucherController.php';
         $voucherController = new VoucherController($db);
         $voucherController->handle($act); 
@@ -206,6 +225,13 @@ switch ($act) {
         } else {
             $controller->showCheckout();
         }
+        break;
+    case 'ThanhToanThanhCong':
+        require_once '../controllers/ThanhToanController.php';
+        $controller = new ThanhToanController($db);
+        // Lấy ID đơn hàng từ URL để hiển thị thông tin đúng
+        $id = $_GET['id'] ?? 0;
+        $controller->showThanhCong($id);
         break;
     // --- MẶC ĐỊNH ---
     default:

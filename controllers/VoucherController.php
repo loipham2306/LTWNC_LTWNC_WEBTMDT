@@ -24,10 +24,16 @@ class VoucherController {
             case 'CapNhatVoucher':
                 $this->capNhat();
                 break;
+            
             case 'XoaVoucher':
                 $this->xoa();
                 break;
-
+            case 'LuuVoucher':
+                $this->luuVoucherVaoVi();
+                break;
+            case 'ViVoucher':
+                $this->hienThiViVoucher();
+                break;   
             // --- Mặc định nếu không tìm thấy trang ---
             default:
                 echo "404 - Trang không tồn tại";
@@ -111,5 +117,45 @@ class VoucherController {
             header("Location: index.php?act=QuanLyVoucher");
             exit();
         }
+    }
+    public function luuVoucherVaoVi() {
+        if (!isset($_SESSION['user']['id_tai_khoan'])) {
+            $_SESSION['error'] = "Bạn cần đăng nhập để lấy mã!";
+            header("Location: index.php?act=login");
+            exit();
+        }
+
+        $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
+        $id_voucher = $_GET['id_voucher'] ?? null;
+
+        if ($id_voucher) {
+            // Kiểm tra xem đã lưu chưa
+            if ($this->voucherModel->kiemTraDaLuuVoucher($id_tai_khoan, $id_voucher)) {
+                $_SESSION['error'] = "Bạn đã lấy mã này rồi!";
+            } else {
+                if ($this->voucherModel->luuVoucherVaoVi($id_tai_khoan, $id_voucher)) {
+                    $_SESSION['success'] = "Lấy mã thành công! Đã thêm vào ví.";
+                } else {
+                    $_SESSION['error'] = "Có lỗi xảy ra, không thể lấy mã.";
+                }
+            }
+        }
+        header("Location: index.php?act=index.php");
+        exit();
+    }
+
+    // 2. Hiển thị Ví Voucher của khách hàng
+    public function hienThiViVoucher() {
+        if (!isset($_SESSION['user']['id_tai_khoan'])) {
+        header("Location: index.php?act=login");
+        exit();
+    }
+    
+    $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
+    
+    // Lấy thêm dữ liệu voucher để hiển thị trong trang Profile
+    $danhSachVoucherCuaToi = $this->voucherModel->layVoucherCuaNguoiDung($id_tai_khoan);
+        
+        include '../views/pages/UserProfile.php';
     }
 }

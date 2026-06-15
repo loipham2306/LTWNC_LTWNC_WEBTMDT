@@ -8,26 +8,41 @@ class GiaHang {
         $this->conn = $db;
         $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
+    public function createGioHang($id_khach_hang)
+    {
+        $stmt = $this->conn->prepare("
+            INSERT INTO ".$this->table_gio_hang." (id_khach_hang, ngay_tao)
+            VALUES (?, NOW())
+        ");
+        $stmt->execute([$id_khach_hang]);
 
+        return $this->conn->lastInsertId();
+    }
     // 1. Lấy hoặc tạo mới giỏ hàng cho khách hàng
     public function getGioHangId($id_khach_hang) {
-        // Luôn tìm xem user này đã có giỏ hàng chưa
+
+        // chỉ check giỏ hàng thôi, không check bảng khach_hang
         $query = "SELECT id_gio_hang FROM gio_hang WHERE id_khach_hang = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$id_khach_hang]);
+
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($row) {
-            return $row['id_gio_hang']; // Trả về 3
-        } else {
-            // Nếu chưa có, tạo mới
-            $query = "INSERT INTO gio_hang (id_khach_hang, ngay_tao) VALUES (?, NOW())";
-            $stmt = $this->conn->prepare($query);
+            return $row['id_gio_hang'];
+        }
+
+        // tạo giỏ hàng mới
+        $query = "INSERT INTO gio_hang (id_khach_hang, ngay_tao) VALUES (?, NOW())";
+        $stmt = $this->conn->prepare($query);
+
+        try {
             $stmt->execute([$id_khach_hang]);
             return $this->conn->lastInsertId();
+        } catch (PDOException $e) {
+            die("Lỗi tạo giỏ hàng: " . $e->getMessage());
         }
     }
-
     public function addToGioHang($id_gio_hang, $id_bien_the, $so_luong)
     {
         try {
@@ -142,5 +157,25 @@ class GiaHang {
 
             return $stmt->execute([$id_gio_hang]);
         }
+    public function updateQty($id_gio_hang, $id_bien_the, $delta)
+    {
+        $sql = "
+            UPDATE chi_tiet_gio_hang
+            SET so_luong = so_luong + ?
+            WHERE id_gio_hang = ? AND id_bien_the = ?
+        ";
+
+        $this->conn->prepare($sql)->execute([$delta, $id_gio_hang, $id_bien_the]);
+
+        // xoá nếu <= 0
+        $sql2 = "
+            DELETE FROM chi_tiet_gio_hang
+            WHERE so_luong <= 0
+        ";
+
+        $this->conn->query($sql2);
+    }
+    
 }
+    
 ?>

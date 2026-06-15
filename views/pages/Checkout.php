@@ -42,7 +42,6 @@
     </style>
 </head>
 <body>
-
     <?php
     $pageTitle = "Thanh Toán Đơn Hàng";
     $pageBreadcrumb = "Thanh Toán";
@@ -63,7 +62,13 @@
                 </a>
             </div>
 
-                <form id="checkout-form" style="display: <?= $hasItems ? 'block' : 'none' ?>;">
+                <form id="formState" style="display: <?= $hasItems ? 'block' : 'none' ?>;">
+                    <div id="qr-payment-area" class="mt-4 p-3 border border-warning rounded text-center" style="display: none;">
+                        <h5 class="text-white">Quét mã để thanh toán</h5>
+                        <img id="qr-code-img" src="" alt="QR Code" class="img-fluid" style="max-width: 250px;">
+                        <p class="mt-2">Đơn hàng: <span id="order-id-label" class="text-orange fw-bold"></span></p>
+                        <p class="text-white-50 small">Vui lòng ghi nội dung chuyển khoản chính xác.</p>
+                    </div>
                     <div class="row g-5">
                     
                     <div class="col-md-12 col-lg-7">
@@ -72,54 +77,56 @@
                             <div class="col-12">
                                 <label class="form-label fw-bold">Họ và tên người nhận <span class="text-danger">*</span></label>
                                 <input type="text"
-                                    name="fullName"
+                                    name="ten_nguoi_nhan"
                                     id="fullName"
                                     class="form-control py-3 rounded"
                                     placeholder="Nhập đầy đủ họ và tên"
-                                    value="<?= $_SESSION['user']['ho_ten'] ?? '' ?>"
+                                    value="<?= htmlspecialchars(trim(($_SESSION['user']['ho_ten_dem'] ?? '') . ' ' . ($_SESSION['user']['ten'] ?? ''))) ?>"
                                     required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
                                 <input type="tel"
-                                    name="phone"
+                                    name="sdt_nguoi_nhan"
                                     id="phone"
                                     class="form-control py-3 rounded"
                                     placeholder="Số điện thoại nhận hàng"
-                                    value="<?= $_SESSION['user']['so_dien_thoai'] ?? '' ?>"
+                                    value="<?= htmlspecialchars($_SESSION['user']['so_dien_thoai'] ?? '') ?>"
                                     required>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Địa chỉ Email (Nếu có)</label>
+                                <label class="form-label fw-bold">Địa chỉ Email</label>
                                 <input type="email"
                                     name="email"
                                     id="email"
                                     class="form-control py-3 rounded"
                                     placeholder="example@gmail.com"
-                                    value="<?= $_SESSION['user']['email'] ?? '' ?>">
+                                    value="<?= htmlspecialchars($_SESSION['user']['email'] ?? '') ?>">
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label fw-bold">Địa chỉ giao hàng chính xác <span class="text-danger">*</span></label>
                                 <input type="text"
-                                    name="address"
+                                    name="dia_chi_giao_hang"
                                     id="address"
                                     class="form-control py-3 rounded"
                                     placeholder="Số nhà, tên đường, phường/xã..."
-                                    value="<?= $_SESSION['user']['dia_chi'] ?? '' ?>"
+                                    value="<?= htmlspecialchars($_SESSION['user']['dia_chi'] ?? '') ?>"
                                     required>
                             </div>
 
                             <div class="col-12 mt-4">
                                 <label class="form-label fw-bold">Ghi chú đơn hàng (Tùy chọn)</label>
-                                <textarea name="note"
+                                <textarea name="ghi_chu"
                                         id="note"
                                         class="form-control p-3 rounded"
                                         rows="4"
-                                        placeholder="Ghi chú thêm về đơn hàng..."><?= $_SESSION['user']['ghi_chu'] ?? '' ?></textarea>
+                                        placeholder="Ghi chú thêm về đơn hàng..."></textarea>
                             </div>
+                            
+                            <input type="hidden" name="id_voucher" id="id_voucher_hidden" value="">
                         </div>
                     </div>
 
@@ -173,7 +180,7 @@
                                         </tr>
                                         <tr>
                                             <td class="ps-0 fs-5 fw-bold text-white">Tổng tiền thanh toán</td>
-                                            <td class="text-end pe-0 fs-4 fw-bold text-orange">
+                                            <td class="text-end pe-0 fs-4 fw-bold text-orange" id="displayTotal">
                                                 <?= number_format($total, 0, ',', '.') ?> đ
                                             </td>
                                         </tr>
@@ -181,16 +188,17 @@
                                 </table>
                             </div>
 
-                            <h4 class="mb-3 fw-bold text-uppercase mt-4 text-white">Phương Thức Thanh Toán</h4>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCOD" value="cod" checked style="cursor: pointer; width: 18px; height: 18px;">
-                                <label class="form-check-label fw-bold text-white-50 ms-2" for="paymentCOD" style="cursor: pointer;">Thanh toán khi nhận hàng (COD)</label>
-                            </div>
-                            <div class="form-check mb-4">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="paymentBank" value="bank" style="cursor: pointer; width: 18px; height: 18px;">
-                                <label class="form-check-label fw-bold text-white-50 ms-2" for="paymentBank" style="cursor: pointer;">Chuyển khoản qua ngân hàng (Mã QR)</label>
-                            </div>
-
+                            <div id="payment-method-container">
+                                <h4 class="mb-3 fw-bold text-uppercase mt-4 text-white">Phương Thức Thanh Toán</h4>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="phuong_thuc_thanh_toan" id="paymentCOD" value="cod" checked>
+                                    <label class="form-check-label" for="paymentCOD">Thanh toán khi nhận hàng (COD)</label>
+                                </div>
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="radio" name="phuong_thuc_thanh_toan" id="paymentBank" value="bank">
+                                    <label class="form-check-label" for="paymentBank">Chuyển khoản qua ngân hàng (Mã QR)</label>
+                                </div>
+                            </div>             
                             <button type="submit" class="btn btn-orange w-100 py-3 text-uppercase fw-bold rounded-pill fs-5 shadow-sm mt-2">
                                 Xác Nhận Đặt Hàng
                             </button>
@@ -201,6 +209,37 @@
             </form>
 
         </div>
+        <div class="modal fade" id="voucherModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background-color: #1a1a1a; color: #fff; border: 1px solid #333;">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title text-orange">Chọn Voucher của bạn</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                        <?php 
+                        $danhSachVoucher = $_SESSION['user']['vouchers'] ?? [];
+                        if (empty($danhSachVoucher)) : ?>
+                            <p class="text-white-50">Bạn chưa có voucher nào.</p>
+                        <?php else : 
+                            foreach ($danhSachVoucher as $vc) : 
+                                $isUsed = ($vc['da_su_dung'] == 1);
+                        ?>
+                            <div class="p-3 mb-2 rounded <?= $isUsed ? 'bg-dark opacity-50' : 'bg-dark' ?>" 
+                                style="border: 1px solid #444; cursor: <?= $isUsed ? 'not-allowed' : 'pointer' ?>"
+                                onclick="<?= $isUsed ? '' : "selectVoucher(" . $vc['id_voucher'] . ", '" . $vc['ma_voucher'] . "')" ?>">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold text-warning"><?= htmlspecialchars($vc['ma_voucher']) ?></span>
+                                    <small><?= $isUsed ? 'Đã dùng' : 'Có thể dùng' ?></small>
+                                </div>
+                                <div class="small">Giảm: <?= number_format($vc['gia_tri_giam']) ?><?= $vc['loai_giam_gia'] == 'percent' ? '%' : 'đ' ?></div>
+                                <div class="small text-white-50">Đơn tối thiểu: <?= number_format($vc['don_toi_thieu']) ?>đ</div>
+                            </div>
+                        <?php endforeach; endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <?php include __DIR__ . '/../components/Footer.php'; ?>
@@ -210,69 +249,124 @@
     
     <script>
         new WOW().init();
+        const formState = document.getElementById('formState');
         let baseTotal = <?= $total ?>;
         let discount = 0;
-
+        const vouchersData = <?= json_encode($_SESSION['user']['vouchers'] ?? []) ?>;                        
         const voucherInput = document.getElementById('voucher');
         const voucherMsg = document.getElementById('voucherMsg');
-        const totalBox = document.querySelector('.text-orange.fs-4');
-
-        document.getElementById('applyVoucher').addEventListener('click', () => {
-            const code = voucherInput.value.trim();
-
-            // demo voucher (sau này đổi qua DB)
-            if (code === 'SALE10') {
-                discount = baseTotal * 0.1;
-                voucherMsg.innerText = 'Áp dụng thành công -10%';
-                voucherMsg.style.color = 'lightgreen';
-            }
-            else if (code === 'FREESHIP') {
-                discount = 50000;
-                voucherMsg.innerText = 'Giảm 50.000đ';
-                voucherMsg.style.color = 'lightgreen';
-            }
-            else {
-                discount = 0;
-                voucherMsg.innerText = 'Mã không hợp lệ';
-                voucherMsg.style.color = 'orange';
-            }
-
-            updateTotal();
+        const displayTotal = document.getElementById('displayTotal');
+        // 1. Mở modal khi bấm nút Áp dụng
+        document.getElementById('applyVoucher').addEventListener('click', function() {
+            var myModal = new bootstrap.Modal(document.getElementById('voucherModal'));
+            myModal.show();
         });
 
+       function selectVoucher(idVoucher, maVoucher) {
+            // Tìm voucher trong mảng dữ liệu dựa trên ID (số)
+            const voucher = vouchersData.find(v => v.id_voucher == idVoucher);
+
+            if (voucher) {
+                // Kiểm tra điều kiện tối thiểu
+                if (baseTotal < parseFloat(voucher.don_toi_thieu)) {
+                    alert('Đơn hàng chưa đủ điều kiện áp dụng mã này!');
+                    return;
+                }
+
+                // Tính toán giảm giá
+                if (voucher.loai_giam_gia === 'percent') {
+                    discount = (baseTotal * parseFloat(voucher.gia_tri_giam)) / 100;
+                } else {
+                    discount = parseFloat(voucher.gia_tri_giam);
+                }
+
+                // CẬP NHẬT GIAO DIỆN
+                // Gán ID (số) vào input ẩn để gửi về Server
+                document.getElementById('id_voucher_hidden').value = idVoucher; 
+                // Gán Mã (chuỗi) vào ô input hiển thị cho khách hàng thấy
+                document.getElementById('voucher').value = maVoucher; 
+                
+                voucherMsg.innerText = "Đã áp dụng: -" + Math.round(discount).toLocaleString('vi-VN') + " đ";
+                voucherMsg.className = "text-success fw-bold";
+
+                updateTotal();
+            }
+
+            // Đóng modal
+            var modalElement = document.getElementById('voucherModal');
+            var modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+        }
         function updateTotal() {
             let finalTotal = baseTotal - discount;
             if (finalTotal < 0) finalTotal = 0;
 
-            totalBox.innerHTML = finalTotal.toLocaleString('vi-VN') + ' đ';
-        }                                    
-        document.addEventListener('DOMContentLoaded', () => {
+            displayTotal.innerHTML = finalTotal.toLocaleString('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).replace('₫', 'đ');
 
-            const formState = document.getElementById('checkout-form');
+            // 🔥 FIX QUAN TRỌNG: cập nhật QR nếu đang hiển thị
+            const qrArea = document.getElementById('qr-payment-area');
+            if (qrArea.style.display !== 'none') {
+                const orderId = document.getElementById('order-id-label').innerText;
+                if (orderId) {
+                    generateQRLink(orderId, finalTotal);
+                }
+            }
+        }                                
 
-            // ❌ KHÔNG render lại giỏ hàng bằng JS nữa (đã có PHP render)
+        // 2. Hàm tạo link VietQR
+        // Sửa lại hàm tạo link
+        function generateQRLink(orderId, finalAmount) { // Thêm tham số finalAmount
+            let bank = "MB";
+            let account = "0388046213";
+            let name = "NGUYEN MINH LUAN";
+            let content = "DH" + orderId;
+            
+            document.getElementById('order-id-label').innerText = orderId;
+            
+            // Sử dụng finalAmount thay vì biến PHP cứng
+            let url = `https://img.vietqr.io/image/${bank}-${account}-compact.png?amount=${finalAmount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(name)}`;
+            document.getElementById('qr-code-img').src = url;
+        }
 
-            // 1. Submit form
-            formState.addEventListener('submit', function(e) {
-                e.preventDefault();
+        // 3. Sửa lại phần xử lý Submit Form
+        formState.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const paymentMethod = document.querySelector('input[name="phuong_thuc_thanh_toan"]:checked').value;
 
-                const formData = new FormData(this);
-
-                fetch('index.php?act=XuLyDatHang', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert('Đặt hàng thành công!');
-                        window.location.href = 'index.php?act=LichSuDonHang';
+            fetch('index.php?act=XuLyThanhToan', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (paymentMethod === 'bank') {
+                        // ĐẶT HÀNG THÀNH CÔNG -> HIỂN THỊ QR VỚI ID THẬT
+                        document.getElementById('qr-payment-area').style.display = 'block';
+                        
+                        // GọgenerateQRLink(data.id_don_hang);i hàm tạo QR với ID nhận được từ Server
+                        generateQRLink(data.id_don_hang, baseTotal - discount);
+                        
+                        // Ẩn nút "Xác nhận đặt hàng" để tránh khách bấm nhiều lần
+                        document.querySelector('button[type="submit"]').style.display = 'none';
+                        
+                        // Cuộn trang xuống vùng QR để khách hàng thấy rõ
+                        document.getElementById('qr-payment-area').scrollIntoView({ behavior: 'smooth' });
+                        
+                        alert("Đặt hàng thành công! Vui lòng quét mã QR để hoàn tất thanh toán.");
                     } else {
-                        alert('Có lỗi: ' + data.message);
+                        // Nếu là COD thì chuyển trang luôn
+                        window.location.href = 'index.php?act=ThanhToanThanhCong&id=' + data.id_don_hang;
                     }
-                });
+                } else {
+                    alert('Có lỗi: ' + data.message);
+                }
             });
-
         });
     </script>
 </body>

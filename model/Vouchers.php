@@ -2,7 +2,7 @@
 class Vouchers {
     private $db;
     private $table_name = "voucher"; 
-
+    private $table_voucher_nguoi_dung= "voucher_cua_nguoi_dung";
     public function __construct($db) {
         $this->db = $db;
     }
@@ -58,14 +58,6 @@ class Vouchers {
             $data['don_toi_thieu']
         ]);
     }
-
-    // Tăng số lượng đã dùng khi khách hàng sử dụng thành công
-    public function tangSoLuongDaDung($id_voucher) {
-        $sql = "UPDATE " . $this->table_name . " SET so_luong_da_dung = so_luong_da_dung + 1 WHERE id_voucher = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$id_voucher]);
-    }
-
     // Xóa voucher
     public function xoaVoucher($id_voucher) {
         $sql = "DELETE FROM " . $this->table_name . " WHERE id_voucher = ?";
@@ -73,12 +65,75 @@ class Vouchers {
         return $stmt->execute([$id_voucher]);
     }
     public function kiemTraVoucherDaDung($id) {
-        $sql = "SELECT so_luong_da_dung FROM vouchers WHERE id_voucher = :id";
+        $sql = "SELECT so_luong_da_dung FROM " . $this->table_name . " WHERE id_voucher = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         $voucher = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Nếu số lượng đã dùng > 0 thì trả về true (đã có người dùng)
+
         return ($voucher && $voucher['so_luong_da_dung'] > 0);
     }
+    public function luuVoucherVaoVi($id_tai_khoan, $id_voucher) {
+        try {
+            $this->db->beginTransaction();
+
+            // Lưu vào ví
+            $sql = "INSERT INTO " . $this->table_voucher_nguoi_dung . " (id_tai_khoan, id_voucher) VALUES (?, ?)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id_tai_khoan, $id_voucher]);
+
+            // Tăng số lượng đã dùng trong bảng gốc
+            $this->tangSoLuongDaDung($id_voucher);
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+    // 2. Kiểm tra khách đã có mã này chưa
+    public function kiemTraDaLuuVoucher($id_tai_khoan, $id_voucher) {
+        $sql = "SELECT id FROM " . $this->table_voucher_nguoi_dung . " WHERE id_tai_khoan = ? AND id_voucher = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_tai_khoan, $id_voucher]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ? true : false;
+    }
+
+    // 3. Lấy danh sách voucher khách đang sở hữu (để hiện ở giỏ hàng/checkout)
+    public function layVoucherCuaNguoiDung($id_tai_khoan) {
+        $sql = "SELECT v.* FROM " . $this->table_name . " v
+                JOIN " . $this->table_voucher_nguoi_dung . " vcn ON v.id_voucher = vcn.id_voucher
+                WHERE vcn.id_tai_khoan = ? AND vcn.da_su_dung = 0";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_tai_khoan]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // 4. Khi thanh toán thành công, đánh dấu voucher đã dùng
+    public function suDungVoucher($id_tai_khoan, $id_voucher) {
+        $sql = "UPDATE " . $this->table_voucher_nguoi_dung . " 
+                SET da_su_dung = 1 
+                WHERE id_tai_khoan = ? AND id_voucher = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id_tai_khoan, $id_voucher]);
+    }
+    // HỖ TRỢ & KIỂM TRA
+    public function tangSoLuongDaDung($id_voucher) {
+        $sql = "UPDATE " . $this->table_name . " SET so_luong_da_dung = so_luong_da_dung + 1 WHERE id_voucher = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id_voucher]);
+    }
+        // Trong Vouchers.php
+    public function layVoucherCuaTaiKhoan($id_tai_khoan) {
+    // Lấy tất cả thông tin từ bảng voucher (v.*) và cột da_su_dung từ bảng trung gian (vnd.da_su_dung)
+    $sql = "SELECT v.*, vnd.da_su_dung 
+            FROM " . $this->table_voucher_nguoi_dung . " vnd
+            JOIN " . $this->table_name . " v ON vnd.id_voucher = v.id_voucher
+            WHERE vnd.id_tai_khoan = ?";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([$id_tai_khoan]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
