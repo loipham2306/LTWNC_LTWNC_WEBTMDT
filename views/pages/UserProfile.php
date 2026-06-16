@@ -94,6 +94,16 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
     include __DIR__ . '/../components/PageHeader.php';
     ?>
 
+    <?php if (isset($_SESSION['success'])): ?>
+        <div id="php-flash-success" data-message="<?= htmlspecialchars($_SESSION['success']) ?>" style="display: none;"></div>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <div id="php-flash-error" data-message="<?= htmlspecialchars($_SESSION['error']) ?>" style="display: none;"></div>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+
     <div class="container-fluid profile-wrapper py-5">
         <div class="container py-5">
             <div class="row g-4">
@@ -126,20 +136,13 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
                             </button>
                             <button class="list-group-item py-3 fw-bold text-danger w-100 text-start" onclick="handleLogout()">
                                 <i class="fas fa-sign-out-alt me-3"></i>Đăng Xuất
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-lg-9 wow fadeInRight" data-wow-delay="0.2s">
                     <div class="card profile-card rounded p-4 h-100">
-
-                       <?php if (isset($_SESSION['success'])): ?>
-    <div class="alert alert-success fw-bold">🎉 <?= $_SESSION['success']; ?></div>
-<?php endif; ?>
-<?php if (isset($_SESSION['error'])): ?>
-    <div class="alert alert-danger fw-bold">⚠️ <?= $_SESSION['error']; ?></div>
-<?php endif; ?>
 
                         <div id="tabContent-info" class="tab-pane-custom">
                             <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Hồ Sơ Của Tôi</h4>
@@ -212,7 +215,21 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
 
                         <div id="tabContent-orders" class="tab-pane-custom" style="display: none;">
                             <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Đơn Hàng Gần Đây</h4>
-                            <p class="text-white-50">Tính năng đang cập nhật...</p>
+                            <div class="table-responsive">
+                                <table class="table table-profile text-center align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="py-3">Mã Đơn</th>
+                                            <th scope="col" class="py-3">Ngày Mua</th>
+                                            <th scope="col" class="py-3">Tổng Tiền</th>
+                                            <th scope="col" class="py-3">Trạng Thái</th>
+                                            <th scope="col" class="py-3">Thao Tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ordersTableBody">
+                                        </tbody>
+                                </table>
+                            </div>
                         </div>
                         
                         <div id="tabContent-password" class="tab-pane-custom" style="display: none;">
@@ -251,17 +268,15 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        new WOW().init();
-
         // 1. ĐIỀU KHIỂN CHUYỂN TAB MƯỢT MÀ
         function switchTab(tabName, element) {
             document.querySelectorAll('.tab-pane-custom').forEach(pane => pane.style.display = 'none');
             document.querySelectorAll('#profileTabs button').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`tabContent-${tabName}`).style.display = 'block';
-            element.classList.add('active');
+            if(element) element.classList.add('active');
         }
 
-        // 2. RENDER DỮ LIỆU ĐƠN HÀNG (Sử dụng biến PHP ném xuống JS)
+        // 2. RENDER DỮ LIỆU ĐƠN HÀNG
         const orders = <?= json_encode($danhSachDonHang); ?>; 
         
         function renderOrders() {
@@ -302,57 +317,52 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
             tbody.innerHTML = html;
         }
 
+        // ===== 3. ĐÓN THÔNG BÁO BẰNG JAVASCRIPT THUẦN (XỬ LÝ ĐƯỢC TẤT CẢ TIẾNG VIỆT) =====
         document.addEventListener("DOMContentLoaded", function() {
-    renderOrders();
+            renderOrders();
 
-    // ===== ĐOẠN CODE BẬT THÔNG BÁO POPUP VÀ GIỮ TAB ĐỔI MẬT KHẨU =====
-    <?php if (isset($_SESSION['success'])): ?>
-        // Bật hộp thoại alert báo thành công
-        alert("<?= $_SESSION['success'] ?>");
-        
-        <?php if (strpos($_SESSION['success'], 'mật khẩu') !== false): ?>
-            // Nếu nội dung thông báo có chữ 'mật khẩu', tự động chuyển sang tab mật khẩu
-            switchTab('password', document.querySelector('button[onclick*="password"]'));
-        <?php endif; ?>
-        
-        <?php unset($_SESSION['success']); // Thông báo xong mới xóa session ?>
-    <?php endif; ?>
+            // Xử lý thông báo Thành Công
+            const successElement = document.getElementById('php-flash-success');
+            if (successElement) {
+                const message = successElement.getAttribute('data-message');
+                setTimeout(() => {
+                    alert(message);
+                    // Dùng JS nguyên bản để tìm từ khóa mật khẩu -> giữ lại tab Đổi mật khẩu
+                    if (message.toLowerCase().includes('mật khẩu') || message.toLowerCase().includes('mat khau')) {
+                        switchTab('password', document.querySelector('button[onclick*="password"]'));
+                    }
+                }, 150);
+            }
 
-    <?php if (isset($_SESSION['error'])): ?>
-        // Bật hộp thoại alert báo lỗi
-        alert("<?= $_SESSION['error'] ?>");
-        
-        <?php if (strpos($_SESSION['error'], 'mật khẩu') !== false): ?>
-            // Nếu lỗi liên quan mật khẩu, giữ nguyên tab mật khẩu cho người dùng nhập lại
-            switchTab('password', document.querySelector('button[onclick*="password"]'));
-        <?php endif; ?>
-        
-        <?php unset($_SESSION['error']); // Thông báo xong mới xóa session ?>
-    <?php endif; ?>
-});
+            // Xử lý thông báo Lỗi
+            const errorElement = document.getElementById('php-flash-error');
+            if (errorElement) {
+                const message = errorElement.getAttribute('data-message');
+                setTimeout(() => {
+                    alert(message);
+                    if (message.toLowerCase().includes('mật khẩu') || message.toLowerCase().includes('mat khau')) {
+                        switchTab('password', document.querySelector('button[onclick*="password"]'));
+                    }
+                }, 150);
+            }
+        });
 
-        // 3. XỬ LÝ JS KHI ĐỔI MẬT KHẨU (Chỉ chặn khi xác nhận sai)
+        // 4. KIỂM TRA MẬT KHẨU KHỚP TRƯỚC KHI GỬI FORM
         document.getElementById('passwordForm').addEventListener('submit', function(e) {
             const newPass = document.getElementById('newPassword').value;
             const confirmPass = document.getElementById('confirmPassword').value;
             
             if (newPass !== confirmPass) {
-                e.preventDefault(); // Dừng không cho submit form về PHP
+                e.preventDefault(); 
                 alert('⚠️ Xác nhận mật khẩu mới không trùng khớp!');
             }
-            // Nếu khớp, tự động thả để Form bay về Controller!
         });
 
-        // 4. HÀM XỬ LÝ ĐĂNG XUẤT (Có thông báo và chuyển hướng)
+        // 5. HÀM XỬ LÝ ĐĂNG XUẤT 
         function handleLogout() {
             if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
-                // Xóa dữ liệu tạm dưới local storage (nếu có dùng)
                 localStorage.removeItem('user');
-                
-                // Hiện thông báo
                 alert('Đăng xuất thành công! Hẹn gặp lại bạn.');
-                
-                // Trỏ về act=logout trong index.php
                 window.location.href = '/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=logout';
             }
         }

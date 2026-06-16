@@ -44,7 +44,7 @@
         }
         public function checkUserExists($email, $so_dien_thoai) {
                 // Lưu ý: Đảm bảo bảng 'khach_hang' của bạn có cột 'id_tai_khoan' làm khóa ngoại
-                $sql = "SELECT t.email, k.so_dien_thoai 
+                $sql = "SELECT *
                         FROM tai_khoan t
                         LEFT JOIN khach_hang k ON t.id_tai_khoan = k.id_tai_khoan 
                         WHERE t.email = ? OR k.so_dien_thoai = ?";
@@ -55,7 +55,7 @@
             }
         public function TimKiemTaiKhoan($ten_dang_nhap){
             // Câu lệnh truy vấn
-            $query ="SELECT id_tai_khoan, ten_dang_nhap, email, mat_khau, vai_tro, trang_thai
+            $query ="SELECT *
                     FROM " . $this->table_name . "
                     WHERE (ten_dang_nhap = :ten_dang_nhap OR email = :ten_dang_nhap)
                     LIMIT 1";
