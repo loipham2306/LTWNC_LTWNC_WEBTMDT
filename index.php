@@ -160,6 +160,8 @@ $brands = $brands??[];
     // 4. NHÚNG DẢI TÍNH NĂNG DỊCH VỤ (FREE SHIP, ĐỔI TRẢ...)
     include 'views/components/ServiceFeatures.php';
 
+    // 5. NHÚNG KHỐI DANH MỤC SẢN PHẨM DUYỆT THEO TAB (NẾU CÓ)
+    include 'views/components/FeaturedProducts.php';
     ?>
     <div class="d-flex justify-content-center flex-wrap mb-4 gap-2">
 

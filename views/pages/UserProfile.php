@@ -39,12 +39,10 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css" rel="stylesheet">
 
     <style>
-        /* Tông nền tối eSports vững chãi */
         body { background-color: #111; color: #fff; font-family: 'Segoe UI', sans-serif; }
         .profile-wrapper { background-color: #111; min-height: 80vh; padding-bottom: 50px; }
         .profile-card { background-color: #1a1a1a; border: 1px solid #333; }
         
-        /* Menu quản lý bên trái */
         .list-group-custom .list-group-item {
             background-color: transparent; color: #aaa; border: none;
             border-bottom: 1px solid #2a2a2a; transition: all 0.3s ease; cursor: pointer;
@@ -52,16 +50,13 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
         .list-group-custom .list-group-item:hover { background-color: #222; color: #F28B00; }
         .list-group-custom .list-group-item.active { background-color: #F28B00 !important; color: #fff !important; }
         
-        /* Định dạng Form Input tối màu cứng cáp */
         .form-control { background-color: #111 !important; border: 1px solid #444 !important; color: #fff !important; }
         .form-control:focus { border-color: #F28B00 !important; box-shadow: 0 0 0 0.25rem rgba(242, 139, 0, 0.25) !important; }
         .form-control:disabled { background-color: #222 !important; color: #666 !important; border-color: #333 !important; }
         
-        /* Bảng lịch sử đơn hàng */
         .table-profile th { background-color: #222; border-bottom: 2px solid #F28B00; color: #F28B00; text-transform: uppercase; }
         .table-profile td { background-color: #1a1a1a; border-bottom: 1px solid #2a2a2a; color: #eee; vertical-align: middle; }
         
-        /* Thành phần màu sắc Cam thương hiệu */
         .btn-orange { background-color: #F28B00 !important; color: #fff !important; border: none; }
         .btn-orange:hover { background-color: #d67a00 !important; }
         .btn-outline-orange { border: 1px solid #F28B00; color: #F28B00; background: transparent; }
@@ -131,7 +126,7 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
                             </button>
                             <button class="list-group-item py-3 fw-bold text-danger w-100 text-start" onclick="handleLogout()">
                                 <i class="fas fa-sign-out-alt me-3"></i>Đăng Xuất
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -217,21 +212,7 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
 
                         <div id="tabContent-orders" class="tab-pane-custom" style="display: none;">
                             <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Đơn Hàng Gần Đây</h4>
-                            <div class="table-responsive">
-                                <table class="table table-profile text-center align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col" class="py-3">Mã Đơn</th>
-                                            <th scope="col" class="py-3">Ngày Mua</th>
-                                            <th scope="col" class="py-3">Tổng Tiền</th>
-                                            <th scope="col" class="py-3">Trạng Thái</th>
-                                            <th scope="col" class="py-3">Thao Tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="ordersTableBody">
-                                        </tbody>
-                                </table>
-                            </div>
+                            <p class="text-white-50">Tính năng đang cập nhật...</p>
                         </div>
                         
                         <div id="tabContent-password" class="tab-pane-custom" style="display: none;">
@@ -266,11 +247,9 @@ $danhSachVoucherCuaToi = $user['vouchers'] ?? [];
         </div>
     </div>
 
-  <?php include __DIR__ . '/../components/Footer.php'; ?>
+    <?php include __DIR__ . '/../components/Footer.php'; ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
-    
     <script>
         new WOW().init();
 

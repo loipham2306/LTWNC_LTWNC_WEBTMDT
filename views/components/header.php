@@ -51,7 +51,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
     <div class="row gx-0 align-items-center text-center">
         <div class="col-md-4 col-lg-3 text-center text-lg-start">
             <div class="d-inline-flex align-items-center">
-                <a href="index.php" class="navbar-brand p-0 text-decoration-none">
+                <a href="<?= $BASE_URL ?>index.php" class="navbar-brand p-0 text-decoration-none">
                     <h1 class="display-5 m-0" style="color: #F28B00;">
                         <img src="<?= $BASE_URL_IMAGE ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> 
                     </h1>

@@ -18,7 +18,7 @@
     <div class="container-fluid d-flex auth-page-container">
         <div class="card p-4 rounded border auth-card login-card pb-0">
 
-            <div class="text-center mb-4">
+            <div class="text-center mb-10">
                 <h1 class="fw-bold m-0 lkstore-logo-text">
                     <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 80px; object-fit: contain;" onerror="this.style.display='none';"> 
                 </h1>
