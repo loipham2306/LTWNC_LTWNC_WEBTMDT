@@ -52,7 +52,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
     <div class="row gx-0 align-items-center text-center">
         <div class="col-md-4 col-lg-3 text-center text-lg-start">
             <div class="d-inline-flex align-items-center">
-                <a href="index.php" class="navbar-brand p-0 text-decoration-none">
+                <a href="<?= $BASE_URL ?>index.php" class="navbar-brand p-0 text-decoration-none">
                     <h1 class="display-5 m-0" style="color: #F28B00;">
                         <img src="<?= $BASE_URL ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> 
                     </h1>
@@ -84,10 +84,10 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
                         <i class="fas fa-shopping-cart"></i>
                     </span>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">3</span>
+                    <span id="headerCartBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem; display: none;">0</span>
                 </a>
 
-                <a href="index.php?act=UserProfile" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
+                <a href="<?= $BASE_URL ?>views/pages/UserProfile.php" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;">
                     <i class="fas fa-user text-white"></i>
                 </a>
 
@@ -122,3 +122,25 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
         </div>
     </div>
 </div>
+
+<script>
+    // Hàm này sẽ tự động đọc dữ liệu từ LocalStorage và cập nhật lên icon giỏ hàng
+    function updateCartBadge() {
+        let currentCart = JSON.parse(localStorage.getItem('cart')) || [];
+        let totalItems = currentCart.reduce((sum, item) => sum + item.quantity, 0);
+        let badge = document.getElementById('headerCartBadge');
+        
+        if (badge) {
+            badge.innerText = totalItems;
+            // Nếu giỏ hàng trống thì ẩn cục màu đỏ đi cho đẹp, có hàng mới hiện lên
+            if (totalItems > 0) {
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    // Chạy hàm ngay khi load xong Header để hiển thị số lượng mới nhất
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+</script>

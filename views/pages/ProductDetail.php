@@ -1,256 +1,270 @@
+<?php
+// 1. KẾT NỐI DATABASE
+require_once '../../config/database.php';
+$db = new Database();
+$conn = $db->getConnection();
+
+// 2. LẤY ID SẢN PHẨM TỪ URL (?id=...)
+$id_san_pham = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$product = null;
+
+if ($id_san_pham > 0) {
+    // Lấy thông tin chi tiết sản phẩm thật từ Database
+    $sql = "SELECT sp.*, dm.ten_danh_muc 
+            FROM san_pham sp 
+            LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc 
+            WHERE sp.id_san_pham = :id AND sp.trang_thai = 1 LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':id', $id_san_pham, PDO::PARAM_INT);
+    $stmt->execute();
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// LẤY TẤT CẢ DANH MỤC TỪ DATABASE ĐỂ TỰ ĐỘNG VẼ SIDEBAR BÊN TRÁI
+$sql_dm = "SELECT * FROM danh_muc";
+$stmt_dm = $conn->prepare($sql_dm);
+$stmt_dm->execute();
+$danhMucs = $stmt_dm->fetchAll(PDO::FETCH_ASSOC);
+
+// 3. XỬ LÝ DỮ LIỆU GIÁ VÀ ẢNH ĐỂ KHÔNG BỊ LỖI
+$gia_hien_tai = 0;
+$imgPath = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/default.png';
+
+if ($product) {
+    $gia_hien_tai = isset($product['gia_ban']) ? $product['gia_ban'] : (isset($product['gia_co_ban']) ? $product['gia_co_ban'] : (isset($product['gia']) ? $product['gia'] : 0));
+    
+    $tenAnh = isset($product['hinh_anh']) ? $product['hinh_anh'] : '';
+    if (!empty($tenAnh)) {
+        $imgPath = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $tenAnh;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi Tiết Sản Phẩm - LuLoShop</title>
+    <title><?= $product ? htmlspecialchars($product['ten_san_pham']) : 'Sản phẩm không tồn tại' ?> - LuLoShop</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css" rel="stylesheet">
-
+    
     <style>
-        /* Tông nền tối eSports vững chãi */
         body { background-color: #111; color: #fff; font-family: 'Segoe UI', sans-serif; }
-        .shop-wrapper { background-color: #1a1a1a; }
+        .detail-wrapper { background-color: #1a1a1a; min-height: 80vh; }
         
-        /* Sidebar & Thùng chứa */
-        .sidebar-box { background-color: #222; border: 1px solid #333; padding: 20px; border-radius: 8px; }
-        .category-link { color: #ccc; text-decoration: none; transition: 0.3s; }
-        .category-link:hover { color: #F28B00; padding-left: 5px; }
-        
-        /* Inputs & Thanh tìm kiếm */
+        /* Sidebar Styling */
+        .sidebar-box { background-color: #222; border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 24px; }
         .form-control { background-color: #111 !important; border: 1px solid #444 !important; color: #fff !important; }
-        .form-control:focus { border-color: #F28B00 !important; box-shadow: 0 0 0 0.25rem rgba(242, 139, 0, 0.25) !important; }
-        .input-group-text { background-color: #333; border: 1px solid #444; color: #F28B00; }
+        
+        .btn-sidebar-cat { 
+            display: block; width: 100%; text-align: left; padding: 10px 15px; 
+            background: transparent; border: none; color: #ccc; 
+            border-radius: 6px; transition: all 0.3s ease; text-decoration: none; font-size: 0.95rem; 
+        }
+        .btn-sidebar-cat:hover { background-color: #2a2a2a; color: #F28B00; padding-left: 20px; }
+        .btn-sidebar-cat.active { background-color: #F28B00; color: #fff !important; font-weight: bold; }
 
-        /* Khu vực trưng bày ảnh */
-        .main-img-container { background-color: #222 !important; border: 1px solid #333; height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .thumb-box { width: 22%; cursor: pointer; background-color: #222 !important; border: 1px solid #333; transition: 0.2s; }
-        .thumb-box.active { border: 2px solid #F28B00 !important; }
-
-        /* Số lượng & Nút bấm màu Cam thương hiệu */
-        .btn-qty { background: #333; border: 1px solid #444; color: #fff; transition: 0.3s; }
-        .btn-qty:hover { background: #F28B00; border-color: #F28B00; }
-        .btn-orange { background-color: #F28B00 !important; color: #fff !important; border: none; }
-        .btn-orange:hover { background-color: #d67a00 !important; }
+        .sidebar-sale-banner { background-color: #222; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: center; position: relative; overflow: hidden; }
+        
+        /* Product Info Styling */
+        .main-img-box { background-color: #222; border: 1px solid #333; border-radius: 12px; height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .thumb-box { background-color: #222; border: 1px solid #333; border-radius: 8px; width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
+        .thumb-box.active { border-color: #F28B00; }
+        
         .text-orange { color: #F28B00 !important; }
-
-        /* Cấu trúc thanh điều hướng Tabs điều khiển thông tin */
-        .nav-tabs { border-bottom: 2px solid #333; }
-        .nav-tabs .nav-link { color: #ccc; border: none !important; background: transparent !important; font-weight: bold; padding: 12px 24px; }
-        .nav-tabs .nav-link.active { color: #F28B00 !important; border-bottom: 3px solid #F28B00 !important; }
-        .tab-content { background-color: #222; border: 1px solid #333; border-top: none; padding: 25px; border-radius: 0 0 8px 8px; color: #eee; }
+        .info-gray-box { background-color: #222; border-left: 3px solid #444; padding: 12px 20px; border-radius: 4px; color: #aaa; font-size: 0.9rem; }
+        
+        /* Quantity & Button */
+        .qty-container { display: flex; align-items: center; background-color: #222; border: 1px solid #444; border-radius: 20px; width: fit-content; overflow: hidden; }
+        .qty-btn { background: transparent; border: none; color: #fff; width: 35px; height: 35px; font-size: 1.1rem; }
+        .qty-btn:hover { background-color: #333; color: #F28B00; }
+        .qty-input { background: transparent; border: none; color: #fff; text-align: center; width: 45px; font-weight: bold; }
+        
+        .btn-orange-lg { background-color: #F28B00; color: #fff; font-weight: bold; border: none; border-radius: 25px; padding: 12px 40px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; }
+        .btn-orange-lg:hover { background-color: #d67a00; color: #fff; transform: translateY(-2px); }
+        
+        /* Tabs Styling */
+        .nav-tabs { border-bottom: 1px solid #333; }
+        .nav-tabs .nav-link { color: #aaa; border: none; font-weight: bold; padding: 12px 20px; }
+        .nav-tabs .nav-link.active { background: transparent; color: #F28B00; border-bottom: 2px solid #F28B00; }
     </style>
 </head>
 <body>
 
     <?php
-    // Gán dữ liệu cho cấu trúc Banner tiêu đề trang cha
     $pageTitle = "Chi Tiết Sản Phẩm";
-    $pageBreadcrumb = "Sản Phẩm";
-
-    // Kéo các thành phần linh hồn giao diện
+    $pageBreadcrumb = "Chi Tiết";
     include '../components/Header.php';
     include '../components/PageHeader.php';
-
-    // Giả lập lấy thông tin sản phẩm (Sau này bạn kết nối database lấy theo $_GET['id'] nhé)
-    $product = [
-        'id' => 1,
-        'name' => 'Smart Camera Pro Max',
-        'category' => 'Điện Tử',
-        'price' => 3350000,
-        'oldPrice' => 4110000,
-        'code' => 'CAM-2026',
-        'stock' => 20,
-        'img' => '/LTWNC_BAN_HANG/assets/images/img/product-4.png'
-    ];
-
-    // Danh sách ảnh nhỏ đi kèm dải sản phẩm
-    $thumbnails = [
-        '/LTWNC_BAN_HANG/assets/images/img/product-4.png',
-        '/LTWNC_BAN_HANG/assets/images/img/product-5.png',
-        '/LTWNC_BAN_HANG/assets/images/img/product-6.png',
-        '/LTWNC_BAN_HANG/assets/images/img/product-7.png'
-    ];
     ?>
 
-    <div class="container-fluid shop-wrapper py-5">
-        <div class="container py-5">
-            <div class="row g-4">
+    <div class="container-fluid detail-wrapper py-5">
+        <div class="container py-4">
+            
+            <?php if (!$product): ?>
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fs-1 text-secondary mb-3"></i>
+                    <h2 class="text-white">Sản phẩm này không tồn tại hoặc đã bị xóa!</h2>
+                    <a href="Shop.php" class="btn btn-orange-lg mt-3">Quay Lại Cửa Hàng</a>
+                </div>
+            <?php else: ?>
                 
-                <div class="col-lg-5 col-xl-3 wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="input-group w-100 mx-auto d-flex mb-4">
-                        <input type="search" class="form-control p-3" placeholder="Tìm kiếm...">
-                        <span class="input-group-text p-3"><i class="fa fa-search"></i></span>
-                    </div>
-                    
-                    <div class="sidebar-box mb-4">
-                        <h4 class="fw-bold text-orange text-uppercase mb-3" style="font-size: 1.1rem; letter-spacing: 1px;">Danh Mục</h4>
-                        <ul class="list-unstyled mb-0">
-                            <li class="mb-2 d-flex justify-content-between align-items-center">
-                                <a href="#" class="category-link"><i class="fas fa-laptop text-orange me-2"></i> Điện Tử & Máy Tính</a>
-                                <span class="text-white-50 small">(5)</span>
-                            </li>
-                            <li class="d-flex justify-content-between align-items-center">
-                                <a href="#" class="category-link"><i class="fas fa-mobile-alt text-orange me-2"></i> Điện Thoại & Tablet</a>
-                                <span class="text-white-50 small">(8)</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <a href="#" class="text-decoration-none">
-                        <div class="position-relative overflow-hidden rounded shadow-sm">
-                            <img src="/LTWNC_BAN_HANG/assets/images/img/product-banner-2.jpg" class="img-fluid w-100" alt="Khuyến mãi" />
-                            <div class="text-center position-absolute d-flex flex-column align-items-center justify-content-center p-4"
-                                style="width: 100%; height: 100%; top: 0; left: 0; background: rgba(0, 0, 0, 0.75);">
-                                <h5 class="display-6 fw-bold text-orange m-0">SALE</h5>
-                                <h4 class="text-white my-2 fw-bold">Giảm Đến 50%</h4>
-                                <button class="btn btn-orange rounded-pill px-4 mt-2 fw-bold">Mua Ngay</button>
+                <div class="row g-4">
+                    <div class="col-lg-3">
+                        <div class="sidebar-box">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Tìm kiếm...">
+                                <span class="input-group-text bg-transparent border-0 text-orange"><i class="fa fa-search"></i></span>
                             </div>
                         </div>
-                    </a>
-                </div>
 
+                        <div class="sidebar-box">
+                            <h6 class="fw-bold text-orange text-uppercase mb-3">Danh Mục</h6>
+                            
+                            <a href="Shop.php" class="btn-sidebar-cat">
+                                <i class="fas fa-th-large me-2"></i> Tất Cả Sản Phẩm
+                            </a>
 
-                <div class="col-lg-7 col-xl-9 wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="row g-4 single-product">
-                        
-                        <div class="col-xl-6">
-                            <div class="bg-light rounded mb-3 p-4 main-img-container">
-                                <img id="productMainImg" src="<?= $product['img'] ?>" class="img-fluid rounded" style="max-height: 100%; object-fit: contain;" alt="Sản phẩm chính">
+                            <?php 
+                            // Lấy tên danh mục của sản phẩm hiện tại
+                            $current_cat = isset($product['ten_danh_muc']) ? $product['ten_danh_muc'] : ''; 
+                            
+                            // Vòng lặp in ra toàn bộ danh mục từ database
+                            if (!empty($danhMucs)) {
+                                foreach ($danhMucs as $dm) {
+                                    $catName = $dm['ten_danh_muc'];
+                                    // Kiểm tra xem danh mục đang in ra có trùng với danh mục của sản phẩm không
+                                    $isActive = ($current_cat === $catName) ? 'active' : '';
+                                    
+                                    echo '<a href="Shop.php" class="btn-sidebar-cat '.$isActive.'">
+                                            <i class="fas fa-angle-right me-2 text-orange"></i> '.htmlspecialchars($catName).'
+                                          </a>';
+                                }
+                            }
+                            ?>
+                        </div>
+                        <div class="sidebar-sale-banner">
+                            <h4 class="fw-bold text-white mb-1">SALE</h4>
+                            <p class="text-orange fw-bold mb-3">Giảm Đến 50%</p>
+                            <button class="btn btn-orange-lg py-2 px-4 fs-6">Mua Ngay</button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-9">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="main-img-box p-3 shadow-sm">
+                                    <img src="<?= $imgPath ?>" class="img-fluid" style="max-height: 100%; object-fit: contain;" alt="<?= htmlspecialchars($product['ten_san_pham']) ?>">
+                                </div>
+                                
+                                <div class="d-flex gap-2 mt-3 justify-content-center">
+                                    <div class="thumb-box active"><img src="<?= $imgPath ?>" class="img-fluid p-1" style="max-height: 100%;"></div>
+                                    <div class="thumb-box"><img src="<?= $imgPath ?>" class="img-fluid p-1" style="max-height: 100%; filter: grayscale(50%);"></div>
+                                    <div class="thumb-box"><img src="<?= $imgPath ?>" class="img-fluid p-1" style="max-height: 100%; filter: grayscale(50%);"></div>
+                                    <div class="thumb-box"><img src="<?= $imgPath ?>" class="img-fluid p-1" style="max-height: 100%; filter: grayscale(50%);"></div>
+                                </div>
                             </div>
-                            <div class="d-flex justify-content-between">
-                                <?php foreach ($thumbnails as $index => $imgSrc): ?>
-                                    <div class="bg-light rounded p-2 thumb-box <?= $index === 0 ? 'active' : '' ?>" onclick="changeMainImage(this, '<?= $imgSrc ?>')">
-                                        <img src="<?= $imgSrc ?>" class="img-fluid" alt="Ảnh thu nhỏ <?= $index ?>">
+
+                            <div class="col-md-6 ps-md-4">
+                                <h2 class="text-white fw-bold mb-1"><?= htmlspecialchars($product['ten_san_pham']) ?></h2>
+                                <p class="mb-3 text-muted">Danh mục: <span class="text-orange fw-bold"><?= htmlspecialchars($product['ten_danh_muc'] ?? 'Chưa phân loại') ?></span></p>
+                                
+                                <h3 class="text-orange fw-bold mb-3"><?= number_format($gia_hien_tai, 0, ',', '.') ?> VNĐ</h3>
+                                
+                                <div class="text-orange mb-4 small">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                    <span class="text-muted ms-2">(15 đánh giá)</span>
+                                </div>
+
+                                <div class="info-gray-box d-flex justify-content-between mb-4">
+                                    <span>Mã SP: <strong>SKU-#<?= $product['id_san_pham'] ?></strong></span>
+                                    <span>Tình trạng: <strong class="text-success">Còn <?= isset($product['so_luong_kho']) ? $product['so_luong_kho'] : 10 ?> sản phẩm</strong></span>
+                                </div>
+
+                                <p class="text-white-50 mb-4" style="line-height: 1.7; font-size: 0.95rem;">
+                                    <?= !empty($product['mo_ta']) ? nl2br(htmlspecialchars($product['mo_ta'])) : 'Sản phẩm chính hãng chất lượng cao phân phối trực tiếp tại Trạm Hiệu. Thiết kế hiện đại, bền bỉ mang đến trải nghiệm sử dụng hoàn hảo.' ?>
+                                </p>
+
+                                <div class="d-flex align-items-center gap-4 mt-4 pt-2">
+                                    <div class="qty-container">
+                                        <button class="qty-btn" onclick="updateQty(-1)">-</button>
+                                        <input type="text" id="buyQty" class="qty-input" value="1" readonly>
+                                        <button class="qty-btn" onclick="updateQty(1)">+</button>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-6 ps-xl-4">
-                            <h3 class="fw-bold mb-2 text-white"><?= htmlspecialchars($product['name']) ?></h3>
-                            <p class="mb-3 text-white-50">Danh mục: <span class="text-orange fw-bold"><?= htmlspecialchars($product['category']) ?></span></p>
-                            <h4 class="fw-bold mb-3 text-orange fs-2"><?= number_format($product['price'], 0, ',', '.') ?> VNĐ</h4>
-                            
-                            <div class="d-flex mb-4 align-items-center">
-                                <div class="text-orange me-2">
-                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-half-alt"></i>
-                                </div>
-                                <span class="text-white-50 small">(15 đánh giá)</span>
-                            </div>
-
-                            <div class="d-flex flex-column mb-4 border-start border-3 border-warning ps-3 py-1 bg-dark-subtle">
-                                <small class="text-white-50">Mã SP: <strong class="text-white"><?= $product['code'] ?></strong></small>
-                                <small class="text-white-50">Tình trạng: <strong class="text-orange">Còn <?= $product['stock'] ?> sản phẩm</strong></small>
-                            </div>
-                            
-                            <p class="mb-4 text-white-50" style="line-height: 1.6;">
-                                Camera thông minh tích hợp AI nhận diện khuôn mặt, đàm thoại 2 chiều rõ nét. Phù hợp cho an ninh gia đình và cửa hàng giám sát chặt chẽ.
-                            </p>
-
-                            <div class="d-flex align-items-center gap-3 mb-4">
-                                <div class="input-group quantity" style="width: 130px;">
-                                    <button class="btn btn-sm btn-minus rounded-circle btn-qty" onclick="handleQty('minus')">
-                                        <i class="fa fa-minus"></i>
-                                    </button>
-                                    <input type="text" id="qtyInput" class="form-control form-control-sm text-center border-0 fw-bold bg-transparent text-white" value="1" readonly style="width: 40px;">
-                                    <button class="btn btn-sm btn-plus rounded-circle btn-qty" onclick="handleQty('plus')">
-                                        <i class="fa fa-plus"></i>
+                                    
+                                    <button onclick="addToCartDetail()" class="btn btn-orange-lg shadow">
+                                        <i class="fas fa-shopping-bag me-2"></i> Thêm Vào Giỏ Hàng
                                     </button>
                                 </div>
                             </div>
-
-                            <?php $productJson = htmlspecialchars(json_encode($product), ENT_QUOTES, 'UTF-8'); ?>
-                            <button onclick='addToCartFromDetail(<?= $productJson ?>)' class="btn btn-orange rounded-pill px-5 py-3 fw-bold text-uppercase shadow-sm">
-                                <i class="fa fa-shopping-bag me-2"></i> Thêm Vào Giỏ Hàng
-                            </button>
                         </div>
 
-                        <div class="col-lg-12 mt-5">
-                            <nav>
-                                <div class="nav nav-tabs mb-3" id="nav-tab" role="tablist">
-                                    <button class="nav-link active" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about" type="button" role="tab">Mô Tả Sản Phẩm</button>
-                                    <button class="nav-link" id="nav-review-tab" data-bs-toggle="tab" data-bs-target="#nav-review" type="button" role="tab">Đánh Giá (2)</button>
+                        <div class="mt-5 pt-4">
+                            <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc-content" type="button" role="tab">Mô Tả Sản Phẩm</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review-content" type="button" role="tab">Đánh Giá (2)</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content p-4" style="background-color: #151515; border: 1px solid #222; border-top: none; border-radius: 0 0 8px 8px;">
+                                <div class="tab-pane fade show active text-white-50" id="desc-content" role="tabpanel" style="line-height: 1.8;">
+                                    <?= !empty($product['mo_ta']) ? nl2br(htmlspecialchars($product['mo_ta'])) : 'Chưa có thông tin mô tả mở rộng cho dòng sản phẩm này.' ?>
                                 </div>
-                            </nav>
-                            <div class="tab-content" id="nav-tabContent">
-                                <div class="tab-pane fade show active" id="nav-about" role="tabpanel">
-                                    <p>Sản phẩm chính hãng, bảo hành 12 tháng hệ thống toàn quốc. Camera hỗ trợ góc xoay rộng 360 độ, kết nối tín hiệu mạng Wifi ổn định băng tần kép cực cao, dễ dàng quản lý thông số qua ứng dụng di động thông minh.</p>
-                                    <h6 class="fw-bold text-orange mb-2">Tính năng nổi bật:</h6>
-                                    <ul class="mb-0 ps-3 text-white-50">
-                                        <li class="mb-1">Độ phân giải siêu căng chuẩn 2K nét đứt.</li>
-                                        <li class="mb-1">Thuật toán AI phát hiện chuyển động chuyển dịch tức thời.</li>
-                                        <li>Hỗ trợ lưu trữ thẻ nhớ mở rộng lên đến 256GB.</li>
-                                    </ul>
-                                </div>
-                                <div class="tab-pane fade" id="nav-review" role="tabpanel">
-                                    <p class="mb-0 text-white-50">Hiện chưa có đánh giá nào từ cộng đồng game thủ. Hãy là người đầu tiên để lại ý kiến đánh giá sản phẩm này của bạn!</p>
+                                <div class="tab-pane fade text-white-50" id="review-content" role="tabpanel">
+                                    <p>⭐️ <strong>Nguyễn Văn A:</strong> Giao hàng cực nhanh, hàng đóng gói cẩn thận y như hình chụp!</p>
+                                    <p>⭐️ <strong>Trần Thị B:</strong> Chất lượng tuyệt vời vượt tầm giá, sẽ tiếp tục ủng hộ LuLoShop dài dài.</p>
                                 </div>
                             </div>
                         </div>
 
                     </div>
                 </div>
-
-            </div>
+                
+            <?php endif; ?>
         </div>
     </div>
 
     <?php include '../components/Footer.php'; ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
-    
     <script>
-        new WOW().init();
-
-        // 1. XỬ LÝ CHUYỂN ĐỔI ẢNH CHÍNH (Thay thế useState mainImg)
-        function changeMainImage(element, newSrc) {
-            document.getElementById('productMainImg').src = newSrc;
-            
-            // Xóa viền active ở các ảnh cũ và thêm vào ảnh vừa click
-            document.querySelectorAll('.thumb-box').forEach(box => box.classList.remove('active'));
-            element.classList.add('active');
+        function updateQty(change) {
+            let qtyInput = document.getElementById('buyQty');
+            let currentVal = parseInt(qtyInput.value);
+            let newVal = currentVal + change;
+            if (newVal >= 1) qtyInput.value = newVal;
         }
 
-        // 2. XỬ LÝ TĂNG GIẢM SỐ LƯỢNG (Thay thế useState quantity)
-        function handleQty(type) {
-            const qtyInput = document.getElementById('qtyInput');
-            let currentQty = parseInt(qtyInput.value);
+        function addToCartDetail() {
+            <?php if ($product): ?>
+                const product = {
+                    id: <?= $product['id_san_pham'] ?>,
+                    name: "<?= addslashes($product['ten_san_pham']) ?>",
+                    price: <?= $gia_hien_tai ?>,
+                    img: "<?= $imgPath ?>",
+                    category: "<?= addslashes($product['ten_danh_muc'] ?? 'Khác') ?>"
+                };
 
-            if (type === 'minus' && currentQty > 1) {
-                qtyInput.value = currentQty - 1;
-            } else if (type === 'plus') {
-                qtyInput.value = currentQty + 1;
-            }
-        }
+                const qty = parseInt(document.getElementById('buyQty').value);
+                let currentCart = JSON.parse(localStorage.getItem('cart')) || [];
+                let existingItemIndex = currentCart.findIndex(item => item.id === product.id);
 
-        // 3. XỬ LÝ THÊM VÀO GIỎ HÀNG ĐỒNG BỘ VỚI LOCALSTORAGE
-        function addToCartFromDetail(product) {
-            const qtyInput = document.getElementById('qtyInput');
-            let quantityToAdd = parseInt(qtyInput.value);
+                if (existingItemIndex !== -1) {
+                    currentCart[existingItemIndex].quantity += qty;
+                } else {
+                    product.quantity = qty;
+                    product.selected = true;
+                    currentCart.push(product);
+                }
 
-            let currentCart = JSON.parse(localStorage.getItem('cart')) || [];
-            let existingItemIndex = currentCart.findIndex(item => item.id === product.id);
-
-            if (existingItemIndex !== -1) {
-                // Cộng dồn số lượng khách chọn trong trang chi tiết
-                currentCart[existingItemIndex].quantity += quantityToAdd;
-            } else {
-                // Thêm mới hoàn toàn
-                product.quantity = quantityToAdd;
-                product.selected = true;
-                currentCart.push(product);
-            }
-
-            localStorage.setItem('cart', JSON.stringify(currentCart));
-            
-            // Cập nhật số lượng trên icon Header (nếu có)
-            if (typeof updateCartBadge === 'function') updateCartBadge();
-
-            alert(`Thành công! Đã thêm ${quantityToAdd} sản phẩm ${product.name} vào giỏ hàng!`);
+                localStorage.setItem('cart', JSON.stringify(currentCart));
+                if (typeof updateCartBadge === 'function') updateCartBadge();
+                alert(`Thành công! Đã thêm ${qty} sản phẩm "${product.name}" vào giỏ hàng.`);
+            <?php endif; ?>
         }
     </script>
 </body>
