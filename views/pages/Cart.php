@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -89,6 +88,7 @@
                                                 value="<?= $key ?>"
                                                 data-unit-price="<?= $item['gia'] ?>"
                                                 data-price="<?= $item['gia'] * $item['so_luong'] ?>"
+                                                data-stock="<?= $item['so_luong_ton'] ?? 0 ?>"
                                                 checked
                                                 onchange="updateTotal()"
                                             />

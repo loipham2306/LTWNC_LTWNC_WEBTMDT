@@ -165,6 +165,15 @@
             $stmt = $this->conn->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+        }
+        public function countThuongHieu() {
+            $sql = "SELECT id_thuong_hieu, ten_thuong_hieu FROM thuong_hieu";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute();
+
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return count($data);
+        }
     }
 ?>

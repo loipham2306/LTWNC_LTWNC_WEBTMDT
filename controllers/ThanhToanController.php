@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../model/DonHangModel.php';
 require_once __DIR__ . '/../model/GioHang.php';
 
@@ -139,11 +138,20 @@ class ThanhToanController
             if (empty($id_voucher_input)) {
                 $id_voucher_input = null;
             }
-            // 6. Tạo đơn hàng (Chỉ gọi 1 lần)
+           $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
+            $stmt = $this->db->prepare("SELECT id_khach_hang FROM khach_hang WHERE id_tai_khoan = ?");
+            $stmt->execute([$id_tai_khoan]);
+            $khach_hang = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$khach_hang) {
+                echo json_encode(['status' => 'error', 'message' => 'Không tìm thấy thông tin khách hàng tương ứng.']);
+                exit;
+            }
+            $id_khach_hang_chuan = $khach_hang['id_khach_hang'];
             $dataDonHang = [
-                'id_khach_hang'          => $_SESSION['user']['id_tai_khoan'],
-                'id_voucher'             => $id_voucher_input,                
-                'tong_tien'              => $tong_tien,
+                'id_khach_hang'         => $id_khach_hang_chuan, // SỬ DỤNG ID ĐÃ PHIÊN DỊCH (SỐ 4)
+                'id_voucher'            => $id_voucher_input,                    
+                'tong_tien'             => $tong_tien,
                 'phuong_thuc_thanh_toan' => $_POST['phuong_thuc_thanh_toan'],
                 'trang_thai_thanh_toan'  => ($_POST['phuong_thuc_thanh_toan'] == 'bank') ? 'Chưa thanh toán' : 'Không áp dụng',
                 'ten_nguoi_nhan'         => $ten_nguoi_nhan,
@@ -153,8 +161,10 @@ class ThanhToanController
             ];
 
             $id_don_hang = $this->donHangModel->createDonHang($dataDonHang);
-            if (!$id_don_hang) throw new Exception('Lỗi hệ thống khi tạo đơn hàng.');
-
+            if (!$id_don_hang) {
+                echo json_encode(['status' => 'error', 'message' => 'Lỗi tạo giỏ hàng...']);
+                exit;
+            }
             // 7. Thêm chi tiết và cập nhật tồn kho
            foreach ($_SESSION['checkout_items'] as $item) {
                 $this->donHangModel->addChiTietDonHang([
@@ -169,8 +179,10 @@ class ThanhToanController
             }
 
             // 8. Xóa giỏ hàng
-            $id_gio_hang = $this->gioHangModel->getGioHangId($_SESSION['user']['id_tai_khoan']);
-            $this->gioHangModel->clearCart($id_gio_hang);
+            $id_gio_hang = $this->gioHangModel->getGioHangId($id_khach_hang_chuan);
+            if ($id_gio_hang) {
+                $this->gioHangModel->clearCart($id_gio_hang);
+            }
             unset($_SESSION['checkout_items']);
 
             $this->db->commit();
@@ -180,15 +192,18 @@ class ThanhToanController
                 'status' => 'success',
                 'message' => 'Đặt hàng thành công.',
                 'id_don_hang' => $id_don_hang,
-                'redirect' => ($_POST['phuong_thuc_thanh_toan'] == 'bank') ? 'index.php?act=ThanhToanBank&id=' . $id_don_hang : 'index.php?act=CamOn'
+                'redirect' => ($_POST['phuong_thuc_thanh_toan'] == 'bank') ? 'index.php?act=ThanhToanBank&id=' . $id_don_hang : 'index.php?act=ThanhToanThanhCong'
             ]);
 
         } catch (Exception $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+           if ($this->db->inTransaction()) $this->db->rollBack();
 
+            // Thay vì chỉ báo lỗi, hãy log lỗi thật sự vào console hoặc file
+            error_log("Lỗi đặt hàng: " . $e->getMessage()); 
+            
             echo json_encode([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage() // Xem chi tiết lỗi ở đây trên giao diện
             ]);
         }
     }

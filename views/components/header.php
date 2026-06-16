@@ -12,7 +12,7 @@ $isHomeActive     = ($currentPage == 'index.php' && $act == '') ? 'active' : '';
 $isShopActive     = ($act == 'Shop' || $currentPage == 'ProductDetail.php') ? 'active' : '';
 $isCartActive     = ($act == 'GioHang' || $currentPage == 'Cart.php') ? 'active' : '';
 $isCheckoutActive = ($act == 'ThanhToan' ||$currentPage == 'Checkout.php') ? 'active' : '';
-$isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
+$isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active' : '';
 ?>
 
 <style>
@@ -83,7 +83,21 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
                         <i class="fas fa-shopping-cart"></i>
                     </span>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">3</span>
+                    
+                    <?php
+                    // Tính tổng số lượng từ session cart
+                    $totalQty = 0;
+                    if (!empty($_SESSION['cart'])) {
+                        foreach ($_SESSION['cart'] as $item) {
+                            $totalQty += (int)($item['so_luong'] ?? 1);
+                        }
+                    }
+                    ?>
+                    <?php if ($totalQty > 0): ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">
+                            <?= $totalQty ?>
+                        </span>
+                    <?php endif; ?>
                 </a>
                 <?php
                     // Kiểm tra trạng thái đăng nhập (đảm bảo session_start() đã được gọi ở đầu file)
@@ -104,6 +118,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
 </div>
 
 <div class="container-fluid nav-bar p-0 mb-0">
+    
     <div class="row gx-0 nav-bar-bg px-5 align-items-center mb-0">
         <div class="col-12 col-lg-12">
             <nav class="navbar navbar-expand-lg navbar-dark bg-transparent py-0">
@@ -116,7 +131,7 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                         <a href="index.php?act=Shop" class="nav-item nav-link <?= $isShopActive ?>">Cửa hàng</a>
                         <a href="index.php?act=GioHang" class="nav-item nav-link <?= $isCartActive ?>">Giỏ Hàng</a>
                         <a href="index.php?act=ThanhToan" class="nav-item nav-link <?= $isCheckoutActive ?>">Thanh Toán</a>
-                        <a href="<?= $BASE_URL ?>views/pages/Contact.php" class="nav-item nav-link me-2 <?= $isContactActive ?>">Liên Hệ</a>
+                        <a href="index.php?act=LienHe" class="nav-item nav-link me-2 <?= $isContactActive ?>">Liên Hệ</a>
                     </div>
 
                     <div class="ms-auto d-none d-lg-block">

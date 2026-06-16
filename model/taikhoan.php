@@ -175,12 +175,25 @@
 
         // 2. Hàm cập nhật mật khẩu
         public function updatePassword($id, $newHashedPassword) {
-            $query = "UPDATE " . $this->table_name . " SET mat_khau = :mat_khau WHERE id_tai_khoan = :id";
+            $query = "UPDATE " . $this->table_name . " 
+                    SET mat_khau = :mat_khau 
+                    WHERE id_tai_khoan = :id";
+
             $stmt = $this->conn->prepare($query);
-            return $stmt->execute([
+
+            $ok = $stmt->execute([
                 ':mat_khau' => $newHashedPassword,
                 ':id' => $id
             ]);
+
+            if (!$ok) {
+                error_log("UPDATE FAIL");
+                return false;
+            }
+
+            // ❌ KHÔNG dùng rowCount để check success
+            return true;
         }
+        
     }
 ?>

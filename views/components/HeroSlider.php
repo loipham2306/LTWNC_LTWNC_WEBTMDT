@@ -38,7 +38,7 @@
     .banner-side {
         height: 480px;
         position: relative;
-        background: url('/LTWNC_LTWNC_WEBTMDT/assets/images/img/giaynike.jpeg') center/cover no-repeat;
+        background: url('/LTWNC_LTWNC_WEBTMDT/assets/images/img/Nike Air Jordan 1 Low.jpg') center/cover no-repeat;
     }
 
     .overlay-side {
@@ -78,7 +78,7 @@
                             <div class="row g-0 w-100 align-items-center"> 
                                 <div class="col-md-6 p-0 wow fadeInLeft" data-wow-delay="0.1s">
                                     <div class="esport-bg">
-                                        <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/ATADIASC8806.webp" class="hero-img-full" alt="BST Adidas Originals">
+                                        <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/xanh_Adidas Tiro 25 Essentials Training Top - Black _adidas UK .jpg" class="hero-img-full" alt="BST Adidas Originals">
                                     </div>
                                 </div>
                                 <div class="col-md-6 text-white ps-4 pe-4 wow fadeInRight" data-wow-delay="0.3s">
@@ -96,7 +96,7 @@
                             <div class="row g-0 w-100 align-items-center"> 
                                 <div class="col-md-6 p-0">
                                     <div class="esport-bg">
-                                        <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/uniqlo.jpg" class="hero-img-full" alt="BST Uniqlo LifeWear">
+                                        <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/Levi's - Áo Sơ Mi Nam Tay Ngắn Relaxed.jpg" class="hero-img-full" alt="BST Uniqlo LifeWear">
                                     </div>
                                 </div>
                                 <div class="col-md-6 text-white ps-4 pe-4">
@@ -121,7 +121,7 @@
 
         <div class="col-lg-3 wow fadeInUp" data-wow-delay="0.5s">
             <div class="banner-side">
-                <div class="save-badge">SALE -20%</div>
+                <div class="save-badge">GIẢM GIÁ -20%</div>
                 <div class="overlay-side text-white text-center text-lg-start">
                     <p class="m-0 text-white-50 fs-6 text-uppercase" style="letter-spacing: 1px;">Giày Chạy Bộ Nam</p>
                     <h3 class="fw-bold my-2">Nike Air Jordan 1 Low</h3>

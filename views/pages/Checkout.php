@@ -1,7 +1,5 @@
 
 <?php
-     // Debug: Bỏ comment dòng này để xem dữ liệu có trong session không
-
     $hasItems = !empty($_SESSION['checkout_items']);
 ?>
 <!DOCTYPE html>
@@ -346,26 +344,31 @@
             .then(data => {
                 if (data.status === 'success') {
                     if (paymentMethod === 'bank') {
-                        // ĐẶT HÀNG THÀNH CÔNG -> HIỂN THỊ QR VỚI ID THẬT
+                        // Hiển thị vùng QR
                         document.getElementById('qr-payment-area').style.display = 'block';
                         
-                        // GọgenerateQRLink(data.id_don_hang);i hàm tạo QR với ID nhận được từ Server
-                        generateQRLink(data.id_don_hang, baseTotal - discount);
+                        // Tính số tiền thực tế sau giảm giá
+                        let finalAmount = baseTotal - discount;
                         
-                        // Ẩn nút "Xác nhận đặt hàng" để tránh khách bấm nhiều lần
+                        // Gọi hàm tạo QR với ID đơn hàng trả về từ Server
+                        generateQRLink(data.id_don_hang, finalAmount);
+                        
+                        // Ẩn các phần không cần thiết
                         document.querySelector('button[type="submit"]').style.display = 'none';
-                        
-                        // Cuộn trang xuống vùng QR để khách hàng thấy rõ
-                        document.getElementById('qr-payment-area').scrollIntoView({ behavior: 'smooth' });
+                        document.getElementById('payment-method-container').style.display = 'none';
                         
                         alert("Đặt hàng thành công! Vui lòng quét mã QR để hoàn tất thanh toán.");
                     } else {
-                        // Nếu là COD thì chuyển trang luôn
-                        window.location.href = 'index.php?act=ThanhToanThanhCong&id=' + data.id_don_hang;
+                        // Nếu là COD, chuyển hướng thẳng
+                        window.location.href = data.redirect;
                     }
                 } else {
-                    alert('Có lỗi: ' + data.message);
+                    alert("Lỗi: " + data.message);
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Đã có lỗi xảy ra. Vui lòng thử lại!");
             });
         });
     </script>

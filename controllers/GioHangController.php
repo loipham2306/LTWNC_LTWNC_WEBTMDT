@@ -3,7 +3,7 @@ require_once '../model/GioHang.php';
 include_once __DIR__ . '/../app/utils/color_helper.php';
 class GioHangController {
     private $ghModel;
-
+    private $db;
     public function __construct($db) {
         $this->ghModel = new GiaHang($db);
         if (session_status() == PHP_SESSION_NONE) {
@@ -60,52 +60,52 @@ class GioHangController {
 
     private function addToCart() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            die("Request không hợp lệ");
+            echo json_encode(['status' => 'error', 'message' => 'Request không hợp lệ']);
+            exit;
         }
-        
-        $id_bien_the = isset($_POST['id_bien_the'])
-            ? (int)$_POST['id_bien_the']
-            : 0;
-        $so_luong = isset($_POST['so_luong'])
-            ? (int)$_POST['so_luong']
-            : 1;
-        if ($id_bien_the <= 0) {
-            die("ID biến thể không hợp lệ");
+
+        $id_khach_hang = $_SESSION['user']['id_khach_hang'] ?? 0;
+        $id_bien_the = isset($_POST['id_bien_the']) ? (int)$_POST['id_bien_the'] : 0;
+        $so_luong = isset($_POST['so_luong']) ? (int)$_POST['so_luong'] : 1;
+
+        if ($id_khach_hang <= 0 || $id_bien_the <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Dữ liệu không hợp lệ']);
+            exit;
         }
-        $id_user = $_SESSION['user']['id_khach_hang'] ?? 0; 
-        if ($id_user <= 0) {
-            die("Bạn chưa đăng nhập");
-        }
+
         try {
             // Lấy ID giỏ hàng
-            $id_gio_hang = $this->ghModel->getGioHangId($id_user);
+            $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
 
+            // Nếu chưa có giỏ hàng, tạo mới
             if (!$id_gio_hang) {
-                $id_gio_hang = $this->ghModel->createGioHang($id_user);
+                $id_gio_hang = $this->ghModel->createGioHang($id_khach_hang);
             }
-            // Thêm vào DB
-            $result = $this->ghModel->addToGioHang(
-                $id_gio_hang,
-                $id_bien_the,
-                $so_luong
-            );
-            if (!$result) {
-                die("Không thể thêm vào giỏ hàng");
+
+            // Kiểm tra xem ID giỏ hàng có hợp lệ không trước khi thêm
+            if ($id_gio_hang > 0) {
+                $result = $this->ghModel->addToGioHang($id_gio_hang, $id_bien_the, $so_luong);
+                
+                if ($result) {
+                    $this->syncCartFromDB();
+                    echo json_encode(['status' => 'success']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Lỗi khi thêm vào DB']);
+                }
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Không thể tạo giỏ hàng']);
             }
-            // Đồng bộ Session từ DB
-            $this->syncCartFromDB();
-            echo 'success'; 
-             exit();
         } catch (Exception $e) {
-            die("Lỗi: " . $e->getMessage());
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
+        exit;
     }
      // Ví dụ xử lý trong GioHangController
     public function capNhatSoLuong() {
 
         $id = $_GET['id'];
         $type = $_GET['type'];
-
+                
         $id_khach_hang = $_SESSION['user']['id_khach_hang'];
         $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
 

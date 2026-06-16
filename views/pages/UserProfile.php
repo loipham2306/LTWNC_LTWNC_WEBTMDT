@@ -107,8 +107,18 @@
 
     <div class="container-fluid profile-wrapper py-5">
         <div class="container py-5">
-            <div class="row g-4">
 
+            <div class="row g-4">
+                <?php
+                    if (isset($_SESSION['success'])) {
+                        echo '<div class="alert alert-success">' . $_SESSION['success'] . '</div>';
+                        unset($_SESSION['success']); // Xóa sau khi đã hiển thị
+                    }
+                    if (isset($_SESSION['error'])) {
+                        echo '<div class="alert alert-danger">' . $_SESSION['error'] . '</div>';
+                        unset($_SESSION['error']); // Xóa sau khi đã hiển thị
+                    }
+                    ?>
                 <div class="col-lg-3 wow fadeInLeft" data-wow-delay="0.1s">
                     <div class="card profile-card rounded p-4 text-center mb-4">
                         <div class="d-flex justify-content-center mb-3">
@@ -144,22 +154,21 @@
 
                 <div class="col-lg-9 wow fadeInRight" data-wow-delay="0.2s">
                     <div class="card profile-card rounded p-4 h-100">
-
                         <div id="tabContent-info" class="tab-pane-custom">
                             <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Hồ Sơ Của Tôi</h4>
-                            <form id="infoForm">
+                            <form action="index.php?act=updateProfile" method="POST" id="infoForm">
                                 <div class="row g-4">
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Họ & Tên Đệm</label>
-                                        <input type="text" id="ho_ten_dem" class="form-control py-2" placeholder="Nhập họ và tên đệm">
+                                        <input type="text" name="ho_ten_dem" id="ho_ten_dem" class="form-control py-2" placeholder="Nhập họ và tên đệm">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Tên</label>
-                                        <input type="text" id="ten" class="form-control py-2" placeholder="Nhập tên">
+                                        <input type="text" name="ten"  id="ten" class="form-control py-2" placeholder="Nhập tên">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Số Điện Thoại</label>
-                                        <input type="text" id="so_dien_thoai" class="form-control py-2" placeholder="Nhập số điện thoại">
+                                        <input type="text" name="so_dien_thoai" id="so_dien_thoai" class="form-control py-2" placeholder="Nhập số điện thoại">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Tên đăng nhập / Email</label>
@@ -167,7 +176,7 @@
                                     </div>
                                     <div class="col-md-12">
                                         <label class="form-label text-white-50 fw-bold">Địa Chỉ Giao Hàng</label>
-                                        <textarea id="dia_chi" class="form-control py-2" rows="3" placeholder="Nhập số nhà, tên đường, quận/huyện..."></textarea>
+                                        <textarea name="dia_chi" id="dia_chi" class="form-control py-2" rows="3" placeholder="Nhập số nhà, tên đường, quận/huyện..."></textarea>
                                     </div>
                                     <div class="col-12 mt-4">
                                         <button type="submit" class="btn btn-orange px-5 py-2 fw-bold rounded-pill">
@@ -247,16 +256,13 @@
                                 <div class="row g-4" style="max-width: 600px;">
                                     <div class="col-12">
                                         <label class="form-label text-white-50 fw-bold">Mật khẩu hiện tại</label>
-                                        <input type="password" id="oldPassword" class="form-control py-2" placeholder="Nhập mật khẩu cũ..." required>
-                                    </div>
+                                        <input type="password" name="old_password" id="oldPassword" class="form-control" required>                                    </div>
                                     <div class="col-12">
                                         <label class="form-label text-white-50 fw-bold">Mật khẩu mới</label>
-                                        <input type="password" id="newPassword" class="form-control py-2" placeholder="Nhập mật khẩu mới..." required>
-                                    </div>
+                                        <input type="password" name="new_password" id="newPassword" class="form-control" required>                                    </div>
                                     <div class="col-12">
                                         <label class="form-label text-white-50 fw-bold">Xác nhận mật khẩu mới</label>
-                                        <input type="password" id="confirmPassword" class="form-control py-2" placeholder="Nhập lại mật khẩu mới..." required>
-                                    </div>
+                                        <input type="password" name="confirm_password" id="confirmPassword" class="form-control" required>                                    </div>
                                     <div class="col-12 mt-4">
                                         <button type="submit" class="btn btn-orange px-5 py-2 fw-bold rounded-pill">
                                             Cập Nhật Mật Khẩu
@@ -279,6 +285,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
     
     <script>
+       const orders = <?= json_encode($danhSachDonHang ?? []); ?>; 
+        console.log("Dữ liệu đơn hàng:", orders);
         new WOW().init();
 
         // Khai báo biến toàn cục quản lý dữ liệu User
@@ -287,13 +295,10 @@
             ten: '', so_dien_thoai: '', dia_chi: '', hang_thanh_vien: ''
         };
 
-        // Mảng dữ liệu mockup Đơn hàng giống React gốc
-        const orders = [
-            { id: '#LK2034', date: '25/05/2026', total: '3.350.000 đ', status: 'Đang Giao' },
-            { id: '#LK1988', date: '12/05/2026', total: '1.250.000 đ', status: 'Hoàn Thành' },
-        ];
+
 
         document.addEventListener("DOMContentLoaded", function() {
+            renderOrders();
             // Gọi AJAX để lấy dữ liệu từ Server/Controller
             // Giả sử ID được lấy từ session PHP, bạn có thể truyền thẳng vào đây
             const taiKhoanId = "<?= $_SESSION['user']['id_tai_khoan'] ?? 0 ?>";
@@ -335,21 +340,40 @@
             document.getElementById('userRank').innerText = 'Hạng: ' + (userData.hang_thanh_vien || 'Thành Viên Mới');
         }
 
-        // Vẽ danh sách lịch sử mua hàng vào bảng
         function renderOrders() {
             const tbody = document.getElementById('ordersTableBody');
-            let html = '';
+            if (!tbody) return;
+
+            // Kiểm tra nếu orders không phải là mảng hoặc rỗng
+            if (!Array.isArray(orders) || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-white-50 text-center">Chưa có đơn hàng nào.</td></tr>';
+                return;
+            }
             
+            let html = '';
             orders.forEach(order => {
-                const badgeClass = order.status === 'Đang Giao' ? 'bg-warning text-dark' : 'bg-success';
+                // Dựa trên object bạn cung cấp:
+                const id = order.id_don_hang; 
+                const date = order.ngay_dat;
+                
+                // Định dạng tiền tệ từ 8800000.00
+                const total = Number(order.tong_tien).toLocaleString('vi-VN') + ' đ';
+                
+                const status = order.trang_thai_don_hang;
+
+                // Logic màu sắc cho badge
+                let badgeClass = 'bg-secondary';
+                if (status === 'Đã giao') badgeClass = 'bg-success';
+                else if (status === 'Đang giao') badgeClass = 'bg-warning text-dark';
+                
                 html += `
                     <tr>
-                        <td class="fw-bold text-white py-3">${order.id}</td>
-                        <td class="text-white-50 py-3">${order.date}</td>
-                        <td class="text-orange fw-bold py-3">${order.total}</td>
+                        <td class="fw-bold text-white py-3">#${id}</td>
+                        <td class="text-white-50 py-3">${date}</td>
+                        <td class="text-orange fw-bold py-3">${total}</td>
                         <td class="py-3">
                             <span class="badge rounded-pill px-3 py-2 ${badgeClass}">
-                                ${order.status}
+                                ${status}
                             </span>
                         </td>
                         <td class="py-3">
@@ -360,7 +384,6 @@
             });
             tbody.innerHTML = html;
         }
-
         // ĐIỀU KHIỂN CHUYỂN TAB MƯỢT MÀ (Thay thế useState activeTab)
         function switchTab(tabName, element) {
             // Ẩn toàn bộ các ô nội dung tab
@@ -375,8 +398,6 @@
 
         // XỬ LÝ HÀM CẬP NHẬT THÔNG TIN HỒ SƠ
         document.getElementById('infoForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
             userData.ho_ten_dem = document.getElementById('ho_ten_dem').value;
             userData.ten = document.getElementById('ten').value;
             userData.so_dien_thoai = document.getElementById('so_dien_thoai').value;
@@ -391,18 +412,15 @@
 
         // XỬ LÝ ĐỔI MẬT KHẨU
         document.getElementById('passwordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
             const newPass = document.getElementById('newPassword').value;
             const confirmPass = document.getElementById('confirmPassword').value;
             
+            // Chỉ chặn gửi form NẾU mật khẩu không khớp
             if (newPass !== confirmPass) {
+                e.preventDefault(); 
                 alert('⚠️ Xác nhận mật khẩu mới không trùng khớp!');
-                return;
+                return false;
             }
-            
-            alert('🎉 Cập nhật mật khẩu thành công!');
-            this.reset();
         });
 
         function handleLogout() {
@@ -444,6 +462,7 @@
                     container.innerHTML = '<p class="text-danger">Không thể tải voucher.</p>';
                 });
         }
+        
     </script>
 </body>
 </html>

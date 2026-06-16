@@ -125,6 +125,7 @@ class GiaHang {
                 bt.mau_sac,
                 bt.gia_ban,
                 bt.hinh_anh_bien_the,
+                bt.so_luong_ton,
                 sp.ten_san_pham
             FROM chi_tiet_gio_hang ct
             INNER JOIN bien_the_san_pham bt

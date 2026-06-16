@@ -19,6 +19,7 @@ include_once '../controllers/ShopController.php';
 include_once '../controllers/GioHangController.php';
 require_once '../controllers/ThanhToanController.php';
 require_once '../controllers/UserProfileController.php';
+require_once '../controllers/DonHangController.php';
 // 2. Lấy action (act) từ URL
 $act = $_REQUEST['act'] ?? 'trangchu';
 
@@ -33,6 +34,9 @@ switch ($act) {
     // --- NHÓM ĐĂNG NHẬP / TÀI KHOẢN ---
     case 'Login':
         include '../views/pages/Login.php';
+        break;
+    case 'LienHe':
+        include '../views/pages/Contact.php';
         break;
         
     case 'layChiTiet':
@@ -69,13 +73,17 @@ switch ($act) {
         $dnController->xuLyDangNhap(); // Gọi trực tiếp hàm xử lý
         break;
     case 'admin_dashboard':
-        // Kiểm tra quyền admin trước khi cho vào
         if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] === 'admin') {
-            include '../views/pages/admin/Dashboard.php';
+
+            require_once '../controllers/DashboardController.php';
+
+            $controller = new DashboardController($db);
+            $controller->index(); // <-- QUAN TRỌNG
+
             exit();
         } else {
-            // Nếu không phải admin thì đá về trang chủ
             header("Location: index.php");
+            exit();
         }
         break;
     //render cửa hàng
@@ -232,6 +240,19 @@ switch ($act) {
         // Lấy ID đơn hàng từ URL để hiển thị thông tin đúng
         $id = $_GET['id'] ?? 0;
         $controller->showThanhCong($id);
+        break;
+    // --- NHÓM ĐƠN HÀNG ---
+    case 'QuanLyDonHang':
+    case 'ChiTietDonHang':
+    case 'CapNhatTrangThaiDonHang':
+    case 'HuyDonHang':
+    case 'XoaDonHang':
+
+        include_once 'DonHangController.php';
+
+        $dhController = new DonHangController($db);
+        $dhController->handle($act);
+
         break;
     // --- MẶC ĐỊNH ---
     default:

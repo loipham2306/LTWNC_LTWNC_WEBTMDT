@@ -10,7 +10,7 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 - [x] Đăng nhập
 - [x] Đăng xuất
-- [ ] Đổi mật khẩu
+- [x] Đổi mật khẩu
 - [ ] Quên mật khẩu
 - [X] Khóa/Mở khóa tài khoản
 - [x] Phân quyền Admin/Nhân viên/Khách hàng
@@ -21,13 +21,12 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 # 👤 2. Quản lý Khách hàng (khach_hang)
 
-- [ ] Thêm khách hàng
-- [ ] Cập nhật thông tin khách hàng
-- [ ] Xem chi tiết khách hàng
+- [x] Thêm khách hàng
+- [x] Cập nhật thông tin khách hàng
+- [x] Xem chi tiết khách hàng
 - [X] Khóa khách hàng
 - [X] Danh sách khách hàng
 - [X] Tìm kiếm khách hàng
-- [ ] Thống kê khách hàng mới
 
 ---
 
@@ -104,7 +103,7 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 # 📦 9. Đơn hàng (don_hang, chi_tiet_don_hang)
 
-- [ ] Đặt hàng
+- [x] Đặt hàng
 - [ ] Hủy đơn hàng
 - [ ] Xem lịch sử mua hàng
 - [ ] Chi tiết đơn hàng
@@ -116,7 +115,7 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 # 🚚 10. Lịch sử giao hàng (lich_su_giao_hang)
 
-- [ ] Chờ xác nhận
+- [x] Chờ xác nhận
 - [ ] Đang chuẩn bị hàng
 - [ ] Đang giao
 - [ ] Đã giao
@@ -161,15 +160,15 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 
 # 📊 14. Thống kê Dashboard
 
-- [ ] Tổng sản phẩm
-- [ ] Tổng khách hàng
-- [ ] Tổng đơn hàng
-- [ ] Tổng doanh thu
+- [x] Tổng sản phẩm
+- [x] Tổng khách hàng
+- [x] Tổng đơn hàng
+- [x] Tổng doanh thu
 - [ ] Đơn hàng hôm nay
 - [ ] Sản phẩm bán chạy
 - [ ] Danh mục bán chạy
 - [ ] Thương hiệu bán chạy
-- [ ] Biểu đồ doanh thu theo tháng
+- [x] Biểu đồ doanh thu theo tháng
 
 ---
 
@@ -182,10 +181,10 @@ Website thương mại điện tử bán hàng thời trang, hỗ trợ quản l
 - [x] Lọc sản phẩm
 - [x] Xem chi tiết sản phẩm
 - [x] Thêm giỏ hàng
-- [ ] Thanh toán
+- [x] Thanh toán
 - [ ] Theo dõi đơn hàng
 - [ ] Đánh giá sản phẩm
-- [ ] Cập nhật hồ sơ cá nhân
+- [x] Cập nhật hồ sơ cá nhân
 
 ---
 

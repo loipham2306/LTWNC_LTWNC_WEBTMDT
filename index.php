@@ -1,4 +1,6 @@
-
+<?php
+$brands = $brands??[];
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -114,28 +116,39 @@
             color: white;
             transform: scale(1.05);
         }
+        .voucher-scroll {
+    display: flex;
+    flex-wrap: nowrap;        /* KHÔNG xuống dòng */
+    overflow-x: auto;         /* cho cuộn ngang */
+    gap: 12px;
+    padding-bottom: 10px;
+    scroll-behavior: smooth;
+}
+
+/* ẩn scrollbar cho đẹp */
+.voucher-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.voucher-scroll::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+}
+
+.voucher-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* card không co lại */
+.voucher-scroll .col-12 {
+    flex: 0 0 auto;
+    width: 320px; /* chỉnh size voucher */
+}
     </style>
 </head>
 <body>
 
     <?php
-    
-    // 1. KẾT NỐI DATABASE VÀ LẤY TỐI ĐA 4 SẢN PHẨM MỚI NHẤT
-    require_once 'config/database.php';
-    $db = new Database();
-    $conn = $db->getConnection();
-
-    $sql = "SELECT sp.*, dm.ten_danh_muc 
-            FROM san_pham sp 
-            LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc 
-            WHERE sp.trang_thai = 1 
-            ORDER BY sp.id_san_pham DESC 
-            LIMIT 4";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-    
-    // ĐỔI TÊN BIẾN THÀNH $homeFeaturedProducts ĐỂ CHỐNG BỊ CÁC FILE KHÁC ĐÈ MẤT DỮ LIỆU
-    $homeFeaturedProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 2. NHÚNG COMPONENT HEADER (THANH MENU)
     include 'views/components/Header.php';
@@ -147,10 +160,22 @@
     // 4. NHÚNG DẢI TÍNH NĂNG DỊCH VỤ (FREE SHIP, ĐỔI TRẢ...)
     include 'views/components/ServiceFeatures.php';
 
-    // 5. NHÚNG KHỐI DANH MỤC SẢN PHẨM DUYỆT THEO TAB (NẾU CÓ)
-    include 'views/components/FeaturedProducts.php';
     ?>
+    <div class="d-flex justify-content-center flex-wrap mb-4 gap-2">
 
+        <button class="btn btn-warning rounded-pill px-3"
+                onclick="filterBrand('all', this)">
+            Tất cả
+        </button>
+
+        <?php foreach ($brands as $b): ?>
+            <button class="btn btn-outline-warning rounded-pill px-3"
+                    onclick="filterBrand('<?= htmlspecialchars($b['ten_thuong_hieu']) ?>', this)">
+                <?= htmlspecialchars($b['ten_thuong_hieu']) ?>
+            </button>
+        <?php endforeach; ?>
+
+    </div>
     <div class="container-fluid home-section py-5">
         <div class="container py-5">
             

@@ -33,6 +33,9 @@ class VoucherController {
                 break;
             case 'ViVoucher':
                 $this->hienThiViVoucher();
+                break;
+            case 'DungVoucher':
+                $this->dungVoucher();
                 break;   
             // --- Mặc định nếu không tìm thấy trang ---
             default:
@@ -157,5 +160,16 @@ class VoucherController {
     $danhSachVoucherCuaToi = $this->voucherModel->layVoucherCuaNguoiDung($id_tai_khoan);
         
         include '../views/pages/UserProfile.php';
+    }
+    public function dungVoucher() {
+        $id_voucher = $_GET['id_voucher'] ?? null;
+        $id_tai_khoan = $_SESSION['user']['id_tai_khoan'] ?? null;
+
+        if ($id_voucher && $id_tai_khoan) {
+            // Gọi model để update trạng thái da_su_dung = 1
+            $this->voucherModel->capNhatTrangThaiVoucher($id_tai_khoan, $id_voucher, 1);
+        }
+        header("Location: index.php?act=UserProfile");
+        exit();
     }
 }

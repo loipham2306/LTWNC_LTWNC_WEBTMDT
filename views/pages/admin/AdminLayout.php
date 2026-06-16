@@ -99,7 +99,7 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
             </li>
             
             <li>
-                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Order_Management" 
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyDonHang" 
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('OrderAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('OrderAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-clipboard-list me-3" style="width: 20px;"></i> Quản Lý Đơn Hàng
@@ -121,8 +121,8 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
             </li>
             <li>
                 <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyKhuyenMai" 
-                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('VoucherAdmin.php', $current_page) ? 'text-white' : 'text-muted' ?>"
-                   style="background-color: <?= isActive('VoucherAdmin.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
+                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('QuanLyKhuyenMai.php', $current_page) ? 'text-white' : 'text-muted' ?>"
+                   style="background-color: <?= isActive('QuanLyKhuyenMai.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-ticket-alt me-3" style="width: 20px;"></i> Quản Lý Khuyến Mãi
                 </a>
             </li>
@@ -140,7 +140,7 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
     <div class="flex-grow-1 d-flex flex-column" style="overflow-y: auto; max-height: 100vh;">
 
         <div class="p-4 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background-color: #111;">
-            <h4 class="text-white fw-bold mb-0">Hệ Thống Quản Trị LuLoShop</h4>
+            <h4 class="text-white fw-bold mb-0">Hệ Thống Quản Trị TramHieu</h4>
             <div class="d-flex align-items-center gap-3">
                 <button class="btn btn-dark border-secondary position-relative">
                     <i class="fas fa-bell text-warning"></i>

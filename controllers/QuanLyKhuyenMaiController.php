@@ -30,7 +30,7 @@ class QuanLyKhuyenMaiController {
     // Hiển thị danh sách
     private function index() {
         $listKM = $this->kmModel->getAllKhuyenMai();
-        $listBienThe = $this->kmModel->getDanhSachBienThe();
+       $listBienThe = $this->kmModel->getDanhSachBienThe();
         include '../views/pages/admin/QuanLyKhuyenMai.php';
     }
               
@@ -40,8 +40,11 @@ class QuanLyKhuyenMaiController {
             $phan_tram = (int)$_POST['phan_tram_giam'];
             $start = $_POST['ngay_bat_dau'];
             $end = $_POST['ngay_ket_thuc'];
-            $trang_thai = (int)$_POST['trang_thai']; // Lấy từ <select> trong form
-            
+            $trang_thai = (int)$_POST['trang_thai'];
+            $selection = $_POST['selection']; // Ví dụ: "sp_1" hoặc "bt_5"
+            $parts = explode('_', $selection);
+            $type = $parts[0]; // 'sp' hoặc 'bt'
+            $id = (int)$parts[1];
             // Xử lý upload ảnh Banner
             $bannerName = null;
             if (!empty($_FILES['hinh_anh_banner']['name'])) {
@@ -50,9 +53,16 @@ class QuanLyKhuyenMaiController {
                 move_uploaded_file($_FILES['hinh_anh_banner']['tmp_name'], $target_dir . $bannerName);
             }
 
-            // Gọi model với ĐỦ 6 tham số
-            if ($this->kmModel->createKhuyenMai($ten, $phan_tram, $start, $end, $trang_thai, $bannerName)) {
-                $_SESSION['success'] = "Thêm chương trình thành công!";
+            $id_km = $this->kmModel->createKhuyenMai($ten, $phan_tram, $start, $end, $trang_thai, $bannerName);
+        
+            if ($id_km) {
+                // Gán vào sản phẩm hoặc biến thể tương ứng
+                if ($type === 'sp') {
+                    $this->kmModel->addKhuyenMaiToSanPham($id_km, $id);
+                } else {
+                    $this->kmModel->addKhuyenMaiToBienThe($id_km, $id);
+                }
+                $_SESSION['success'] = "Tạo khuyến mãi và gán thành công!";
                 header("Location: index.php?act=QuanLyKhuyenMai");
                 exit();
             }

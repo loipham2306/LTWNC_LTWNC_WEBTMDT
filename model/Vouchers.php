@@ -126,14 +126,24 @@ class Vouchers {
     }
         // Trong Vouchers.php
     public function layVoucherCuaTaiKhoan($id_tai_khoan) {
-    // Lấy tất cả thông tin từ bảng voucher (v.*) và cột da_su_dung từ bảng trung gian (vnd.da_su_dung)
-    $sql = "SELECT v.*, vnd.da_su_dung 
-            FROM " . $this->table_voucher_nguoi_dung . " vnd
-            JOIN " . $this->table_name . " v ON vnd.id_voucher = v.id_voucher
-            WHERE vnd.id_tai_khoan = ?";
-            
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([$id_tai_khoan]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+        // Lấy tất cả thông tin từ bảng voucher (v.*) và cột da_su_dung từ bảng trung gian (vnd.da_su_dung)
+        $sql = "SELECT v.*, vnd.da_su_dung 
+                FROM " . $this->table_voucher_nguoi_dung . " vnd
+                JOIN " . $this->table_name . " v ON vnd.id_voucher = v.id_voucher
+                WHERE vnd.id_tai_khoan = ?";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id_tai_khoan]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function capNhatTrangThaiVoucher($id_tai_khoan, $id_voucher, $trang_thai) {
+        $sql = "UPDATE vi_voucher SET da_su_dung = :trang_thai 
+                WHERE id_tai_khoan = :id_tai_khoan AND id_voucher = :id_voucher";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':trang_thai' => $trang_thai,
+            ':id_tai_khoan' => $id_tai_khoan,
+            ':id_voucher' => $id_voucher
+        ]);
+    }
 }

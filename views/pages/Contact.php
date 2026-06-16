@@ -39,8 +39,8 @@
     $pageBreadcrumb = "Liên Hệ";
 
     // Gọi đúng các Component viết hoa chữ cái đầu
-    include '../components/Header.php';
-    include '../components/PageHeader.php';
+    include __DIR__.'/../components/Header.php';
+    include __DIR__ .'/../components/PageHeader.php';
     ?>
 
     <div class="container-fluid contact-wrapper py-5">
@@ -113,18 +113,18 @@
                             </div>
 
                             <div class="rounded overflow-hidden flex-fill shadow-sm border border-secondary" style="min-height: 280px;">
-    <iframe 
-        class="w-100 h-100" 
-        style="border: 0; display: block;" 
-        src="https://maps.google.com/maps?q=624+%C3%82u+C%C6%A1,+Ph%C6%B0%E1%BB%9Dng+10,+T%C3%A2n+B%C3%ACnh,+H%E1%BB%93+Ch%C3%AD+Minh&z=16&output=embed" 
-        allowfullscreen="" 
-        loading="lazy" 
-        referrerpolicy="no-referrer-when-downgrade">
-    </iframe>
-</div>
-</div>
-      
-</div>
+                                    <iframe 
+                                        class="w-100 h-100" 
+                                        style="border: 0; display: block;" 
+                                        src="https://maps.google.com/maps?q=624+%C3%82u+C%C6%A1,+Ph%C6%B0%E1%BB%9Dng+10,+T%C3%A2n+B%C3%ACnh,+H%E1%BB%93+Ch%C3%AD+Minh&z=16&output=embed" 
+                                        allowfullscreen="" 
+                                        loading="lazy" 
+                                        referrerpolicy="no-referrer-when-downgrade">
+                                    </iframe>
+                                </div>
+                                </div>
+                                    
+                                </div>
                             </div>
 
                         </div>
@@ -135,7 +135,7 @@
         </div>
     </div>
 
-    <?php include '../components/Footer.php'; ?>
+    <?php include __DIR__ .'/../components/Footer.php'; ?>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
