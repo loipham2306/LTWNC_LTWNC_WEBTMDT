@@ -1,11 +1,9 @@
 <?php
 /** @var array $donHang */ 
 ?>
-<div class="container py-5">
-    <div class="row justify-content-center">
+<div class="container py-5 thank-you-container"> <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
-            <div class="card shadow-sm border-0 text-center p-4">
-                <div class="mb-3">
+            <div class="card shadow-sm border-0 text-center p-4 success-card"> <div class="mb-3">
                     <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
                 </div>
                 
@@ -23,13 +21,13 @@
                          class="img-fluid mb-3" 
                          style="max-width: 250px;">
                     
-                    <div class="alert alert-info">
-                        <strong>Nội dung CK:</strong> <code>DH<?= $donHang['id_don_hang'] ?></code><br>
+                    <div class="bank-info-box">
+                        <strong>Nội dung CK:</strong> <code class="user-select-all">DH<?= $donHang['id_don_hang'] ?></code><br>
                         <small>Số tiền: <?= number_format($donHang['tong_tien'], 0, ',', '.') ?> VNĐ</small>
                     </div>
                 </div>
                 <?php else: ?>
-                    <div class="alert alert-success">Đơn hàng của bạn sẽ được gửi qua hình thức thanh toán khi nhận hàng (COD).</div>
+                    <div class="alert alert-success mt-3">Đơn hàng của bạn sẽ được gửi qua hình thức thanh toán khi nhận hàng (COD).</div>
                 <?php endif; ?>
 
                 <div class="mt-4">

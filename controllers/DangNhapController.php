@@ -18,7 +18,7 @@ class DangNhapController {
 
     public function xuLyDangNhap() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header("Location: ../views/pages/login.php");
+            header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Login");
             exit;
         }
 
@@ -27,7 +27,7 @@ class DangNhapController {
 
         if (empty($ten_dang_nhap) || empty($mat_khau_nhap)) {
             $_SESSION['error'] = "Vui lòng nhập đầy đủ thông tin!";
-            header("Location: ../views/pages/login.php");
+           header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Login");
             exit;
         }
 
@@ -51,7 +51,7 @@ class DangNhapController {
             $_SESSION['error'] = "Tài khoản không tồn tại!";
         }
 
-        header("Location: ../views/pages/login.php");
+        header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Login");
         exit;
     }
 
@@ -78,7 +78,7 @@ class DangNhapController {
     }    
     private function dieuHuong($vai_tro) {
         // Ép kiểu về lowercase và bỏ khoảng trắng để so sánh chính xác
-        $v = trim(strtolower($vai_tro));
+        $v = str_replace(' ', '', strtolower(trim($vai_tro)));
         
         if ($v === 'admin') {
            header("Location: /LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=admin_dashboard");

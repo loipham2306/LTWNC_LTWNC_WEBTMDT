@@ -15,7 +15,7 @@ class HomeController {
     }
 
     public function index() {
-        $products = $this->spModel->getSanPhamHome();
+        $homeFeaturedProducts = $this->spModel->getSanPhamHome(4);
         $brands = $this->thModel->getTatCaThuongHieu();
         $currentUserId = $_SESSION['user']['id_tai_khoan'] ?? 0;
         // HomeController.php

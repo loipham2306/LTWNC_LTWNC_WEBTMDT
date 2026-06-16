@@ -83,7 +83,21 @@ $isContactActive  = ($currentPage == 'Contact.php') ? 'active' : '';
                     <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
                         <i class="fas fa-shopping-cart"></i>
                     </span>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">3</span>
+                    
+                    <?php
+                    // Tính tổng số lượng từ session cart
+                    $totalQty = 0;
+                    if (!empty($_SESSION['cart'])) {
+                        foreach ($_SESSION['cart'] as $item) {
+                            $totalQty += (int)($item['so_luong'] ?? 1);
+                        }
+                    }
+                    ?>
+                    <?php if ($totalQty > 0): ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">
+                            <?= $totalQty ?>
+                        </span>
+                    <?php endif; ?>
                 </a>
                 <?php
                     // Kiểm tra trạng thái đăng nhập (đảm bảo session_start() đã được gọi ở đầu file)

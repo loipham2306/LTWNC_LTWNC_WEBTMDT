@@ -1,9 +1,38 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 1. CHẶN KHÔNG CHO VÀO NẾU CHƯA ĐĂNG NHẬP
+if (!isset($_SESSION['user'])) {
+    header("Location: /LTWNC_LTWNC_WEBTMDT/views/pages/login.php");
+    exit();
+}
+
+$user = $_SESSION['user'];
+
+// 2. XỬ LÝ TÊN HIỂN THỊ TRÊN GIAO DIỆN
+$ho_ten_dem = $user['ho_ten_dem'] ?? '';
+$ten = $user['ten'] ?? '';
+$fullName = trim($ho_ten_dem . ' ' . $ten);
+
+if (empty($fullName)) {
+    $fullName = $user['ten_dang_nhap'] ?? 'Khách Hàng';
+}
+
+// Lấy chữ cái đầu làm Avatar
+$avatarChar = !empty($ten) ? mb_substr($ten, 0, 1, "UTF-8") : 'U';
+
+// 3. DỮ LIỆU ĐƠN HÀNG VÀ VOUCHER
+$danhSachDonHang = $user['orders'] ?? [];
+$danhSachVoucherCuaToi = $user['vouchers'] ?? [];
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tài Khoản Của Tôi - LuLoShop</title>
+    <title>Tài Khoản Của Tôi - Trạm Hiệu</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
@@ -17,12 +46,8 @@
         
         /* Menu quản lý bên trái */
         .list-group-custom .list-group-item {
-            background-color: transparent;
-            color: #aaa;
-            border: none;
-            border-bottom: 1px solid #2a2a2a;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background-color: transparent; color: #aaa; border: none;
+            border-bottom: 1px solid #2a2a2a; transition: all 0.3s ease; cursor: pointer;
         }
         .list-group-custom .list-group-item:hover { background-color: #222; color: #F28B00; }
         .list-group-custom .list-group-item.active { background-color: #F28B00 !important; color: #fff !important; }
@@ -43,62 +68,31 @@
         .btn-outline-orange:hover { background-color: #F28B00; color: #fff; }
         .text-orange { color: #F28B00 !important; }
         .avatar-circle { background-color: #F28B00 !important; color: #fff; font-weight: bold; text-transform: uppercase; }
-        /* Nền tối của card */
-/* Tổng thể thẻ */
-.voucher-card { 
-    background: #1a1a1a; 
-    border: 1px solid #333; 
-    padding: 15px; 
-    border-radius: 8px; 
-    position: relative; 
-    transition: all 0.3s ease;
-    color: #fff;
-}
-
-/* Phần Mã Voucher - Làm nổi bật */
-.voucher-code {
-    color: #FFD700 !important; /* Vàng Gold rực rỡ */
-    font-weight: 800 !important;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
-}
-
-/* Phần trạng thái */
-.voucher-status.text-success { color: #28a745 !important; font-weight: bold; }
-
-/* Phần giảm giá */
-.voucher-discount { color: #fff; margin-bottom: 8px; font-weight: 600; }
-.voucher-discount span { color: #F28B00; font-size: 1.3rem; font-weight: 900; }
-
-/* Thông tin chi tiết */
-.voucher-condition, .voucher-exp {
-    color: #ffffff; /* Đổi thành màu trắng hoàn toàn để hết bị chìm */
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-    font-weight: 500;
-}
-
-/* Sửa nút bấm bị xấu */
-.btn-copy { 
-    width: 100%; 
-    margin-top: 15px; 
-    padding: 10px; 
-    background-color: #F28B00 !important; 
-    color: #fff !important; 
-    border: none !important; 
-    border-radius: 4px; 
-    font-weight: bold;
-    cursor: pointer;
-    text-transform: uppercase;
-}
-.btn-copy:hover { background-color: #d67a00 !important; }
+        
+        /* GIAO DIỆN VOUCHER */
+        .voucher-card { 
+            background: #1a1a1a; border: 1px solid #333; padding: 15px; 
+            border-radius: 8px; position: relative; transition: all 0.3s ease; color: #fff;
+        }
+        .voucher-code {
+            color: #FFD700 !important; font-weight: 800 !important; font-size: 1.1rem;
+            text-transform: uppercase; text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+        }
+        .voucher-status.text-success { color: #28a745 !important; font-weight: bold; }
+        .voucher-discount { color: #fff; margin-bottom: 8px; font-weight: 600; }
+        .voucher-discount span { color: #F28B00; font-size: 1.3rem; font-weight: 900; }
+        .voucher-condition, .voucher-exp { color: #ffffff; font-size: 0.9rem; margin-bottom: 4px; font-weight: 500; }
+        .btn-copy { 
+            width: 100%; margin-top: 15px; padding: 10px; background-color: #F28B00 !important; 
+            color: #fff !important; border: none !important; border-radius: 4px; 
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
+        }
+        .btn-copy:hover { background-color: #d67a00 !important; }
     </style>
 </head>
 <body>
 
     <?php
-    // Gán dữ liệu cấu hình cho PageHeader cha
     $pageTitle = "Tài Khoản Của Tôi";
     $pageBreadcrumb = "Tài Khoản";
     include __DIR__ . '/../components/Header.php'; 
@@ -112,13 +106,13 @@
                 <div class="col-lg-3 wow fadeInLeft" data-wow-delay="0.1s">
                     <div class="card profile-card rounded p-4 text-center mb-4">
                         <div class="d-flex justify-content-center mb-3">
-                            <div id="userAvatar" class="avatar-circle rounded-circle d-flex align-items-center justify-content-center"
+                            <div class="avatar-circle rounded-circle d-flex align-items-center justify-content-center"
                                  style="width: 80px; height: 80px; font-size: 30px;">
-                                U
+                                <?= htmlspecialchars($avatarChar) ?>
                             </div>
                         </div>
-                        <h5 id="userSidebarName" class="text-white fw-bold mb-1">Khách Hàng</h5>
-                        <p id="userRank" class="text-white-50 small mb-0">Hạng: Thành Viên Mới</p>
+                        <h5 class="text-white fw-bold mb-1"><?= htmlspecialchars($fullName) ?></h5>
+                        <p class="text-white-50 small mb-0">Hạng: <?= htmlspecialchars($user['hang_thanh_vien'] ?? 'Thành Viên Mới') ?></p>
                     </div>
 
                     <div class="card profile-card rounded overflow-hidden">
@@ -135,7 +129,7 @@
                             <button class="list-group-item py-3 fw-bold" onclick="switchTab('password', this)">
                                 <i class="fas fa-lock me-3"></i>Đổi Mật Khẩu
                             </button>
-                            <button class="list-group-item py-3 fw-bold text-danger" onclick="handleLogout()">
+                            <button class="list-group-item py-3 fw-bold text-danger w-100 text-start" onclick="handleLogout()">
                                 <i class="fas fa-sign-out-alt me-3"></i>Đăng Xuất
                             </button>
                         </div>
@@ -145,29 +139,36 @@
                 <div class="col-lg-9 wow fadeInRight" data-wow-delay="0.2s">
                     <div class="card profile-card rounded p-4 h-100">
 
+                       <?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success fw-bold">🎉 <?= $_SESSION['success']; ?></div>
+<?php endif; ?>
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger fw-bold">⚠️ <?= $_SESSION['error']; ?></div>
+<?php endif; ?>
+
                         <div id="tabContent-info" class="tab-pane-custom">
                             <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Hồ Sơ Của Tôi</h4>
-                            <form id="infoForm">
+                            <form action="/LTWNC_LTWNC_WEBTMDT/controllers/UpdateProfileController.php" method="POST">
                                 <div class="row g-4">
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Họ & Tên Đệm</label>
-                                        <input type="text" id="ho_ten_dem" class="form-control py-2" placeholder="Nhập họ và tên đệm">
+                                        <input type="text" name="ho_ten_dem" value="<?= htmlspecialchars($ho_ten_dem) ?>" class="form-control py-2" placeholder="Nhập họ và tên đệm">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Tên</label>
-                                        <input type="text" id="ten" class="form-control py-2" placeholder="Nhập tên">
+                                        <input type="text" name="ten" value="<?= htmlspecialchars($ten) ?>" class="form-control py-2" placeholder="Nhập tên">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Số Điện Thoại</label>
-                                        <input type="text" id="so_dien_thoai" class="form-control py-2" placeholder="Nhập số điện thoại">
+                                        <input type="text" name="so_dien_thoai" value="<?= htmlspecialchars($user['so_dien_thoai'] ?? '') ?>" class="form-control py-2" placeholder="Nhập số điện thoại">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-white-50 fw-bold">Tên đăng nhập / Email</label>
-                                        <input type="text" id="ten_dang_nhap" class="form-control py-2" disabled>
+                                        <input type="text" value="<?= htmlspecialchars($user['ten_dang_nhap'] ?? '') ?>" class="form-control py-2" disabled>
                                     </div>
                                     <div class="col-md-12">
                                         <label class="form-label text-white-50 fw-bold">Địa Chỉ Giao Hàng</label>
-                                        <textarea id="dia_chi" class="form-control py-2" rows="3" placeholder="Nhập số nhà, tên đường, quận/huyện..."></textarea>
+                                        <textarea name="dia_chi" class="form-control py-2" rows="3" placeholder="Nhập số nhà, tên đường, quận/huyện..."><?= htmlspecialchars($user['dia_chi'] ?? '') ?></textarea>
                                     </div>
                                     <div class="col-12 mt-4">
                                         <button type="submit" class="btn btn-orange px-5 py-2 fw-bold rounded-pill">
@@ -176,6 +177,42 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+
+                        <div id="tabContent-vouchers" class="tab-pane-custom" style="display: none;">
+                            <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Ví Voucher</h4>
+                            <div class="row g-3" id="voucherContainer">
+                                <?php if (!empty($danhSachVoucherCuaToi)) : 
+                                    foreach ($danhSachVoucherCuaToi as $vc) : 
+                                        $isUsed = ($vc['da_su_dung'] == 1);
+                                ?>
+                                    <div class="col-12 col-md-6">
+                                        <div class="voucher-card <?= $isUsed ? 'opacity-50' : '' ?>">
+                                            <div class="voucher-top">
+                                                <span class="voucher-code">🎟 <?= htmlspecialchars($vc['ma_voucher']) ?></span>
+                                                <span class="voucher-status <?= $isUsed ? 'text-danger' : 'text-success' ?>">
+                                                    <?= $isUsed ? 'Đã sử dụng' : 'Chưa sử dụng' ?>
+                                                </span>
+                                            </div>
+                                            <div class="voucher-body">
+                                                <div class="voucher-discount">
+                                                    Giảm <span><?= $vc['loai_giam_gia'] == 'percent' ? $vc['gia_tri_giam'] . '%' : number_format($vc['gia_tri_giam']) . 'đ' ?></span>
+                                                </div>
+                                                <div class="voucher-condition">🛒 Đơn tối thiểu: <?= number_format($vc['don_toi_thieu']) ?>đ</div>
+                                                <div class="voucher-exp">⏳ HSD: <?= htmlspecialchars($vc['ngay_het_han']) ?></div>
+                                            </div>
+                                            
+                                            <?php if($isUsed): ?>
+                                                <button class="btn-copy" disabled style="background-color: #555 !important;">Đã dùng</button>
+                                            <?php else: ?>
+                                                <button class="btn-copy" onclick="window.location.href='/LTWNC_LTWNC_WEBTMDT/views/pages/Shop.php'">Sử dụng ngay</button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; else : ?>
+                                    <p class="text-white-50 p-3">Hiện tại bạn chưa có voucher nào trong ví.</p>
+                                <?php endif; ?>
+                            </div>
                         </div>
 
                         <div id="tabContent-orders" class="tab-pane-custom" style="display: none;">
@@ -197,65 +234,21 @@
                             </div>
                         </div>
                         
-                        <div id="tabContent-vouchers" class="tab-pane-custom" style="display: none;">
-                            <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Ví Voucher</h4>
-                            <div class="row g-3" id="voucherContainer">
-                                <?php 
-                            $danhSachVoucherCuaToi = $_SESSION['user']['vouchers'] ?? [];
-                            
-                            if (!empty($danhSachVoucherCuaToi)) : 
-                                foreach ($danhSachVoucherCuaToi as $vc) : 
-                                    $isUsed = ($vc['da_su_dung'] == 1);
-                            ?>
-                                <div class="col-12 col-md-6">
-                                    <div class="voucher-card <?= $isUsed ? 'opacity-50' : '' ?>">
-                                        <div class="voucher-top">
-                                            <span class="voucher-code">🎟 <?= htmlspecialchars($vc['ma_voucher']) ?></span>
-                                            <span class="voucher-status <?= $isUsed ? 'text-danger' : 'text-success' ?>">
-                                                <?= $isUsed ? 'Đã sử dụng' : 'Chưa sử dụng' ?>
-                                            </span>
-                                        </div>
-
-                                        <div class="voucher-body">
-                                            <div class="voucher-discount">
-                                                Giảm <span><?= $vc['loai_giam_gia'] == 'percent' ? $vc['gia_tri_giam'] . '%' : number_format($vc['gia_tri_giam']) . 'đ' ?></span>
-                                            </div>
-                                            <div class="voucher-condition">
-                                                🛒 Đơn tối thiểu: <?= number_format($vc['don_toi_thieu']) ?>đ
-                                            </div>
-                                            <div class="voucher-exp">
-                                                ⏳ HSD: <?= htmlspecialchars($vc['ngay_het_han']) ?>
-                                            </div>
-                                        </div>
-                                        
-                                        <?php if($isUsed): ?>
-                                            <button class="btn-copy btn-disabled" disabled>Đã dùng</button>
-                                        <?php else: ?>
-                                            <button class="btn-copy" onclick="window.location.href='index.php?act=Shop'">Sử dụng ngay</button>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; 
-                            else : ?>
-                                <p class="text-white-50 p-3">Hiện tại bạn chưa có voucher nào trong ví.</p>
-                            <?php endif; ?>
-                            </div>
-                        </div>
                         <div id="tabContent-password" class="tab-pane-custom" style="display: none;">
                             <h4 class="text-white fw-bold border-bottom border-secondary pb-3 mb-4 text-orange">Đổi Mật Khẩu</h4>
-                            <form action="index.php?act=changePassword" method="POST" id="passwordForm">
+                            <form action="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=changePassword" method="POST" id="passwordForm">
                                 <div class="row g-4" style="max-width: 600px;">
                                     <div class="col-12">
                                         <label class="form-label text-white-50 fw-bold">Mật khẩu hiện tại</label>
-                                        <input type="password" id="oldPassword" class="form-control py-2" placeholder="Nhập mật khẩu cũ..." required>
+                                        <input type="password" name="oldPassword" class="form-control py-2" placeholder="Nhập mật khẩu cũ..." required>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label text-white-50 fw-bold">Mật khẩu mới</label>
-                                        <input type="password" id="newPassword" class="form-control py-2" placeholder="Nhập mật khẩu mới..." required>
+                                        <input type="password" name="newPassword" id="newPassword" class="form-control py-2" placeholder="Nhập mật khẩu mới..." required>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label text-white-50 fw-bold">Xác nhận mật khẩu mới</label>
-                                        <input type="password" id="confirmPassword" class="form-control py-2" placeholder="Nhập lại mật khẩu mới..." required>
+                                        <input type="password" name="confirmPassword" id="confirmPassword" class="form-control py-2" placeholder="Nhập lại mật khẩu mới..." required>
                                     </div>
                                     <div class="col-12 mt-4">
                                         <button type="submit" class="btn btn-orange px-5 py-2 fw-bold rounded-pill">
@@ -281,76 +274,45 @@
     <script>
         new WOW().init();
 
-        // Khai báo biến toàn cục quản lý dữ liệu User
-        let userData = {
-            id_tai_khoan: '', ten_dang_nhap: '', vai_tro: '', ho_ten_dem: '',
-            ten: '', so_dien_thoai: '', dia_chi: '', hang_thanh_vien: ''
-        };
-
-        // Mảng dữ liệu mockup Đơn hàng giống React gốc
-        const orders = [
-            { id: '#LK2034', date: '25/05/2026', total: '3.350.000 đ', status: 'Đang Giao' },
-            { id: '#LK1988', date: '12/05/2026', total: '1.250.000 đ', status: 'Hoàn Thành' },
-        ];
-
-        document.addEventListener("DOMContentLoaded", function() {
-            // Gọi AJAX để lấy dữ liệu từ Server/Controller
-            // Giả sử ID được lấy từ session PHP, bạn có thể truyền thẳng vào đây
-            const taiKhoanId = "<?= $_SESSION['user']['id_tai_khoan'] ?? 0 ?>";
-
-            if (taiKhoanId > 0) {
-                fetch(`index.php?act=layChiTiet&id_tai_khoan=${taiKhoanId}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data && !data.error) { // Kiểm tra nếu data tồn tại và không phải là thông báo lỗi
-                            userData = data;
-                            fillUserData();
-                        } else {
-                            console.warn('Không tìm thấy dữ liệu người dùng');
-                        }
-                    })
-                    .catch(error => console.error('Lỗi khi lấy thông tin:', error));
-            }
-        });
-        // Đổ dữ liệu từ Object vào các trường form input và sidebar hiển thị
-        function fillUserData() {
-            document.getElementById('ho_ten_dem').value = userData.ho_ten_dem || '';
-            document.getElementById('ten').value = userData.ten || '';
-            document.getElementById('so_dien_thoai').value = userData.so_dien_thoai || '';
-            document.getElementById('ten_dang_nhap').value = userData.ten_dang_nhap || '';
-            document.getElementById('dia_chi').value = userData.dia_chi || '';
-            
-            // Render tên hiển thị đầy đủ (Fullname logic)
-            let rawFullName = `${userData.ho_ten_dem || ''} ${userData.ten || ''}`.trim();
-            let finalName = rawFullName || userData.ten_dang_nhap || 'Khách Hàng';
-            document.getElementById('userSidebarName').innerText = finalName;
-            
-            // Render chữ cái đầu avatar
-            document.getElementById('userAvatar').innerText = userData.ten ? userData.ten.charAt(0) : 'U';
-            
-            // Hạng thành viên
-            document.getElementById('userRank').innerText = 'Hạng: ' + (userData.hang_thanh_vien || 'Thành Viên Mới');
+        // 1. ĐIỀU KHIỂN CHUYỂN TAB MƯỢT MÀ
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.tab-pane-custom').forEach(pane => pane.style.display = 'none');
+            document.querySelectorAll('#profileTabs button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tabContent-${tabName}`).style.display = 'block';
+            element.classList.add('active');
         }
 
-        // Vẽ danh sách lịch sử mua hàng vào bảng
+        // 2. RENDER DỮ LIỆU ĐƠN HÀNG (Sử dụng biến PHP ném xuống JS)
+        const orders = <?= json_encode($danhSachDonHang); ?>; 
+        
         function renderOrders() {
             const tbody = document.getElementById('ordersTableBody');
-            let html = '';
+            if (!tbody) return;
+
+            if (!Array.isArray(orders) || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-white-50 text-center py-4">Bạn chưa có đơn hàng nào.</td></tr>';
+                return;
+            }
             
+            let html = '';
             orders.forEach(order => {
-                const badgeClass = order.status === 'Đang Giao' ? 'bg-warning text-dark' : 'bg-success';
+                const id = order.id_don_hang; 
+                const date = order.ngay_dat;
+                const total = Number(order.tong_tien).toLocaleString('vi-VN') + ' đ';
+                const status = order.trang_thai_don_hang;
+
+                let badgeClass = 'bg-secondary';
+                if (status === 'Đã giao' || status === 'Hoàn thành') badgeClass = 'bg-success';
+                else if (status === 'Đang giao') badgeClass = 'bg-warning text-dark';
+                else if (status === 'Đã hủy') badgeClass = 'bg-danger';
+                
                 html += `
                     <tr>
-                        <td class="fw-bold text-white py-3">${order.id}</td>
-                        <td class="text-white-50 py-3">${order.date}</td>
-                        <td class="text-orange fw-bold py-3">${order.total}</td>
+                        <td class="fw-bold text-white py-3">#${id}</td>
+                        <td class="text-white-50 py-3">${date}</td>
+                        <td class="text-orange fw-bold py-3">${total}</td>
                         <td class="py-3">
-                            <span class="badge rounded-pill px-3 py-2 ${badgeClass}">
-                                ${order.status}
-                            </span>
+                            <span class="badge rounded-pill px-3 py-2 ${badgeClass}">${status}</span>
                         </td>
                         <td class="py-3">
                             <button class="btn btn-sm btn-outline-orange rounded-pill px-3">Xem</button>
@@ -361,88 +323,59 @@
             tbody.innerHTML = html;
         }
 
-        // ĐIỀU KHIỂN CHUYỂN TAB MƯỢT MÀ (Thay thế useState activeTab)
-        function switchTab(tabName, element) {
-            // Ẩn toàn bộ các ô nội dung tab
-            document.querySelectorAll('.tab-pane-custom').forEach(pane => pane.style.display = 'none');
-            // Gỡ bỏ trạng thái active ở các nút bấm cũ
-            document.querySelectorAll('#profileTabs button').forEach(btn => btn.classList.remove('active'));
-            
-            // Hiển thị tab được chọn và gán viền sáng active
-            document.getElementById(`tabContent-${tabName}`).style.display = 'block';
-            element.classList.add('active');
-        }
+        document.addEventListener("DOMContentLoaded", function() {
+    renderOrders();
 
-        // XỬ LÝ HÀM CẬP NHẬT THÔNG TIN HỒ SƠ
-        document.getElementById('infoForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            userData.ho_ten_dem = document.getElementById('ho_ten_dem').value;
-            userData.ten = document.getElementById('ten').value;
-            userData.so_dien_thoai = document.getElementById('so_dien_thoai').value;
-            userData.dia_chi = document.getElementById('dia_chi').value;
-            
-            // Ghi đè cập nhật ngược lại vào localStorage
-            localStorage.setItem('user', JSON.stringify(userData));
-            fillUserData(); // Cập nhật lại UI lập tức
-            
-            alert('🎉 Cập nhật thông tin thành công!');
-        });
+    // ===== ĐOẠN CODE BẬT THÔNG BÁO POPUP VÀ GIỮ TAB ĐỔI MẬT KHẨU =====
+    <?php if (isset($_SESSION['success'])): ?>
+        // Bật hộp thoại alert báo thành công
+        alert("<?= $_SESSION['success'] ?>");
+        
+        <?php if (strpos($_SESSION['success'], 'mật khẩu') !== false): ?>
+            // Nếu nội dung thông báo có chữ 'mật khẩu', tự động chuyển sang tab mật khẩu
+            switchTab('password', document.querySelector('button[onclick*="password"]'));
+        <?php endif; ?>
+        
+        <?php unset($_SESSION['success']); // Thông báo xong mới xóa session ?>
+    <?php endif; ?>
 
-        // XỬ LÝ ĐỔI MẬT KHẨU
+    <?php if (isset($_SESSION['error'])): ?>
+        // Bật hộp thoại alert báo lỗi
+        alert("<?= $_SESSION['error'] ?>");
+        
+        <?php if (strpos($_SESSION['error'], 'mật khẩu') !== false): ?>
+            // Nếu lỗi liên quan mật khẩu, giữ nguyên tab mật khẩu cho người dùng nhập lại
+            switchTab('password', document.querySelector('button[onclick*="password"]'));
+        <?php endif; ?>
+        
+        <?php unset($_SESSION['error']); // Thông báo xong mới xóa session ?>
+    <?php endif; ?>
+});
+
+        // 3. XỬ LÝ JS KHI ĐỔI MẬT KHẨU (Chỉ chặn khi xác nhận sai)
         document.getElementById('passwordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
             const newPass = document.getElementById('newPassword').value;
             const confirmPass = document.getElementById('confirmPassword').value;
             
             if (newPass !== confirmPass) {
+                e.preventDefault(); // Dừng không cho submit form về PHP
                 alert('⚠️ Xác nhận mật khẩu mới không trùng khớp!');
-                return;
             }
-            
-            alert('🎉 Cập nhật mật khẩu thành công!');
-            this.reset();
+            // Nếu khớp, tự động thả để Form bay về Controller!
         });
 
+        // 4. HÀM XỬ LÝ ĐĂNG XUẤT (Có thông báo và chuyển hướng)
         function handleLogout() {
-            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                // 1. Xóa dữ liệu tạm ở trình duyệt (nếu bạn vẫn muốn dùng)
+            if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+                // Xóa dữ liệu tạm dưới local storage (nếu có dùng)
                 localStorage.removeItem('user');
                 
-                // 2. Chuyển hướng đến hành động logout của Controller PHP
-                // Việc này sẽ gọi case 'logout' trong switch-case của index.php
-                window.location.href = 'index.php?act=logout';
+                // Hiện thông báo
+                alert('Đăng xuất thành công! Hẹn gặp lại bạn.');
+                
+                // Trỏ về act=logout trong index.php
+                window.location.href = '/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=logout';
             }
-        }
-        // Thêm hàm lấy dữ liệu Voucher từ Server
-        function loadVouchers() {
-            const container = document.getElementById('voucherContainer');
-            // Giả sử bạn đã có action 'layVoucherCuaToi' trong Controller
-            fetch('index.php?act=layVoucherCuaToi')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        container.innerHTML = '<p class="text-white-50">Bạn chưa có voucher nào.</p>';
-                        return;
-                    }
-                    
-                    let html = '';
-                    data.forEach(vc => {
-                        html += `
-                        <div class="col-md-6">
-                            <div class="card p-3" style="background: #222; border-left: 5px solid #F28B00;">
-                                <h6 class="text-orange fw-bold">${vc.ma_voucher}</h6>
-                                <p class="text-white mb-1">Giảm: ${vc.gia_tri_giam} ${vc.loai_giam_gia == 1 ? '%' : 'đ'}</p>
-                                <small class="text-white-50">Hạn: ${vc.ngay_het_han}</small>
-                            </div>
-                        </div>`;
-                    });
-                    container.innerHTML = html;
-                })
-                .catch(err => {
-                    container.innerHTML = '<p class="text-danger">Không thể tải voucher.</p>';
-                });
         }
     </script>
 </body>

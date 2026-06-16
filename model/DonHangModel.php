@@ -54,9 +54,60 @@ class DonHangModel
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute($data);
     }
-    public function getAllDonHang(){
-        $sql = "SELECT * FROM {$this->table_don_hang} ORDER BY ngay_dat DESC";
-        return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    public function getFilteredOrders($search = '', $status = '', $offset = 0, $limit = 10) {
+        // 1. Xây dựng điều kiện WHERE động
+        $where = [];
+        $params = [];
+
+        if (!empty($search)) {
+            $where[] = "(id_don_hang LIKE :search OR ten_nguoi_nhan LIKE :search OR sdt_nguoi_nhan LIKE :search)";
+            $params[':search'] = "%$search%";
+        }
+
+        if (!empty($status)) {
+            $where[] = "trang_thai_don_hang = :status";
+            $params[':status'] = $status;
+        }
+
+        $whereSql = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+
+        // 2. Câu lệnh SQL
+        $sql = "SELECT * FROM {$this->table_don_hang} 
+                $whereSql 
+                ORDER BY ngay_dat DESC 
+                LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($sql);
+        
+        // Bind các biến phụ
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Phương thức đếm để phục vụ phân trang
+    public function countFilteredOrders($search = '', $status = '') {
+        $where = [];
+        $params = [];
+        if (!empty($search)) {
+            $where[] = "(id_don_hang LIKE :search OR ten_nguoi_nhan LIKE :search)";
+            $params[':search'] = "%$search%";
+        }
+        if (!empty($status)) {
+            $where[] = "trang_thai_don_hang = :status";
+            $params[':status'] = $status;
+        }
+        $whereSql = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+        
+        $sql = "SELECT COUNT(*) FROM {$this->table_don_hang} $whereSql";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn();
     }
     public function getDonHangById($id)
     {
@@ -132,42 +183,41 @@ class DonHangModel
             $id_bien_the
         ]);
     }
+    // Thêm vào trong class DonHangModel
+    public function getDonHangByKhachHangId($id_khach_hang) {
+        $sql = "SELECT * FROM {$this->table_don_hang} 
+                WHERE id_khach_hang = :id_khach_hang 
+                ORDER BY ngay_dat DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id_khach_hang' => $id_khach_hang]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
      // TRẠNG THÁI ĐƠN HÀNG
     public function updateTrangThai($id_don_hang, $trang_thai){
         $sql = "UPDATE {$this->table_don_hang} SET trang_thai_don_hang = ? WHERE id_don_hang = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([$trang_thai, $id_don_hang]);
     }
-    public function cancelDonHang($id_don_hang){
-        try {
-            $this->conn->beginTransaction();
-            $donHang = $this->getDonHangById($id_don_hang);
-            if (!$donHang) {
-                throw new Exception("Không tìm thấy đơn hàng");
-            }
-            if (
-                $donHang['trang_thai_don_hang'] == 'Đã hủy' ||
-                $donHang['trang_thai_don_hang'] == 'Đã giao'
-            ) {
-                throw new Exception("Không thể hủy đơn hàng");
-            }
-            $items = $this->getChiTietDonHang($id_don_hang);
-            foreach ($items as $item) {
-                $this->restoreTonKho(
-                    $item['id_bien_the'],
-                    $item['so_luong']
-                );
-            }
-            $this->updateTrangThai(
-                $id_don_hang,
-                'Đã hủy'
-            );
-            $this->conn->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->conn->rollBack();
+    public function cancelDonHang($id)
+    {
+        // LẤY ĐÚNG CỘT
+        $sql = "SELECT trang_thai_don_hang FROM don_hang WHERE id_don_hang = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$id]);
+        $current = $stmt->fetchColumn();
+
+        if (!$current) return false;
+
+        // CHẶN HỦY
+        if (in_array($current, ['Đang giao', 'Hoàn thành'])) {
             return false;
         }
+
+        // UPDATE ĐÚNG CỘT
+        $sql = "UPDATE don_hang SET trang_thai_don_hang = 'Hủy' WHERE id_don_hang = ?";
+        $stmt = $this->conn->prepare($sql);
+
+        return $stmt->execute([$id]);
     }
      //THỐNG KÊ
     public function countDonHang() {
@@ -220,5 +270,54 @@ class DonHangModel
             return [];
         }
     }
-    
+    public function getTotalRevenue()
+    {
+        $sql = "SELECT SUM(tong_tien)
+                FROM {$this->table_don_hang}
+                WHERE trang_thai_don_hang = 'Hoàn thành'";
+
+        return $this->conn->query($sql)->fetchColumn() ?? 0;
+    }
+    public function countNewOrders()
+    {
+        $sql = "SELECT COUNT(*)
+                FROM {$this->table_don_hang}
+                WHERE trang_thai_don_hang = 'Chờ duyệt'";
+
+        return $this->conn->query($sql)->fetchColumn() ?? 0;
+    }
+    public function countAllOrders()
+    {
+        $sql = "SELECT COUNT(*) FROM {$this->table_don_hang}";
+        return $this->conn->query($sql)->fetchColumn() ?? 0;
+    }
+    public function countShippingOrders()
+    {
+        $sql = "SELECT COUNT(*)
+                FROM {$this->table_don_hang}
+                WHERE trang_thai_don_hang = 'Đang giao'";
+
+        return $this->conn->query($sql)->fetchColumn() ?? 0;
+    }
+    public function countCancelledOrders()
+    {
+        $sql = "SELECT COUNT(*)
+                FROM {$this->table_don_hang}
+                WHERE trang_thai_don_hang = 'Hủy'";
+
+        return $this->conn->query($sql)->fetchColumn() ?? 0;
+    }
+    public function getRevenueByMonth()
+        {
+            $sql = "SELECT 
+                        DATE_FORMAT(ngay_dat, '%Y-%m') as month,
+                        SUM(tong_tien) as revenue
+                    FROM {$this->table_don_hang}
+                    WHERE trang_thai_don_hang = 'Hoàn thành'
+                    GROUP BY DATE_FORMAT(ngay_dat, '%Y-%m')
+                    ORDER BY month ASC
+                    LIMIT 6";
+
+            return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        }
 }

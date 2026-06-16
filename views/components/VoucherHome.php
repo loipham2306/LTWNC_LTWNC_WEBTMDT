@@ -11,13 +11,13 @@
             </a>
         </div>
 
-        <div class="row g-3">
+        <div class="voucher-scroll">
 
             <?php if (!empty($danhSachVoucher)) : ?>
                 
                 <?php foreach ($danhSachVoucher as $vc) : ?>
                     
-                    <div class="col-12 col-md-4">
+                    <div class="col-12">
                         <div class="voucher-card">
 
                             <div class="voucher-top">

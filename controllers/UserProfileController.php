@@ -2,19 +2,19 @@
 require_once '../model/khachhang.php';
 require_once '../model/Vouchers.php';
 require_once '../model/TaiKhoan.php';
-
+require_once '../model/DonHangModel.php';
 class UserProfileController {
     private $db;
     private $kh_model;
     private $voucher_model;
     private $tk_model;
-
+    private $donhang_model;
     public function __construct($db) {
         $this->db = $db;
         $this->kh_model = new khachhang($db);
         $this->voucher_model = new Vouchers($db);
         $this->tk_model = new TaiKhoan($db);
-        
+        $this->donhang_model = new DonHangModel($db);
         // Kiểm tra đăng nhập cho tất cả các hành động trong controller này
         if (!isset($_SESSION['user'])) {
             header("Location: ../views/pages/login.php");
@@ -41,20 +41,24 @@ class UserProfileController {
 
     // Hiển thị trang profile và load dữ liệu cần thiết
     private function showProfile() {
-        $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
+    $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
 
-        // 1. Lấy thông tin khách hàng
-        $thongTinKhach = $this->kh_model->getThongTinByTaiKhoanId($id_tai_khoan);
-        
-        // 2. Lấy danh sách Voucher của người dùng
-        $danhSachVoucherCuaToi = $this->voucher_model->layVoucherCuaTaiKhoan($id_tai_khoan);
-        
-        // Đẩy vào session để chắc chắn View có thể truy cập nếu cần
-        $_SESSION['user']['vouchers'] = $danhSachVoucherCuaToi;
-        
-        // Render view
-        include '../views/pages/UserProfile.php';
-    }
+    // 1. Lấy thông tin khách hàng (Hàm này trả về mảng thông tin có chứa id_khach_hang)
+    $thongTinKhach = $this->kh_model->getThongTinByTaiKhoanId($id_tai_khoan);
+    
+    // ĐẢM BẢO BẠN LẤY ĐÚNG ID KHÁCH HÀNG TẠI ĐÂY
+    $id_khach_hang = $thongTinKhach['id_khach_hang']; 
+
+    // 2. Lấy danh sách Voucher và Đơn hàng theo ID khách hàng chuẩn
+    $danhSachVoucherCuaToi = $this->voucher_model->layVoucherCuaTaiKhoan($id_tai_khoan);
+    
+    // SỬA DÒNG NÀY: Truyền $id_khach_hang thay vì $id_tai_khoan
+    $danhSachDonHang = $this->donhang_model->getDonHangByKhachHangId($id_khach_hang);
+    
+    $_SESSION['user']['vouchers'] = $danhSachVoucherCuaToi;
+    
+    include '../views/pages/UserProfile.php';
+}
 
     // Xử lý cập nhật thông tin cá nhân
     private function updateProfile() {

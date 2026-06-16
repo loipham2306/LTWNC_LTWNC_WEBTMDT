@@ -19,6 +19,7 @@ include_once '../controllers/ShopController.php';
 include_once '../controllers/GioHangController.php';
 require_once '../controllers/ThanhToanController.php';
 require_once '../controllers/UserProfileController.php';
+require_once '../controllers/DonHangController.php';
 // 2. Lấy action (act) từ URL
 $act = $_REQUEST['act'] ?? 'trangchu';
 
@@ -54,13 +55,54 @@ switch ($act) {
         break;
     // --- profile ---
     case 'UserProfile':
+        // Bắt buộc phải có dòng include này để in giao diện ra màn hình
+        include '../views/pages/UserProfile.php';
+        break;
+
     case 'updateProfile':
+        // Nếu sau này bạn làm thêm updateProfile ở Controller khác thì viết ở đây
+        break;
+
     case 'changePassword':
-    // 1. Khởi tạo Controller
-        include_once 'UserProfileController.php';
-        $profileController = new UserProfileController($db);
-        // 2. Gọi hàm xử lý (hàm này sẽ tự load dữ liệu và include View)
-        $profileController->handle($act);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            require_once '../config/database.php';
+            $db = new Database();
+            $conn = $db->getConnection();
+
+            $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
+            $oldPassword = $_POST['oldPassword'];
+            $newPassword = $_POST['newPassword'];
+
+            // 1. Lấy mật khẩu cũ đang lưu trong Database ra để đối chiếu
+            $sql_check = "SELECT mat_khau FROM tai_khoan WHERE id_tai_khoan = :id";
+            $stmt_check = $conn->prepare($sql_check);
+            $stmt_check->execute([':id' => $id_tai_khoan]);
+            $userDB = $stmt_check->fetch(PDO::FETCH_ASSOC);
+
+            // 2. Kiểm tra mật khẩu cũ nhập vào có khớp với DB không
+            if ($userDB && password_verify($oldPassword, $userDB['mat_khau'])) {
+                
+                // 3. Đúng rồi thì mã hóa mật khẩu mới
+                $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                
+                // 4. Lưu đè mật khẩu mới vào Database
+                $sql_update = "UPDATE tai_khoan SET mat_khau = :new_pass WHERE id_tai_khoan = :id";
+                $stmt_update = $conn->prepare($sql_update);
+                
+                if ($stmt_update->execute([':new_pass' => $hashedNewPassword, ':id' => $id_tai_khoan])) {
+                    $_SESSION['success'] = "🎉 Đổi mật khẩu thành công!";
+                } else {
+                    $_SESSION['error'] = "Lỗi hệ thống, không thể đổi mật khẩu.";
+                }
+            } else {
+                // Nhập sai mật khẩu cũ
+                $_SESSION['error'] = "❌ Mật khẩu hiện tại không chính xác!";
+            }
+
+            // Chuyển hướng về lại trang Profile
+            header("Location: index.php?act=UserProfile");
+            exit();
+        }
         break;
     case 'xuly_dangnhap':
         // Chỉ dành cho việc xử lý logic POST
@@ -69,13 +111,17 @@ switch ($act) {
         $dnController->xuLyDangNhap(); // Gọi trực tiếp hàm xử lý
         break;
     case 'admin_dashboard':
-        // Kiểm tra quyền admin trước khi cho vào
         if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] === 'admin') {
-            include '../views/pages/admin/Dashboard.php';
+
+            require_once '../controllers/DashboardController.php';
+
+            $controller = new DashboardController($db);
+            $controller->index(); // <-- QUAN TRỌNG
+
             exit();
         } else {
-            // Nếu không phải admin thì đá về trang chủ
             header("Location: index.php");
+            exit();
         }
         break;
     //render cửa hàng
@@ -232,6 +278,19 @@ switch ($act) {
         // Lấy ID đơn hàng từ URL để hiển thị thông tin đúng
         $id = $_GET['id'] ?? 0;
         $controller->showThanhCong($id);
+        break;
+    // --- NHÓM ĐƠN HÀNG ---
+    case 'QuanLyDonHang':
+    case 'ChiTietDonHang':
+    case 'CapNhatTrangThaiDonHang':
+    case 'HuyDonHang':
+    case 'XoaDonHang':
+
+        include_once 'DonHangController.php';
+
+        $dhController = new DonHangController($db);
+        $dhController->handle($act);
+
         break;
     // --- MẶC ĐỊNH ---
     default:

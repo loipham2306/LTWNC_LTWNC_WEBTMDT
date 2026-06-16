@@ -214,7 +214,7 @@ $danhMucList = $danhMucList ?? [];
                         <?php endforeach; ?>
                     </div>
                 </div>
-
+                            
             </div> 
         </div> 
     </div> 
@@ -229,7 +229,8 @@ $danhMucList = $danhMucList ?? [];
     
     <script>
         new WOW().init();
-                            
+         let currentPage = 1;
+        const itemsPerPage = 9; // Số sản phẩm hiển thị mỗi trang                       
         // 1. NHẬN DỮ LIỆU TỪ PHP
         const rawDbProducts = <?= json_encode($Products) ?>;
         console.log("Dữ liệu gốc:", rawDbProducts);
@@ -285,7 +286,9 @@ $danhMucList = $danhMucList ?? [];
                 
                 return matchCategory && matchSearch;
             });
-
+             const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const paginatedItems = filtered.slice(start, start + itemsPerPage);                   
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="col-12 text-center py-5">
@@ -357,6 +360,25 @@ $danhMucList = $danhMucList ?? [];
                     </div>
                 `;
             });
+            html += `
+        <div class="col-12 mt-4">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link bg-dark text-white border-0" href="#" onclick="changePage(${currentPage - 1})">Trước</a>
+                    </li>
+                    ${Array.from({length: totalPages}, (_, i) => i + 1).map(page => `
+                        <li class="page-item ${currentPage === page ? 'active' : ''}">
+                            <a class="page-link ${currentPage === page ? 'bg-warning' : 'bg-dark text-white'} border-0" href="#" onclick="changePage(${page})">${page}</a>
+                        </li>
+                    `).join('')}
+                    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link bg-dark text-white border-0" href="#" onclick="changePage(${currentPage + 1})">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    `;
 
             container.innerHTML = html;
         }
@@ -398,7 +420,11 @@ $danhMucList = $danhMucList ?? [];
             if (typeof updateCartBadge === 'function') updateCartBadge();
             alert(`Thành công! Đã thêm ${product.name} vào giỏ hàng.`);
         }
-
+function changePage(page) {
+    currentPage = page;
+    renderProducts();
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn lên đầu trang
+}
     </script>
 </body>
 </html>

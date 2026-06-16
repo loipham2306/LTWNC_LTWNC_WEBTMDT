@@ -31,7 +31,8 @@ class SanPham {
     }
     // lấy sản phẩm cho cửa hàng
     // Trong class SanPham, cập nhật hàm này:
-    public function getAllProductsForShop() {
+    public function getAllProductsForShop($limit, $offset) {
+        // Thêm LIMIT và OFFSET vào cuối câu truy vấn
         $sql = "SELECT 
                     sp.id_san_pham, 
                     sp.ten_san_pham, 
@@ -46,9 +47,15 @@ class SanPham {
                 LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
                 LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
                 GROUP BY sp.id_san_pham
-                ORDER BY sp.id_san_pham DESC;";
+                ORDER BY sp.id_san_pham DESC 
+                LIMIT :limit OFFSET :offset"; // Thêm dòng này
         
         $stmt = $this->conn->prepare($sql);
+        
+        // Gán giá trị cho các tham số
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -209,6 +216,14 @@ class SanPham {
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+    // model/SanPham.php
 
+
+    public function countAllProductsForShop() {
+        $query = "SELECT COUNT(*) FROM san_pham WHERE trang_thai = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }   
 }
 ?>

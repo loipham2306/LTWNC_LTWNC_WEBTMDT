@@ -28,6 +28,7 @@ function openAddModal() {
 }
 
 function openEditModal(product) {
+
     // 1. Cập nhật Tiêu đề và Action
     document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit me-2 text-info"></i> CẬP NHẬT SẢN PHẨM';
     document.getElementById('formAction').value = 'suaSP';

@@ -38,7 +38,7 @@
     .banner-side {
         height: 480px;
         position: relative;
-        background: url('/LTWNC_LTWNC_WEBTMDT/assets/images/img/giaynike.jpeg') center/cover no-repeat;
+        background: url('/LTWNC_LTWNC_WEBTMDT/assets/images/img/Nike Air Jordan 1 Low.jpg') center/cover no-repeat;
     }
 
     .overlay-side {
@@ -78,7 +78,7 @@
                             <div class="row g-0 w-100 align-items-center"> 
                                 <div class="col-md-6 p-0 wow fadeInLeft" data-wow-delay="0.1s">
                                     <div class="esport-bg">
-                                        <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/ATADIASC8806.webp" class="hero-img-full" alt="BST Adidas Originals">
+                                        <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/img/xanh_Adidas Tiro 25 Essentials Training Top - Black _adidas UK .jpg" class="hero-img-full" alt="BST Adidas Originals">
                                     </div>
                                 </div>
                                 <div class="col-md-6 text-white ps-4 pe-4 wow fadeInRight" data-wow-delay="0.3s">

@@ -1,42 +1,43 @@
+
 <?php
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    ob_start(); 
-    if (isset($data) && is_array($data)) {
-        extract($data);
-    } else {
-        // Nếu $data bị null, gán giá trị mặc định để không lỗi
-        $total_revenue = 0;
-        $new_orders = 0;
-        $total_products = 0;
-        $total_users = 0;
-        $brand_stats = [];
-    }
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+ob_start();
+
+$data = $data ?? [];
+
+$total_revenue   = $data['total_revenue'] ?? 0;
+$new_orders      = $data['new_orders'] ?? 0;
+$total_orders    = $data['total_orders'] ?? 0;
+$shipping_orders = $data['shipping_orders'] ?? 0;
+$cancel_orders   = $data['cancel_orders'] ?? 0;
+
+$total_products  = $data['total_products'] ?? 0;
+$total_users     = $data['total_users'] ?? 0;
+$brand_stats     = $data['brand_stats'] ?? [];
+$total_brand     = $data['total_brand']   ??[];
+$revenueData     = $data['revenue_data'] ?? [];
+$recentOrders    = $data['recent_orders'] ?? [];
+$revenueData = $data['revenue_data'] ?? [];
 ?>
 <?php
     $stats = [
         ['title' => 'Tổng Doanh Thu', 'value' => number_format($total_revenue) . ' đ', 'icon' => 'fa-wallet', 'color' => 'text-success'],
-        ['title' => 'Đơn Hàng Mới', 'value' => $new_orders, 'icon' => 'fa-shopping-cart', 'color' => 'text-warning'],
+
+        ['title' => 'Đơn Mới', 'value' => $new_orders, 'icon' => 'fa-bell', 'color' => 'text-warning'],
+
+        ['title' => 'Tổng Đơn', 'value' => $total_orders, 'icon' => 'fa-shopping-cart', 'color' => 'text-primary'],
+
+        ['title' => 'Đang Giao', 'value' => $shipping_orders, 'icon' => 'fa-truck', 'color' => 'text-info'],
+
+        ['title' => 'Đã Hủy', 'value' => $cancel_orders, 'icon' => 'fa-times-circle', 'color' => 'text-danger'],
+
         ['title' => 'Sản Phẩm', 'value' => $total_products, 'icon' => 'fa-box', 'color' => 'text-primary'],
+
         ['title' => 'Khách Hàng', 'value' => $total_users, 'icon' => 'fa-users', 'color' => 'text-info'],
-
-    ];
-
-    $revenueData = [
-        ['name' => 'Tháng 1', 'revenue' => 45000000],
-        ['name' => 'Tháng 2', 'revenue' => 52000000],
-        ['name' => 'Tháng 3', 'revenue' => 38000000],
-        ['name' => 'Tháng 4', 'revenue' => 65000000],
-        ['name' => 'Tháng 5', 'revenue' => 85000000],
-        ['name' => 'Tháng 6', 'revenue' => 125400000],
-    ];
-
-    $recentOrders = [
-        ['id' => '#ORD-001', 'customer' => 'Nguyễn Văn A', 'date' => '25/05/2026', 'total' => '3.350.000 đ', 'status' => 'Chờ Duyệt'],
-        ['id' => '#ORD-002', 'customer' => 'Trần Thị B', 'date' => '24/05/2026', 'total' => '10.500.000 đ', 'status' => 'Đang Giao'],
-        ['id' => '#ORD-003', 'customer' => 'Lê Hoàng C', 'date' => '23/05/2026', 'total' => '850.000 đ', 'status' => 'Hoàn Thành'],
-        ['id' => '#ORD-004', 'customer' => 'Phạm D', 'date' => '22/05/2026', 'total' => '1.250.000 đ', 'status' => 'Đã Hủy'],
+        ['title' => 'Số Thương Hiệu', 'value' => $total_brand , 'icon' => 'fa-users', 'color' => 'text-info'],
     ];
 ?>
 
@@ -62,20 +63,14 @@
         <div class="col-md-6 col-xl-3">
             </div>
     <?php endforeach; ?>
-    
-    <div class="col-md-6 col-xl-3">
-        <div class="card border-0 rounded p-4 h-100 shadow-sm" style="background-color: #1a1a1a;">
-            <p class="text-muted fw-bold mb-1">Số lượng Thương Hiệu</p>
-            <h4 class="text-white fw-bold mb-0"><?= count($brand_stats) ?></h4>
-        </div>
-    </div>
 </div>
 
 <div class="card border-0 rounded p-4 mb-4" style="background-color: #1a1a1a;">
-    <h5 class="text-white fw-bold mb-4">Biểu Đồ Doanh Thu 6 Tháng Gần Nhất</h5>
-    <div style="width: 100%; height: 350px; position: relative;">
-        <canvas id="revenueChart"></canvas>
+    <h5 class="text-white fw-bold mb-4">Biểu Đồ Doanh Thu Tổng</h5>
+    <div style="width: 100%; height: 350px;">
+        <canvas id="revenueLineChart"></canvas>
     </div>
+</div>
 </div>
 
 <div class="card border-0 rounded p-4" style="background-color: #1a1a1a;">
@@ -129,84 +124,54 @@
         </table>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Lấy dữ liệu từ PHP chuyển sang mảng JS
-        const revenueData = <?= json_encode($revenueData) ?>;
-        
-        const labels = revenueData.map(item => item.name);
-        const data = revenueData.map(item => item.revenue);
+ 
+document.addEventListener("DOMContentLoaded", function () {
+    const totalRevenue = <?= (float)$total_revenue ?>; 
+    const target = 20000000; // Mục tiêu doanh thu
 
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Doanh Thu',
-                    data: data,
+    const ctx = document.getElementById('revenueLineChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Tháng trước', 'Hiện tại'],
+            datasets: [
+                {
+                    label: 'Doanh thu thực tế',
+                    data: [0, totalRevenue], // Tăng dần từ 0 đến hiện tại
                     borderColor: '#F28B00',
-                    backgroundColor: 'rgba(242, 139, 0, 0.1)',
-                    borderWidth: 4,
-                    pointBackgroundColor: '#1a1a1a',
-                    pointBorderColor: '#F28B00',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    fill: false,
-                    tension: 0.1 // 0.1 cho đường kẻ thẳng gấp khúc, tương tự type="monotone" của recharts
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false // Ẩn chú thích giống Recharts
-                    },
-                    tooltip: {
-                        backgroundColor: '#222',
-                        borderColor: '#444',
-                        borderWidth: 1,
-                        titleColor: '#fff',
-                        bodyColor: '#F28B00',
-                        bodyFont: { weight: 'bold' },
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y.toLocaleString('vi-VN') + ' đ';
-                            }
-                        }
-                    }
+                    backgroundColor: 'rgba(242, 139, 0, 0.2)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6
                 },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false, // Ẩn đường kẻ dọc giống vertical={false}
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#888'
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: '#333',
-                            borderDash: [3, 3], // Đường kẻ ngang nét đứt giống strokeDasharray="3 3"
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#888',
-                            callback: function(value) {
-                                return (value / 1000000) + 'Tr'; // tickFormatter
-                            }
-                        }
-                    }
+                {
+                    label: 'Mục tiêu',
+                    data: [target, target], // Đường thẳng mục tiêu
+                    borderColor: '#555',
+                    borderDash: [5, 5],
+                    pointRadius: 0
                 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#fff' }
+                },
+                x: { ticks: { color: '#fff' } }
+            },
+            plugins: {
+                legend: { labels: { color: '#fff' } }
             }
-        });
+        }
     });
+});
 </script>
 
 <?php
