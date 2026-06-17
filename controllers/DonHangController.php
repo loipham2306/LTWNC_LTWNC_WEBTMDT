@@ -131,33 +131,54 @@ class DonHangController
     /**
      * HỦY ĐƠN
      */
-    private function huyDonHang()
-        {
-            $id = $_GET['id'] ?? 0;
+   private function huyDonHang()
+    {
+        $id = $_GET['id'] ?? 0;
 
-            $donHang = $this->donHangModel->getDonHangById($id);
+        $donHang = $this->donHangModel->getDonHangById($id);
 
-            if (!$donHang) {
-                $_SESSION['error'] = "Không tìm thấy đơn hàng";
-                header("Location:index.php?act=QuanLyDonHang");
-                exit;
-            }
-
-            if (in_array($donHang['trang_thai'], ['Đang giao', 'Hoàn thành'])) {
-                $_SESSION['error'] = "Không thể hủy đơn khi đang giao hoặc đã hoàn thành";
-                header("Location:index.php?act=QuanLyDonHang");
-                exit;
-            }
-
-            if ($this->donHangModel->cancelDonHang($id)) {
-                $_SESSION['success'] = "Đơn hàng đã được hủy";
-            } else {
-                $_SESSION['error'] = "Hủy thất bại";
-            }
-
+        if (!$donHang) {
+            $_SESSION['error'] = "Không tìm thấy đơn hàng";
             header("Location:index.php?act=QuanLyDonHang");
             exit;
         }
+
+        if (in_array($donHang['trang_thai_don_hang'], ['Đang giao', 'Đã giao'])) {
+            $_SESSION['error'] = "Không thể hủy đơn";
+            header("Location:index.php?act=QuanLyDonHang");
+            exit;
+        }
+
+        $this->db->beginTransaction();
+
+        try {
+            $chiTiet = $this->donHangModel->getChiTietDonHang($id);
+
+            foreach ($chiTiet as $item) {
+                $this->donHangModel->restoreTonKho(
+                    $item['id_bien_the'],
+                    $item['so_luong']
+                );
+            }
+
+            $ok = $this->donHangModel->cancelDonHang($id);
+
+            if (!$ok) {
+                throw new Exception("Cancel fail");
+            }
+
+            $this->db->commit();
+
+            $_SESSION['success'] = "Hủy đơn + hoàn kho thành công";
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            $_SESSION['error'] = $e->getMessage();
+        }
+
+        header("Location:index.php?act=QuanLyDonHang");
+        exit;
+    }
     /**
      * XÓA ĐƠN ĐÃ HỦY
      */

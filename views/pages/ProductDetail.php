@@ -454,6 +454,27 @@
 
                 window.currentSelectedColor = color;
             }
+        function updateQty(change) {
+
+            let qtyInput = document.getElementById('buyQty');
+            let currentQty = parseInt(qtyInput.value);
+
+            let newQty = currentQty + change;
+
+            if (newQty < 1) newQty = 1;
+
+            // ❌ chỉ giới hạn, không trừ UI
+            if (newQty > window.currentStock) {
+                alert('Chỉ còn ' + window.currentStock + ' sản phẩm trong kho!');
+                return;
+            }
+
+            qtyInput.value = newQty;
+
+            // 👉 chỉ HIỂN THỊ stock gốc, không trừ
+            document.getElementById('stock-info').innerText =
+                `Còn ${window.currentStock} sản phẩm (Size ${window.currentSelectedSize})`;
+        }
         </script>
     </body>
     </html>

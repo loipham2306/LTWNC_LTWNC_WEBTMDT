@@ -247,14 +247,12 @@ function getStatusBadge($status)
                     <input type="hidden" name="id_don_hang" id="modalOrderIdInput">
 
                     <input type="hidden" name="trang_thai" value="Đã hủy">
-
-                    <button
-                        type="submit"
-                        class="btn btn-outline-danger fw-bold rounded-pill"
-                        onclick="return confirm('Xác nhận hủy đơn hàng?')"
-                    >
-                        <i class="fas fa-times me-2"></i>Hủy Đơn
-                    </button>
+                    <a href="index.php?act=HuyDonHang&id=<?= $order['id_don_hang'] ?>"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                        <i class="fas fa-times me-2"></i>Hủy Đơn Hàng
+                    </a>
+                    
                 </form>
 
                 <div class="d-flex gap-2">

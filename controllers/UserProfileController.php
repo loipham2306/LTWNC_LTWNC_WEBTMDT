@@ -41,24 +41,26 @@ class UserProfileController {
 
     // Hiển thị trang profile và load dữ liệu cần thiết
     private function showProfile() {
-    $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
+        $id_tai_khoan = $_SESSION['user']['id_tai_khoan'];
 
-    // 1. Lấy thông tin khách hàng (Hàm này trả về mảng thông tin có chứa id_khach_hang)
-    $thongTinKhach = $this->kh_model->getThongTinByTaiKhoanId($id_tai_khoan);
-    
-    // ĐẢM BẢO BẠN LẤY ĐÚNG ID KHÁCH HÀNG TẠI ĐÂY
-    $id_khach_hang = $thongTinKhach['id_khach_hang']; 
+        // 1. Lấy thông tin khách hàng (Hàm này trả về mảng thông tin có chứa id_khach_hang)
+        $thongTinKhach = $this->kh_model->getThongTinByTaiKhoanId($id_tai_khoan);
+        
+        // ĐẢM BẢO BẠN LẤY ĐÚNG ID KHÁCH HÀNG TẠI ĐÂY
+        $id_khach_hang = $thongTinKhach['id_khach_hang']; 
 
-    // 2. Lấy danh sách Voucher và Đơn hàng theo ID khách hàng chuẩn
-    $danhSachVoucherCuaToi = $this->voucher_model->layVoucherCuaTaiKhoan($id_tai_khoan);
-    
-    // SỬA DÒNG NÀY: Truyền $id_khach_hang thay vì $id_tai_khoan
-    $danhSachDonHang = $this->donhang_model->getDonHangByKhachHangId($id_khach_hang);
-    
-    $_SESSION['user']['vouchers'] = $danhSachVoucherCuaToi;
-    
-    include '../views/pages/UserProfile.php';
-}
+        // 2. Lấy danh sách Voucher và Đơn hàng theo ID khách hàng chuẩn
+        $danhSachVoucherCuaToi = $this->voucher_model->layVoucherCuaTaiKhoan($id_tai_khoan);
+        
+        // SỬA DÒNG NÀY: Truyền $id_khach_hang thay vì $id_tai_khoan
+        $danhSachDonHang = $this->donhang_model->getDonHangByKhachHangId($id_khach_hang);
+        foreach ($danhSachDonHang as &$dh) {
+            $dh['items'] = $this->donhang_model->getChiTietDonHang($dh['id_don_hang']);
+        }
+        $_SESSION['user']['vouchers'] = $danhSachVoucherCuaToi;
+        
+        include '../views/pages/UserProfile.php';
+    }
 
     // Xử lý cập nhật thông tin cá nhân
     private function updateProfile() {

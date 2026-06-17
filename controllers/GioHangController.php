@@ -101,18 +101,35 @@ class GioHangController {
         exit;
     }
      // Ví dụ xử lý trong GioHangController
-    public function capNhatSoLuong() {
+   public function capNhatSoLuong() {
 
-        $id = $_GET['id'];
+        header('Content-Type: application/json');
+
+        $id = $_GET['id']; // id_bien_the
         $type = $_GET['type'];
-                
+
         $id_khach_hang = $_SESSION['user']['id_khach_hang'];
         $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
 
+        // 🔥 LẤY STOCK TỪ DB
+        $stock = $this->ghModel->getStockByVariant($id);
+
+        $current = $_SESSION['cart'][$id]['so_luong'] ?? 0;
+        $stock = $_SESSION['cart'][$id]['so_luong_ton'] ?? 0;
         if ($type === 'plus') {
+
+            // ❌ CHẶN VƯỢT KHO
+            if ($current >= $stock) {
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Chỉ còn $stock sản phẩm trong kho"
+                ]);
+                exit;
+            }
+
             $this->ghModel->updateQty($id_gio_hang, $id, 1);
+
         } else {
-            $current = $_SESSION['cart'][$id]['so_luong'] ?? 1;
 
             if ($current <= 1) {
                 $this->ghModel->removeFromGioHang($id_gio_hang, $id);
@@ -121,8 +138,17 @@ class GioHangController {
             }
         }
 
+        // sync lại cart
         $this->syncCartFromDB();
-        echo "OK";
+
+        $newQty = $_SESSION['cart'][$id]['so_luong'] ?? 0;
+
+        echo json_encode([
+            "status" => "success",
+            "newQty" => $newQty,
+            "stock" => $stock
+        ]);
+        exit;
     }
     public function xoaGioHang() {
         $id_bien_the = $_GET['id'];
@@ -138,39 +164,36 @@ class GioHangController {
     // Thêm hàm này vào Controller
     public function syncCartFromDB() {
 
-    $id_khach_hang = $_SESSION['user']['id_khach_hang'] ?? null;
+        $id_khach_hang = $_SESSION['user']['id_khach_hang'] ?? null;
 
-    if (!$id_khach_hang) {
+        if (!$id_khach_hang) {
+            $_SESSION['cart'] = [];
+            return;
+        }
+
+        $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
+
+        if (!$id_gio_hang) {
+            $_SESSION['cart'] = [];
+            return;
+        }
+
+        $items = $this->ghModel->getChiTietGioHang($id_gio_hang);
+
         $_SESSION['cart'] = [];
-        return;
+
+        foreach ($items as $item) {
+
+            $_SESSION['cart'][$item['id_bien_the']] = [
+                'id_bien_the'  => $item['id_bien_the'],
+                'ten_san_pham' => $item['ten_san_pham'],
+                'gia'          => (float)$item['gia_ban'],
+                'size'         => $item['kich_co'],
+                'mau'          => $item['mau_sac'],
+                'hinh_anh'     => $item['hinh_anh_bien_the'],
+                'so_luong'     => (int)$item['so_luong'],
+                'so_luong_ton' => (int)$item['so_luong_ton']
+            ];
+        }
     }
-    $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
-
-    if (!$id_gio_hang) {
-        $_SESSION['cart'] = [];
-        return;
-    }
-
-    $items = $this->ghModel->getChiTietGioHang($id_gio_hang);
-
-    // debug cực quan trọng
-    if (empty($items)) {
-        error_log("Giỏ hàng rỗng hoặc query sai");
-    }
-
-    $_SESSION['cart'] = [];
-
-    foreach ($items as $item) {
-
-        $_SESSION['cart'][$item['id_bien_the']] = [
-            'id_bien_the'  => $item['id_bien_the'],
-            'ten_san_pham' => $item['ten_san_pham'],
-            'gia'          => (float)$item['gia_ban'],
-            'size'         => $item['kich_co'],
-            'mau'          => $item['mau_sac'],
-            'hinh_anh'     => $item['hinh_anh_bien_the'],
-            'so_luong'     => (int)$item['so_luong']
-        ];
-    }
-}
 }

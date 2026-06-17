@@ -1,6 +1,7 @@
 
 <?php
     $hasItems = !empty($_SESSION['checkout_items']);
+    
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -216,7 +217,7 @@
                     </div>
                     <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
                         <?php 
-                        $danhSachVoucher = $_SESSION['user']['vouchers'] ?? [];
+                        $danhSachVoucher = $danhSachVoucher ?? [];
                         if (empty($danhSachVoucher)) : ?>
                             <p class="text-white-50">Bạn chưa có voucher nào.</p>
                         <?php else : 
@@ -250,7 +251,7 @@
         const formState = document.getElementById('formState');
         let baseTotal = <?= $total ?>;
         let discount = 0;
-        const vouchersData = <?= json_encode($_SESSION['user']['vouchers'] ?? []) ?>;                        
+        const vouchersData = <?= json_encode($danhSachVoucher ?? []) ?>;        
         const voucherInput = document.getElementById('voucher');
         const voucherMsg = document.getElementById('voucherMsg');
         const displayTotal = document.getElementById('displayTotal');
@@ -261,38 +262,66 @@
         });
 
        function selectVoucher(idVoucher, maVoucher) {
-            // Tìm voucher trong mảng dữ liệu dựa trên ID (số)
-            const voucher = vouchersData.find(v => v.id_voucher == idVoucher);
+                if (typeof vouchersData === 'undefined') {
+            alert("Voucher chưa load");
+            return;
+        }
 
-            if (voucher) {
-                // Kiểm tra điều kiện tối thiểu
-                if (baseTotal < parseFloat(voucher.don_toi_thieu)) {
-                    alert('Đơn hàng chưa đủ điều kiện áp dụng mã này!');
-                    return;
-                }
-
-                // Tính toán giảm giá
-                if (voucher.loai_giam_gia === 'percent') {
-                    discount = (baseTotal * parseFloat(voucher.gia_tri_giam)) / 100;
-                } else {
-                    discount = parseFloat(voucher.gia_tri_giam);
-                }
-
-                // CẬP NHẬT GIAO DIỆN
-                // Gán ID (số) vào input ẩn để gửi về Server
-                document.getElementById('id_voucher_hidden').value = idVoucher; 
-                // Gán Mã (chuỗi) vào ô input hiển thị cho khách hàng thấy
-                document.getElementById('voucher').value = maVoucher; 
-                
-                voucherMsg.innerText = "Đã áp dụng: -" + Math.round(discount).toLocaleString('vi-VN') + " đ";
-                voucherMsg.className = "text-success fw-bold";
-
-                updateTotal();
+        if (typeof baseTotal === 'undefined') {
+            alert("Không thể áp dụng voucher ở trang này");
+            return;
+        }                  
+            // 1. Check data tồn tại trước
+            if (!vouchersData || vouchersData.length === 0) {
+                alert("Không có voucher khả dụng");
+                return;
             }
 
-            // Đóng modal
-            var modalElement = document.getElementById('voucherModal');
-            var modal = bootstrap.Modal.getInstance(modalElement);
+            // 2. Find voucher
+            const voucher = vouchersData.find(v => v.id_voucher == idVoucher);
+
+            if (!voucher) {
+                alert("Voucher không tồn tại");
+                return;
+            }
+
+            // 3. Reset discount trước khi tính
+            discount = 0;
+
+            const minOrder = parseFloat(voucher.don_toi_thieu || 0);
+            const value = parseFloat(voucher.gia_tri_giam || 0);
+
+            // 4. Check điều kiện đơn tối thiểu
+            if (baseTotal < minOrder) {
+                alert('Đơn hàng chưa đủ điều kiện áp dụng mã này!');
+                return;
+            }
+
+            // 5. Tính giảm giá
+            if (voucher.loai_giam_gia === 'percent') {
+                discount = (baseTotal * value) / 100;
+            } else {
+                discount = value;
+            }
+
+            if (isNaN(discount) || discount < 0) {
+                discount = 0;
+            }
+
+            // 6. Update UI + sync backend
+            document.getElementById('id_voucher_hidden').value = idVoucher;
+            document.getElementById('voucher').value = maVoucher;
+
+            voucherMsg.innerText =
+                "Đã áp dụng: -" + Math.round(discount).toLocaleString('vi-VN') + " đ";
+
+            voucherMsg.className = "text-success fw-bold";
+
+            updateTotal();
+
+            // 7. Close modal
+            const modalElement = document.getElementById('voucherModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) modal.hide();
         }
         function updateTotal() {
@@ -330,46 +359,58 @@
         }
 
         // 3. Sửa lại phần xử lý Submit Form
-        formState.addEventListener('submit', function(e) {
+        formState.addEventListener('submit', async function (e) {
             e.preventDefault();
-            
-            const formData = new FormData(this);
-            const paymentMethod = document.querySelector('input[name="phuong_thuc_thanh_toan"]:checked').value;
 
-            fetch('index.php?act=XuLyThanhToan', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    if (paymentMethod === 'bank') {
-                        // Hiển thị vùng QR
-                        document.getElementById('qr-payment-area').style.display = 'block';
-                        
-                        // Tính số tiền thực tế sau giảm giá
-                        let finalAmount = baseTotal - discount;
-                        
-                        // Gọi hàm tạo QR với ID đơn hàng trả về từ Server
-                        generateQRLink(data.id_don_hang, finalAmount);
-                        
-                        // Ẩn các phần không cần thiết
-                        document.querySelector('button[type="submit"]').style.display = 'none';
-                        document.getElementById('payment-method-container').style.display = 'none';
-                        
-                        alert("Đặt hàng thành công! Vui lòng quét mã QR để hoàn tất thanh toán.");
-                    } else {
-                        // Nếu là COD, chuyển hướng thẳng
-                        window.location.href = data.redirect;
-                    }
-                } else {
-                    alert("Lỗi: " + data.message);
+            const btn = document.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = "Đang xử lý...";
+
+            try {
+                const formData = new FormData(this);
+                const paymentMethod = document.querySelector('input[name="phuong_thuc_thanh_toan"]:checked').value;
+
+                const res = await fetch('index.php?act=XuLyThanhToan', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.status !== 'success') {
+                    alert(data.message || "Có lỗi xảy ra");
+                    btn.disabled = false;
+                    btn.innerHTML = "Xác Nhận Đặt Hàng";
+                    return;
                 }
-            })
-            .catch(err => {
+
+                // ===== BANK =====
+                if (paymentMethod === 'bank') {
+
+                    document.getElementById('qr-payment-area').style.display = 'block';
+
+                    const finalAmount = baseTotal - discount;
+
+                    generateQRLink(data.id_don_hang, finalAmount);
+
+                    document.querySelector('button[type="submit"]').style.display = 'none';
+                    document.getElementById('payment-method-container').style.display = 'none';
+
+                    // UX tốt hơn alert
+                    voucherMsg.innerText = "Đơn hàng đã tạo. Vui lòng quét QR để thanh toán.";
+                    voucherMsg.className = "text-success fw-bold";
+
+                } else {
+                    window.location.href = data.redirect;
+                }
+
+            } catch (err) {
                 console.error(err);
-                alert("Đã có lỗi xảy ra. Vui lòng thử lại!");
-            });
+                alert("Lỗi hệ thống, vui lòng thử lại");
+
+                btn.disabled = false;
+                btn.innerHTML = "Xác Nhận Đặt Hàng";
+            }
         });
     </script>
 </body>

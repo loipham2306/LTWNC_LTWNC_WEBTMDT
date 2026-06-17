@@ -239,7 +239,8 @@ switch ($act) {
         $controller = new ThanhToanController($db);
         // Lấy ID đơn hàng từ URL để hiển thị thông tin đúng
         $id = $_GET['id'] ?? 0;
-        $controller->showThanhCong($id);
+        $controller->showThanhCong($_GET['id'] ?? null);
+    break;
         break;
     // --- NHÓM ĐƠN HÀNG ---
     case 'QuanLyDonHang':

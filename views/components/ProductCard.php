@@ -15,6 +15,31 @@ $currentPrice = number_format($price, 0, ',', '.') . ' đ';
 // Xử lý ảnh (DB trả về hinh_anh)
 $imgName = !empty($product['hinh_anh']) ? basename($product['hinh_anh']) : 'default.png';
 $productImg = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $imgName;
+$stock = (int)($product['tong_ton_kho'] ?? 0);
+
+$tags = [];
+
+// 🔴 Hết hàng
+if ($stock <= 0) {
+    $tags[] = ['HẾT HÀNG', 'bg-danger'];
+}
+
+// 🟡 Sắp hết
+if ($stock > 0 && $stock < 5) {
+    $tags[] = ['SẮP HẾT', 'bg-warning text-dark'];
+}
+
+
+// 🔥 HOT (tuỳ logic bạn)
+if ($stock > 20) {
+    $tags[] = ['NỔI BẬT', 'bg-danger'];
+}
+
+// 🆕 NEW (7 ngày gần đây)
+if (!empty($product['ngay_tao']) 
+    && strtotime($product['ngay_tao']) > strtotime('-7 days')) {
+    $tags[] = ['MỚI', 'bg-primary'];
+}
 ?>
 
 <style>
@@ -89,6 +114,11 @@ $productImg = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $imgName;
         </div>
 
         <div class="card-body text-center d-flex flex-column p-4">
+            <?php foreach ($tags as $t): ?>
+                <span class="position-absolute top-0 start-0 m-2 badge <?= $t[1] ?> mb-1 d-block">
+                    <?= $t[0] ?>
+                </span>
+            <?php endforeach; ?>
             <p class="text-white-50 small mb-1"><?= htmlspecialchars($category) ?></p>
             
             <a href="/LTWNC_LTWNC_WEBTMDT/views/pages/ProductDetail.php?id=<?= htmlspecialchars($id) ?>" 

@@ -36,7 +36,13 @@ class BienTheSanPham {
 
     // Lấy tất cả biến thể của 1 sản phẩm
     public function LayBienTheTheoSanPham($id_san_pham) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE id_san_pham = :id_sp";
+        $query = "SELECT id_bien_the,
+            id_san_pham,
+            kich_co,
+            mau_sac,
+            gia_ban,
+            so_luong_ton AS stock
+             FROM " . $this->table_name . " WHERE id_san_pham = :id_sp";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':id_sp' => $id_san_pham]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -88,7 +88,7 @@
                                                 value="<?= $key ?>"
                                                 data-unit-price="<?= $item['gia'] ?>"
                                                 data-price="<?= $item['gia'] * $item['so_luong'] ?>"
-                                                data-stock="<?= $item['so_luong_ton'] ?? 0 ?>"
+                                                data-stock="<?= (int)$item['so_luong_ton'] ?>"
                                                 checked
                                                 onchange="updateTotal()"
                                             />
@@ -171,32 +171,67 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
     <script>
+        
+        
+
         function updateQty(id, type) {
+                    
             let input = document.getElementById(`qty-${id}`);
             let checkbox = document.querySelector(`.product-checkbox[value="${id}"]`);
 
-            let unitPrice = parseFloat(checkbox.dataset.unitPrice);
-
+            let stock = parseInt(checkbox.dataset.stock);
             let currentQty = parseInt(input.value);
-            let newQty = (type === 'plus') ? currentQty + 1 : Math.max(1, currentQty - 1);
+            console.log("stock:", stock);
+            let newQty = currentQty;
+
+            if (type === 'plus') {
+
+                // ❌ chỉ check khi tăng
+                if (stock <= 0) {
+                    alert("⚠️ Sản phẩm đã hết hàng");
+                    return;
+                }
+
+                if (currentQty >= stock) {
+                    alert('⚠️ Đã đạt giới hạn số lượng trong kho!');
+                    return;
+                }
+
+                newQty++;
+            }
+
+            if (type === 'minus') {
+                newQty--;
+
+                if (newQty <= 0) {
+                    xoaSanPham(id);
+                    return;
+                }
+            }
 
             fetch(`index.php?act=CapNhatSoLuong&id=${id}&type=${type}`)
-            .then(res => res.text())
-            .then(() => {
+                .then(res => res.json())
+                .then(data => {
 
-                // update UI
-                input.value = newQty;
+                    if (data.status !== 'success') {
+                        alert(data.message || "Lỗi cập nhật!");
+                        return;
+                    }
 
-                let newTotalRow = newQty * unitPrice;
+                    input.value = newQty;
 
-                checkbox.dataset.price = newTotalRow;
+                    let unitPrice = parseFloat(checkbox.dataset.unitPrice);
+                    let newTotalRow = newQty * unitPrice;
 
-                let row = checkbox.closest('tr');
-                row.querySelectorAll('td')[5].innerText =
-                    newTotalRow.toLocaleString('vi-VN') + ' đ';
+                    checkbox.dataset.price = newTotalRow;
 
-                updateTotal();
-            });
+                    let row = checkbox.closest('tr');
+                    row.querySelectorAll('td')[5].innerText =
+                        newTotalRow.toLocaleString('vi-VN') + ' đ';
+
+                    updateTotal();
+                })
+                .catch(err => console.error("Lỗi kết nối:", err));
         }
         function updateTotal() {
             let total = 0;

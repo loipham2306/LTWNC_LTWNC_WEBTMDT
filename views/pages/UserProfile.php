@@ -286,6 +286,7 @@
     
     <script>
        const orders = <?= json_encode($danhSachDonHang ?? []); ?>; 
+       console.log("ORDERS FULL:", orders);
         console.log("Dữ liệu đơn hàng:", orders);
         new WOW().init();
 
@@ -361,10 +362,26 @@
                 
                 const status = order.trang_thai_don_hang;
 
-                // Logic màu sắc cho badge
-                let badgeClass = 'bg-secondary';
-                if (status === 'Đã giao') badgeClass = 'bg-success';
-                else if (status === 'Đang giao') badgeClass = 'bg-warning text-dark';
+               let badgeClass = 'bg-secondary';
+
+                switch (order.trang_thai_don_hang) {
+                    case 'Đã giao':
+                        badgeClass = 'bg-success';
+                        break;
+
+                    case 'Chờ duyệt':
+                        badgeClass = 'bg-warning text-dark';
+                        break;
+
+                    case 'Đang giao':
+                        badgeClass = 'bg-info text-dark';
+                        break;
+
+                    case 'Hủy':
+                    case 'Đã hủy':
+                        badgeClass = 'bg-danger';
+                        break;
+                }
                 
                 html += `
                     <tr>
@@ -377,12 +394,95 @@
                             </span>
                         </td>
                         <td class="py-3">
-                            <button class="btn btn-sm btn-outline-orange rounded-pill px-3">Xem</button>
+                            <button class="btn btn-sm btn-outline-orange rounded-pill px-3"
+                                onclick="viewOrderDetail(${id})">
+                            Xem
+                            </button>
                         </td>
                     </tr>
                 `;
             });
             tbody.innerHTML = html;
+        }
+        function viewOrderDetail(orderId) {
+            const order = orders.find(o => String(o.id_don_hang) === String(orderId));
+
+            if (!order) return;
+
+            const items = Array.isArray(order.items) ? order.items : [];
+
+            let itemsHtml = '';
+
+            if (items.length > 0) {
+                itemsHtml = `
+                <table class="table table-dark table-bordered align-middle mt-3">
+                    <thead>
+                        <tr class="text-orange">
+                            <th>Sản phẩm</th>
+                            <th>Size</th>
+                            <th>Màu</th>
+                            <th>SL</th>
+                            <th>Giá</th>
+                            <th>Tạm tính</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                items.forEach(sp => {
+                    const price = Number(sp.gia_luc_mua || 0);
+                    const qty = Number(sp.so_luong || 0);
+                    const total = price * qty;
+
+                    itemsHtml += `
+                        <tr>
+                            <td>${sp.ten_san_pham}</td>
+                            <td>${sp.kich_co ?? '-'}</td>
+                            <td>
+                                <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${sp.mau_sac}"></span>
+                                ${sp.mau_sac ?? '-'}
+                            </td>
+                            <td>${qty}</td>
+                            <td>${price.toLocaleString('vi-VN')} đ</td>
+                            <td class="text-warning fw-bold">
+                                ${total.toLocaleString('vi-VN')} đ
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                itemsHtml += `</tbody></table>`;
+            } else {
+                itemsHtml = `<p class="text-white-50">Không có sản phẩm</p>`;
+            }
+
+            let html = `
+                <div>
+                    <h5 class="text-orange">#${order.id_don_hang}</h5>
+                    <p class="text-white-50">Ngày đặt: ${order.ngay_dat}</p>
+                    <p class="text-white-50">Trạng thái: <b>${order.trang_thai_don_hang}</b></p>
+                    <p class="text-white-50">Địa chỉ: ${order.dia_chi_giao_hang ?? '-'}</p>
+                    <p class="text-white-50">Người nhận: ${order.ten_nguoi_nhan ?? '-'}</p>
+                    <p class="text-white-50">SĐT: ${order.sdt_nguoi_nhan ?? '-'}</p>
+                </div>
+
+                <hr class="border-secondary">
+
+                <h6 class="text-orange">Sản phẩm đã mua</h6>
+                ${itemsHtml}
+
+                <div class="mt-3 text-end">
+                    <h5>Tổng tiền:
+                        <span class="text-orange">
+                            ${Number(order.tong_tien || 0).toLocaleString('vi-VN')} đ
+                        </span>
+                    </h5>
+                </div>
+            `;
+
+            document.getElementById('orderDetailBody').innerHTML = html;
+
+            new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
         }
         // ĐIỀU KHIỂN CHUYỂN TAB MƯỢT MÀ (Thay thế useState activeTab)
         function switchTab(tabName, element) {
@@ -464,5 +564,19 @@
         }
         
     </script>
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-dark text-white border border-secondary">
+
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title text-orange">Chi tiết đơn hàng</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" id="orderDetailBody"></div>
+
+    </div>
+  </div>
+</div>
 </body>
 </html>

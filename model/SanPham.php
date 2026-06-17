@@ -106,17 +106,34 @@ class SanPham {
         return $sanPham;
     }
     public function getSanPhamHome($limit = 8) {
-        $query = "SELECT sp.*, 
-              GROUP_CONCAT(DISTINCT bt.kich_co SEPARATOR ', ') as danh_sach_size,
-              GROUP_CONCAT(DISTINCT bt.mau_sac SEPARATOR ', ') as danh_sach_mau
-              FROM san_pham sp
-              LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
-              GROUP BY sp.id_san_pham
-              ORDER BY sp.id_san_pham DESC 
-              LIMIT :limit";
+        $query = "
+            SELECT 
+                sp.*,
+                GROUP_CONCAT(DISTINCT bt.kich_co SEPARATOR ', ') as danh_sach_size,
+                GROUP_CONCAT(DISTINCT bt.mau_sac SEPARATOR ', ') as danh_sach_mau,
+                SUM(bt.so_luong_ton) AS tong_ton_kho,
+
+                CASE 
+                    WHEN SUM(bt.so_luong_ton) IS NULL OR SUM(bt.so_luong_ton) = 0 
+                    THEN 'HẾT HÀNG'
+                    WHEN SUM(bt.so_luong_ton) < 5 
+                    THEN 'SẮP HẾT'
+                    ELSE NULL
+                END AS trang_thai_sp
+
+            FROM san_pham sp
+            LEFT JOIN bien_the_san_pham bt 
+                ON sp.id_san_pham = bt.id_san_pham
+
+            GROUP BY sp.id_san_pham
+            ORDER BY sp.id_san_pham DESC
+            LIMIT :limit
+        ";
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->execute();
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     // THÊM SẢN PHẨM (Đã bỏ cột 'giam_gia' và 'gia')

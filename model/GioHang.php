@@ -140,7 +140,15 @@ class GiaHang {
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
+    public function getStockByVariant($id_bien_the) {
+        $stmt = $this->conn->prepare("
+            SELECT so_luong_ton 
+            FROM bien_the_san_pham 
+            WHERE id_bien_the = ?
+        ");
+        $stmt->execute([$id_bien_the]);
+        return (int)$stmt->fetchColumn();
+    }
     // 4. Xóa sản phẩm khỏi giỏ hàng
     public function removeFromGioHang($id_gio_hang, $id_bien_the) {
         // Xóa dựa trên cả 2 điều kiện để chính xác

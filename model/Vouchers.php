@@ -111,12 +111,17 @@ class Vouchers {
     }
 
     // 4. Khi thanh toán thành công, đánh dấu voucher đã dùng
-    public function suDungVoucher($id_tai_khoan, $id_voucher) {
-        $sql = "UPDATE " . $this->table_voucher_nguoi_dung . " 
-                SET da_su_dung = 1 
-                WHERE id_tai_khoan = ? AND id_voucher = ?";
+    public function setVoucherDaSuDung($id_tai_khoan, $id_voucher) {
+        $sql = "UPDATE voucher_cua_nguoi_dung
+                SET da_su_dung = 1
+                WHERE id_tai_khoan = :id_tai_khoan
+                AND id_voucher = :id_voucher";
+
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$id_tai_khoan, $id_voucher]);
+        return $stmt->execute([
+            ':id_tai_khoan' => $id_tai_khoan,
+            ':id_voucher' => $id_voucher
+        ]);
     }
     // HỖ TRỢ & KIỂM TRA
     public function tangSoLuongDaDung($id_voucher) {
@@ -126,24 +131,15 @@ class Vouchers {
     }
         // Trong Vouchers.php
     public function layVoucherCuaTaiKhoan($id_tai_khoan) {
-        // Lấy tất cả thông tin từ bảng voucher (v.*) và cột da_su_dung từ bảng trung gian (vnd.da_su_dung)
-        $sql = "SELECT v.*, vnd.da_su_dung 
-                FROM " . $this->table_voucher_nguoi_dung . " vnd
-                JOIN " . $this->table_name . " v ON vnd.id_voucher = v.id_voucher
-                WHERE vnd.id_tai_khoan = ?";
-                
+        $sql = "SELECT v.*, vnd.da_su_dung
+                FROM voucher_cua_nguoi_dung vnd
+                JOIN voucher v ON vnd.id_voucher = v.id_voucher
+                WHERE vnd.id_tai_khoan = ? 
+                AND vnd.da_su_dung = 0";
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id_tai_khoan]);
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    public function capNhatTrangThaiVoucher($id_tai_khoan, $id_voucher, $trang_thai) {
-        $sql = "UPDATE vi_voucher SET da_su_dung = :trang_thai 
-                WHERE id_tai_khoan = :id_tai_khoan AND id_voucher = :id_voucher";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':trang_thai' => $trang_thai,
-            ':id_tai_khoan' => $id_tai_khoan,
-            ':id_voucher' => $id_voucher
-        ]);
     }
 }

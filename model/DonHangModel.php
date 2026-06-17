@@ -125,11 +125,15 @@ class DonHangModel
     }
     // CHI TIẾT ĐƠN HÀNG
     public function getChiTietDonHang($id_don_hang){
-        $sql = "SELECT ct.*, bt.kich_co, bt.mau_sac, bt.hinh_anh_bien_the, sp.ten_san_pham
+        $sql = "SELECT ct.*, 
+                    bt.kich_co, bt.mau_sac, bt.hinh_anh_bien_the,
+                    sp.ten_san_pham,
+                    sp.hinh_anh AS hinh_anh_san_pham
                 FROM {$this->table_chi_tiet_don_hang} ct
                 INNER JOIN bien_the_san_pham bt ON ct.id_bien_the = bt.id_bien_the
                 INNER JOIN san_pham sp ON bt.id_san_pham = sp.id_san_pham
                 WHERE ct.id_don_hang = ?";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id_don_hang]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -171,16 +175,21 @@ class DonHangModel
         ]);
         return $stmt->rowCount() > 0;
     }
-    public function restoreTonKho($id_bien_the, $so_luong){
+        public function restoreTonKho($id_bien_the, $so_luong)
+    {
+        if ($so_luong <= 0) return false;
+
         $sql = "
             UPDATE bien_the_san_pham
-            SET so_luong_ton = so_luong_ton + ?
-            WHERE id_bien_the = ?
+            SET so_luong_ton = so_luong_ton + :so_luong
+            WHERE id_bien_the = :id_bien_the
         ";
+
         $stmt = $this->conn->prepare($sql);
+
         return $stmt->execute([
-            $so_luong,
-            $id_bien_the
+            ':so_luong' => (int)$so_luong,
+            ':id_bien_the' => $id_bien_the
         ]);
     }
     // Thêm vào trong class DonHangModel
@@ -192,6 +201,7 @@ class DonHangModel
         $stmt->execute([':id_khach_hang' => $id_khach_hang]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
      // TRẠNG THÁI ĐƠN HÀNG
     public function updateTrangThai($id_don_hang, $trang_thai){
         $sql = "UPDATE {$this->table_don_hang} SET trang_thai_don_hang = ? WHERE id_don_hang = ?";
@@ -200,7 +210,6 @@ class DonHangModel
     }
     public function cancelDonHang($id)
     {
-        // LẤY ĐÚNG CỘT
         $sql = "SELECT trang_thai_don_hang FROM don_hang WHERE id_don_hang = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
@@ -208,15 +217,16 @@ class DonHangModel
 
         if (!$current) return false;
 
-        // CHẶN HỦY
-        if (in_array($current, ['Đang giao', 'Hoàn thành'])) {
+        // CHẶN hủy
+        if (in_array($current, ['Đang giao', 'Đã giao'])) {
             return false;
         }
 
-        // UPDATE ĐÚNG CỘT
-        $sql = "UPDATE don_hang SET trang_thai_don_hang = 'Hủy' WHERE id_don_hang = ?";
-        $stmt = $this->conn->prepare($sql);
+        $sql = "UPDATE don_hang 
+                SET trang_thai_don_hang = 'Đã hủy' 
+                WHERE id_don_hang = ?";
 
+        $stmt = $this->conn->prepare($sql);
         return $stmt->execute([$id]);
     }
      //THỐNG KÊ

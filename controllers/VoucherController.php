@@ -33,10 +33,7 @@ class VoucherController {
                 break;
             case 'ViVoucher':
                 $this->hienThiViVoucher();
-                break;
-            case 'DungVoucher':
-                $this->dungVoucher();
-                break;   
+                break; 
             // --- Mặc định nếu không tìm thấy trang ---
             default:
                 echo "404 - Trang không tồn tại";
@@ -123,8 +120,7 @@ class VoucherController {
     }
     public function luuVoucherVaoVi() {
         if (!isset($_SESSION['user']['id_tai_khoan'])) {
-            $_SESSION['error'] = "Bạn cần đăng nhập để lấy mã!";
-            header("Location: index.php?act=login");
+            echo "error";
             exit();
         }
 
@@ -132,20 +128,20 @@ class VoucherController {
         $id_voucher = $_GET['id_voucher'] ?? null;
 
         if ($id_voucher) {
-            // Kiểm tra xem đã lưu chưa
             if ($this->voucherModel->kiemTraDaLuuVoucher($id_tai_khoan, $id_voucher)) {
-                $_SESSION['error'] = "Bạn đã lấy mã này rồi!";
+                echo "error";
             } else {
                 if ($this->voucherModel->luuVoucherVaoVi($id_tai_khoan, $id_voucher)) {
-                    $_SESSION['success'] = "Lấy mã thành công! Đã thêm vào ví.";
+                    echo "success";
                 } else {
-                    $_SESSION['error'] = "Có lỗi xảy ra, không thể lấy mã.";
+                    echo "error";
                 }
             }
+        } else {
+            echo "error";
         }
-        header("Location: index.php?act=index.php");
         exit();
-    }
+}
 
     // 2. Hiển thị Ví Voucher của khách hàng
     public function hienThiViVoucher() {
@@ -161,15 +157,5 @@ class VoucherController {
         
         include '../views/pages/UserProfile.php';
     }
-    public function dungVoucher() {
-        $id_voucher = $_GET['id_voucher'] ?? null;
-        $id_tai_khoan = $_SESSION['user']['id_tai_khoan'] ?? null;
-
-        if ($id_voucher && $id_tai_khoan) {
-            // Gọi model để update trạng thái da_su_dung = 1
-            $this->voucherModel->capNhatTrangThaiVoucher($id_tai_khoan, $id_voucher, 1);
-        }
-        header("Location: index.php?act=UserProfile");
-        exit();
-    }
+    
 }

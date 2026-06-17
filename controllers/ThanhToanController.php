@@ -1,19 +1,22 @@
 <?php
+require_once __DIR__ . '/../controllers/MailController.php';
 require_once __DIR__ . '/../model/DonHangModel.php';
 require_once __DIR__ . '/../model/GioHang.php';
+require_once __DIR__.'/../model/Vouchers.php';
 
 class ThanhToanController
 {
     private $db;
     private $donHangModel;
     private $gioHangModel;
-
+    private $voucher_model;
     public function __construct($db)
     {
         $this->db = $db;
 
         $this->donHangModel = new DonHangModel($db);
         $this->gioHangModel = new GiaHang($db);
+        $this->voucher_model = new Vouchers($db);
     }
     public function showThanhCong($id) {
         // 1. Truy vấn đơn hàng từ Model dựa trên ID
@@ -60,6 +63,7 @@ class ThanhToanController
     }
     // HIỂN THỊ TRANG THANH TOÁN
     public function showCheckout(){
+        
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }    
@@ -71,14 +75,10 @@ class ThanhToanController
         $checkoutItems = $_SESSION['checkout_items'];
         $userInfo = $_SESSION['user'] ?? [];
         
-        // --- BỔ SUNG ĐOẠN NÀY ---
-        // Gọi model để lấy danh sách voucher hợp lệ của khách hàng hiện tại
-        $id_khach_hang = $_SESSION['user']['id_khach_hang'] ?? null;
+        $id_khach_hang =$_SESSION['user']['id_tai_khoan'];
+        $danhSachVoucher = [];
         if ($id_khach_hang) {
-            // Giả sử bạn có hàm getVouchersByKhachHang trong donHangModel hoặc VoucherModel
-            $danhSachVoucher = $this->donHangModel->getVouchersByKhachHang($id_khach_hang);
-            // Đưa vào biến để view sử dụng
-            $danhSachVoucher = $danhSachVoucher ?? [];
+            $danhSachVoucher = $this->voucher_model->layVoucherCuaTaiKhoan($id_khach_hang);
         } else {
             $danhSachVoucher = [];
         }
@@ -117,11 +117,47 @@ class ThanhToanController
             }
 
             // 3. Tính tổng tiền
-            $tong_tien = 0;
+           $tong_goc = 0;
+
             foreach ($_SESSION['checkout_items'] as $item) {
-                $tong_tien += (($item['gia'] ?? 0) * ($item['so_luong'] ?? 0));
+                $tong_goc += ($item['gia'] ?? 0) * ($item['so_luong'] ?? 0);
             }
 
+            $id_voucher_input = $_POST['id_voucher'] ?? null;
+            $giam = 0;
+
+            if (!empty($id_voucher_input)) {
+
+                $voucher = $this->voucher_model->layVoucherTheoId($id_voucher_input);
+
+                if (!$voucher) {
+                    throw new Exception("Voucher không tồn tại");
+                }
+
+                //  hết hạn
+                if (!empty($voucher['ngay_het_han']) && strtotime($voucher['ngay_het_han']) < time()) {
+                    throw new Exception("Voucher đã hết hạn");
+                }
+
+                // đơn tối thiểu
+                if ($tong_goc < $voucher['don_toi_thieu']) {
+                    throw new Exception("Đơn chưa đủ điều kiện áp dụng voucher");
+                }
+
+                //  hết lượt
+                if ($voucher['so_luong_da_dung'] >= $voucher['so_luong_ma']) {
+                    throw new Exception("Voucher đã hết lượt sử dụng");
+                }
+
+                // ✔ tính giảm
+                if ($voucher['loai_giam_gia'] === 'percent') {
+                    $giam = ($tong_goc * $voucher['gia_tri_giam']) / 100;
+                } else {
+                    $giam = $voucher['gia_tri_giam'];
+                }
+            }
+
+            $tong_tien = max(0, $tong_goc - $giam);
             // 4. Bắt đầu giao dịch
             $this->db->beginTransaction();
 
@@ -132,8 +168,6 @@ class ThanhToanController
                     throw new Exception($item['ten_san_pham'] . ' không đủ hàng.');
                 }
             }
-            $id_voucher_input = $_POST['id_voucher'] ?? null;
-
             // XỬ LÝ LỖI KHÓA NGOẠI: Nếu chuỗi rỗng thì chuyển thành NULL
             if (empty($id_voucher_input)) {
                 $id_voucher_input = null;
@@ -161,9 +195,16 @@ class ThanhToanController
             ];
 
             $id_don_hang = $this->donHangModel->createDonHang($dataDonHang);
+            
             if (!$id_don_hang) {
                 echo json_encode(['status' => 'error', 'message' => 'Lỗi tạo giỏ hàng...']);
                 exit;
+            }
+            if (!empty($id_voucher_input)) {
+                $this->voucher_model->setVoucherDaSuDung(
+                    $id_tai_khoan,
+                    $id_voucher_input
+                );
             }
             // 7. Thêm chi tiết và cập nhật tồn kho
            foreach ($_SESSION['checkout_items'] as $item) {
@@ -186,14 +227,22 @@ class ThanhToanController
             unset($_SESSION['checkout_items']);
 
             $this->db->commit();
+            $donHang = $this->donHangModel->getDonHangById($id_don_hang);
+            $chiTiet = $this->donHangModel->getChiTietDonHang($id_don_hang);
 
+            $email = $_SESSION['user']['email'] ?? null;
+
+            if ($email) {
+                MailController::sendOrderConfirmation($email, $donHang, $chiTiet, $tong_tien, $giam);
+            }
             // 9. Trả về phản hồi thành công
             echo json_encode([
                 'status' => 'success',
                 'message' => 'Đặt hàng thành công.',
                 'id_don_hang' => $id_don_hang,
-                'redirect' => ($_POST['phuong_thuc_thanh_toan'] == 'bank') ? 'index.php?act=ThanhToanBank&id=' . $id_don_hang : 'index.php?act=ThanhToanThanhCong'
-            ]);
+                'redirect' => ($_POST['phuong_thuc_thanh_toan'] == 'bank')
+                    ? 'index.php?act=ThanhToanBank&id=' . $id_don_hang
+                    : 'index.php?act=ThanhToanThanhCong&id=' . $id_don_hang            ]);
 
         } catch (Exception $e) {
            if ($this->db->inTransaction()) $this->db->rollBack();
@@ -207,4 +256,5 @@ class ThanhToanController
             ]);
         }
     }
+    
 }

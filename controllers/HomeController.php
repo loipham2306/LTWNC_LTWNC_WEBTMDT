@@ -15,23 +15,19 @@ class HomeController {
     }
 
     public function index() {
-        $homeFeaturedProducts = $this->spModel->getSanPhamHome(4);
+        $homeFeaturedProducts = $this->spModel->getSanPhamHome(8);
         $brands = $this->thModel->getTatCaThuongHieu();
-        $currentUserId = $_SESSION['user']['id_tai_khoan'] ?? 0;
-        // HomeController.php
-        $currentUserId = $_SESSION['user']['id_tai_khoan'] ?? 0;
+
+        $currentUserId = $_SESSION['user']['id_tai_khoan'] ?? null;
+
         $danhSachVoucher = $this->voucherModel->layTatCaVoucher();
 
-        // Sử dụng mảng tạm để không làm thay đổi mảng gốc ngay lập tức
-        $danhSachDaXuLy = [];
-        if (!empty($danhSachVoucher)) {
-            foreach ($danhSachVoucher as $vc) { // BỎ DẤU & Ở ĐÂY
-                // Kiểm tra cho từng voucher cụ thể
-                $vc['da_luu'] = $this->voucherModel->kiemTraDaLuuVoucher($currentUserId, $vc['id_voucher']);
-                $danhSachDaXuLy[] = $vc;
-            }
+        foreach ($danhSachVoucher as &$vc) {
+            $vc['da_luu'] = $currentUserId
+                ? $this->voucherModel->kiemTraDaLuuVoucher($currentUserId, $vc['id_voucher'])
+                : false;
         }
-        $danhSachVoucher = $danhSachDaXuLy; // Gán lại mảng đã có trạng thái
+
         include '../index.php';
     }
 }
