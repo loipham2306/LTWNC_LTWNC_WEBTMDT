@@ -30,11 +30,6 @@ if ($stock > 0 && $stock < 5) {
 }
 
 
-// 🔥 HOT (tuỳ logic bạn)
-if ($stock > 20) {
-    $tags[] = ['NỔI BẬT', 'bg-danger'];
-}
-
 // 🆕 NEW (7 ngày gần đây)
 if (!empty($product['ngay_tao']) 
     && strtotime($product['ngay_tao']) > strtotime('-7 days')) {

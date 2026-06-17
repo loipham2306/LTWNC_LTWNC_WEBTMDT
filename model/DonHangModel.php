@@ -203,11 +203,18 @@ class DonHangModel
     }
     
      // TRẠNG THÁI ĐƠN HÀNG
-    public function updateTrangThai($id_don_hang, $trang_thai){
-        $sql = "UPDATE {$this->table_don_hang} SET trang_thai_don_hang = ? WHERE id_don_hang = ?";
+    public function updateTrangThai($id_don_hang, $trang_thai)
+    {
+        $sql = "UPDATE {$this->table_don_hang} 
+                SET trang_thai_don_hang = ? 
+                WHERE id_don_hang = ?";
+
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([$trang_thai, $id_don_hang]);
+        $stmt->execute([$trang_thai, $id_don_hang]);
+
+        return $stmt->rowCount() > 0;
     }
+    
     public function cancelDonHang($id)
     {
         $sql = "SELECT trang_thai_don_hang FROM don_hang WHERE id_don_hang = ?";

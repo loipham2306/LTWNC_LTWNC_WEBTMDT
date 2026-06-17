@@ -74,11 +74,11 @@ class MailController {
                 $tien = $sp['so_luong'] * $sp['gia_luc_mua'];
                 $tong += $tien;
                 $imgFile = $sp['hinh_anh_bien_the']
-                    ?? $sp['hinh_anh_san_pham']
+                    ?? $sp['hinh_anh']
                     ?? '';
 
                 $img = $imgFile
-                    ? 'http://localhost/LTWNC_LTWNC_WEBTMDT/assets/images/products/Bien_The_Products/' . $imgFile
+                    ? '/LTWNC_LTWNC_WEBTMDT/assets/images/products/Bien_The_Products/' . $imgFile
                     : '';
                 $html .= "
                     <tr>

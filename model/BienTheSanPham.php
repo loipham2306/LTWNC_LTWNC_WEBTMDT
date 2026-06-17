@@ -41,6 +41,7 @@ class BienTheSanPham {
             kich_co,
             mau_sac,
             gia_ban,
+            hinh_anh_bien_the,
             so_luong_ton AS stock
              FROM " . $this->table_name . " WHERE id_san_pham = :id_sp";
         $stmt = $this->conn->prepare($query);

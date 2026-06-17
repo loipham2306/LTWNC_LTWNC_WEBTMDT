@@ -35,7 +35,46 @@ function getStatusBadge($status)
     }
 }
 ?>
+<style>
+    .pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top: 1px solid #444;
+    padding-top: 15px;
+}
 
+.pagination {
+    margin-bottom: 0;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.pagination .page-item {
+    margin: 2px;
+}
+
+.pagination .page-link {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 8px !important;
+    padding: 6px 12px;
+}
+
+.pagination .page-item.active .page-link {
+    background: #F28B00;
+    border-color: #F28B00;
+    color: #000;
+}
+
+.pagination .page-link:hover {
+    background: #333;
+    color: #fff;
+}
+</style>
 <div class="container-fluid p-4" style="background-color: #111; min-height: 100vh; color: #fff;">
     <h3 class="text-white fw-bold mb-4">Quản Lý Đơn Hàng</h3>
 
@@ -132,11 +171,11 @@ function getStatusBadge($status)
                                         $order['trang_thai_don_hang'] != 'Đã giao'
                                     ): ?>
 
-                                    <a href="index.php?act=HuyDonHang&id=<?= $order['id_don_hang'] ?>"
-                                    class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
-                                        Hủy
-                                    </a>
+                                    <a id="cancelLink"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                        <i class="fas fa-times me-2"></i>Hủy Đơn Hàng
+                                        </a>
 
                                     <?php endif; ?>
 
@@ -161,27 +200,25 @@ function getStatusBadge($status)
             </table>
         </div>
         
-        <div class="d-flex justify-content-between align-items-center mt-4 border-top border-secondary pt-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4 border-top border-secondary pt-4">
+
             <span class="text-muted small">
                 Tổng đơn hàng: <?= $totalOrders ?>
-            </span>            <nav>
-                <ul class="pagination pagination-sm">
+            </span>
 
-                            <?php for($i=1;$i<=$totalPages;$i++): ?>
-
-                            <li class="page-item <?= $page == $i ? 'active' : '' ?>">
-
-                            <a
-                            class="page-link"
+            <nav class="ms-auto">
+                <ul class="pagination pagination-sm mb-0 d-flex flex-row flex-nowrap">
+                    <?php for($i=1;$i<=$totalPages;$i++): ?>
+                        <li class="page-item <?= $page == $i ? 'active' : '' ?>">
+                            <a class="page-link"
                             href="index.php?act=QuanLyDonHang&page=<?= $i ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($status) ?>">
-                            <?= $i ?>
+                                <?= $i ?>
                             </a>
-
-                            </li>
-
-                            <?php endfor; ?>
+                        </li>
+                    <?php endfor; ?>
                 </ul>
             </nav>
+
         </div>
 
     </div>
@@ -255,36 +292,29 @@ function getStatusBadge($status)
                     
                 </form>
 
-                <div class="d-flex gap-2">
+               <div class="d-flex gap-2">
 
-                    <form action="index.php?act=CapNhatTrangThaiDonHang" method="POST">
+                    <form id="btnApproveForm" action="index.php?act=CapNhatTrangThaiDonHang" method="POST">
                         <input type="hidden" name="id_don_hang" class="order-id-hidden">
                         <input type="hidden" name="trang_thai" value="Đã xác nhận">
-
-                        <button type="submit"
-                            class="btn btn-outline-info fw-bold rounded-pill">
-                            <i class="fas fa-check me-2"></i>Duyệt Đơn
+                        <button type="submit" class="btn btn-outline-info fw-bold rounded-pill">
+                            Duyệt Đơn
                         </button>
                     </form>
 
-                    <form action="index.php?act=CapNhatTrangThaiDonHang" method="POST">
+                    <form id="btnShipForm" action="index.php?act=CapNhatTrangThaiDonHang" method="POST">
                         <input type="hidden" name="id_don_hang" class="order-id-hidden">
                         <input type="hidden" name="trang_thai" value="Đang giao">
-
-                        <button type="submit"
-                            class="btn btn-outline-warning fw-bold rounded-pill">
-                            <i class="fas fa-truck me-2"></i>Giao Hàng
+                        <button type="submit" class="btn btn-outline-warning fw-bold rounded-pill">
+                            Giao hàng
                         </button>
                     </form>
 
-                    <form action="index.php?act=CapNhatTrangThaiDonHang" method="POST">
+                    <form id="btnDoneForm" action="index.php?act=CapNhatTrangThaiDonHang" method="POST">
                         <input type="hidden" name="id_don_hang" class="order-id-hidden">
                         <input type="hidden" name="trang_thai" value="Đã giao">
-
-                        <button type="submit"
-                            class="btn fw-bold text-white rounded-pill"
-                            style="background-color:#28a745;">
-                            <i class="fas fa-check-double me-2"></i>Hoàn Thành
+                        <button type="submit" class="btn btn-success fw-bold rounded-pill">
+                            Hoàn thành
                         </button>
                     </form>
 
@@ -300,141 +330,177 @@ function getStatusBadge($status)
     function getJsStatusBadge(status) {
         switch(status) {
             case 'Chờ Duyệt': return 'bg-info text-dark';
-            case 'Đang Giao': return 'bg-warning text-dark';
-            case 'Hoàn Thành': return 'bg-success';
-            case 'Đã Hủy': return 'bg-danger';
+            case 'Đã xác nhận': return 'bg-primary';
+            case 'Đang giao': return 'bg-warning text-dark';
+            case 'Đã giao': return 'bg-success';
+            case 'Đã hủy': return 'bg-danger';
             default: return 'bg-secondary';
         }
     }
 
     function viewOrderDetail(order)
-        {
-            console.log(order);
+{
+    console.log(order);
 
-            document.getElementById('modalOrderId').innerText =
-                order.id_don_hang;
-            document.getElementById('modalOrderIdInput').value =
-                order.id_don_hang;
+    // ======================
+    // ORDER INFO
+    // ======================
+    document.getElementById('modalOrderId').innerText = order.id_don_hang;
+    document.getElementById('modalOrderIdInput').value = order.id_don_hang;
 
-            document.querySelectorAll('.order-id-hidden')
-                .forEach(input => {
-                    input.value = order.id_don_hang;
-                });                   
-            document.getElementById('modalCustomer').innerText =
-                order.ten_nguoi_nhan;
+    document.querySelectorAll('.order-id-hidden').forEach(input => {
+        input.value = order.id_don_hang;
+    });
 
-            document.getElementById('modalPhone').innerText =
-                order.sdt_nguoi_nhan;
+    document.getElementById('modalCustomer').innerText = order.ten_nguoi_nhan;
+    document.getElementById('modalPhone').innerText = order.sdt_nguoi_nhan;
+    document.getElementById('modalAddress').innerText = order.dia_chi_giao_hang;
+    document.getElementById('modalDate').innerText = order.ngay_dat;
+    document.getElementById('modalPayment').innerText = order.phuong_thuc_thanh_toan;
 
-            document.getElementById('modalAddress').innerText =
-                order.dia_chi_giao_hang;
+    document.getElementById('modalTotal').innerText =
+        Number(order.tong_tien).toLocaleString('vi-VN') + ' đ';
 
-            document.getElementById('modalDate').innerText =
-                order.ngay_dat;
+    // ======================
+    // STATUS BADGE
+    // ======================
+    let statusEl = document.getElementById('modalStatus');
 
-            document.getElementById('modalPayment').innerText =
-                order.phuong_thuc_thanh_toan;
+    statusEl.className =
+        `badge rounded-pill px-2 py-1 ms-2 ${getJsStatusBadge(order.trang_thai_don_hang)}`;
 
-            document.getElementById('modalTotal').innerText =
-                Number(order.tong_tien).toLocaleString('vi-VN') + ' đ';
+    statusEl.innerText = order.trang_thai_don_hang;
 
-            let statusEl = document.getElementById('modalStatus');
+    // ======================
+    // CANCEL BUTTON
+    // ======================
+    const cancelBtn = document.getElementById('cancelLink');
 
-            statusEl.className =
-                `badge rounded-pill px-2 py-1 ms-2 ${getJsStatusBadge(order.trang_thai_don_hang)}`;
+    if (cancelBtn) {
+        cancelBtn.href =
+            "index.php?act=HuyDonHang&id=" + order.id_don_hang;
 
-            statusEl.innerText =
-                order.trang_thai_don_hang;
+        if (
+            order.trang_thai_don_hang === 'Đang giao' ||
+            order.trang_thai_don_hang === 'Đã giao' ||
+            order.trang_thai_don_hang === 'Đã hủy'
+        ) {
+            cancelBtn.style.display = 'none';
+        } else {
+            cancelBtn.style.display = 'inline-block';
+        }
+    }
 
-            // ===== Render sản phẩm =====
+    // ======================
+    // HANDLE ACTION BUTTONS
+    // ======================
+    const status = order.trang_thai_don_hang.trim();
 
-            let productHTML = '';
+const btnApprove = document.getElementById('btnApproveForm');
+const btnShip = document.getElementById('btnShipForm');
+const btnDone = document.getElementById('btnDoneForm');
 
-            if(order.chi_tiet && order.chi_tiet.length > 0)
-            {
-                order.chi_tiet.forEach(item => {
+// hide all
+btnApprove.classList.add('d-none');
+btnShip.classList.add('d-none');
+btnDone.classList.add('d-none');
 
-                    let thanhTien =
-                        Number(item.gia_luc_mua) *
-                        Number(item.so_luong);
+switch (status) {
+    case 'Chờ duyệt':
+        btnApprove.classList.remove('d-none');
+        break;
 
-                    productHTML += `
-                        <tr>
+    case 'Đã xác nhận':
+        btnShip.classList.remove('d-none');
+        break;
 
-                            <td class="text-start">
+    case 'Đang giao':
+        btnDone.classList.remove('d-none');
+        break;
+}
 
-                                <div class="d-flex align-items-center gap-2">
+    // ======================
+    // RENDER PRODUCTS
+    // ======================
+    let productHTML = '';
 
-                                    <img
-                                        src="/LTWNC_LTWNC_WEBTMDT/assets/images/products/Bien_The_Products/${item.hinh_anh_bien_the}"
-                                        width="60"
-                                        height="60"
-                                        class="rounded"
-                                        style="object-fit:cover"
-                                    >
+    if (order.chi_tiet && order.chi_tiet.length > 0)
+    {
+        order.chi_tiet.forEach(item => {
 
-                                    <div>
+            let thanhTien =
+                Number(item.gia_luc_mua) * Number(item.so_luong);
 
-                                        <div class="fw-bold text-white">
-                                            ${item.ten_san_pham}
-                                        </div>
+            productHTML += `
+                <tr>
+                    <td class="text-start">
+                        <div class="d-flex align-items-center gap-2">
 
-                                        <small class="text-muted">
-                                            Size: ${item.kich_co}
-                                        </small>
+                            <img
+                                src="/LTWNC_LTWNC_WEBTMDT/assets/images/products/Bien_The_Products/${item.hinh_anh_bien_the}"
+                                width="60"
+                                height="60"
+                                class="rounded"
+                                style="object-fit:cover"
+                            >
 
-                                        <br>
-
-                                        <span
-                                            style="
-                                                display:inline-block;
-                                                width:15px;
-                                                height:15px;
-                                                border-radius:50%;
-                                                background:${item.mau_sac};
-                                                border:1px solid #ccc;
-                                            ">
-                                        </span>
-
-                                    </div>
-
+                            <div>
+                                <div class="fw-bold text-white">
+                                    ${item.ten_san_pham}
                                 </div>
 
-                            </td>
+                                <small class="text-muted">
+                                    Size: ${item.kich_co}
+                                </small>
 
-                            <td>
-                                ${Number(item.gia_luc_mua).toLocaleString('vi-VN')} đ
-                            </td>
+                                <br>
 
-                            <td>
-                                ${item.so_luong}
-                            </td>
+                                <span style="
+                                    display:inline-block;
+                                    width:15px;
+                                    height:15px;
+                                    border-radius:50%;
+                                    background:${item.mau_sac};
+                                    border:1px solid #ccc;">
+                                </span>
+                            </div>
 
-                            <td class="text-warning fw-bold">
-                                ${thanhTien.toLocaleString('vi-VN')} đ
-                            </td>
+                        </div>
+                    </td>
 
-                        </tr>
-                    `;
-                });
-            }
-            else
-            {
-                productHTML = `
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-3">
-                            Không có sản phẩm
-                        </td>
-                    </tr>
-                `;
-            }
+                    <td>
+                        ${Number(item.gia_luc_mua).toLocaleString('vi-VN')} đ
+                    </td>
 
-            document.getElementById('modalProducts').innerHTML =
-                productHTML;
+                    <td>
+                        ${item.so_luong}
+                    </td>
 
-            document.getElementById('orderDetailModal').style.display =
-                'flex';
-        }
+                    <td class="text-warning fw-bold">
+                        ${thanhTien.toLocaleString('vi-VN')} đ
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    else
+    {
+        productHTML = `
+            <tr>
+                <td colspan="4" class="text-center text-muted py-3">
+                    Không có sản phẩm
+                </td>
+            </tr>
+        `;
+    }
+
+    document.getElementById('modalProducts').innerHTML = productHTML;
+
+    // ======================
+    // SHOW MODAL
+    // ======================
+    document.getElementById('orderDetailModal').style.display = 'flex';
+}
     // Đóng Popup
     function closeDetailModal() {
         document.getElementById('orderDetailModal').style.display = 'none';

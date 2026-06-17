@@ -119,7 +119,7 @@ class SanPhamController {
 
                 if ($this->sp_model->ThemSanPham()) {
                     $id_san_pham_moi = $this->db->lastInsertId();
-
+                    
                     // 2. Lưu danh sách biến thể
                     if (!empty($_POST['size'])) {
                         foreach ($_POST['size'] as $index => $size) {
@@ -132,8 +132,10 @@ class SanPhamController {
                             $this->bt_model->kich_co = $size;
                             $this->bt_model->mau_sac = $_POST['mau'][$index];
                             $this->bt_model->gia_ban = $_POST['gia_ban'][$index] ?? 0;
-                            $this->bt_model->so_luong_ton = $_POST['so_luong'][$index] ?? 0;
+                            $this->bt_model->so_luong_ton = $_POST['ton_kho'][$index] ?? 0;
                             $this->bt_model->hinh_anh_bien_the = ''; // Xử lý nếu có upload ảnh riêng
+                            // Debug để xem dữ liệu có được gửi lên không
+
                             $this->bt_model->hinh_anh_bien_the = $this->uploadFileBienThe($index) ?? '';
                             $this->bt_model->ThemBienThe();
                         }

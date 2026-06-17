@@ -105,22 +105,42 @@ class DonHangController
      */
     private function capNhatTrangThai()
     {
+        
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-            $id_don_hang = $_POST['id_don_hang'];
-            $trang_thai = $_POST['trang_thai'];
+            $id = $_POST['id_don_hang'];
+            
+            $order = $this->donHangModel->getDonHangById($id);
 
-            if (
-                $this->donHangModel->updateTrangThai(
-                    $id_don_hang,
-                    $trang_thai
-                )
-            ) {
-                $_SESSION['success'] =
-                    "Cập nhật trạng thái thành công";
+            if (!$order) {
+                $_SESSION['error'] = "Không tìm thấy đơn hàng";
+                header("Location:index.php?act=QuanLyDonHang");
+                exit;
+            }
+
+            $current = trim($order['trang_thai_don_hang']);
+            $newStatus = trim($_POST['trang_thai']);
+            // CHẶN LUỒNG SAI
+           $allowed = [
+                'Chờ duyệt'   => ['Đã xác nhận', 'Đã hủy'],
+                'Đã xác nhận' => ['Đang giao', 'Đã hủy'],
+                'Đang giao'   => ['Đã giao'],
+                'Đã giao'     => [],
+                'Đã hủy'      => []
+            ];
+            
+
+            if (!in_array($newStatus, $allowed[$current] ?? [])) {
+                $_SESSION['error'] = "Không thể chuyển trạng thái từ '$current' sang '$newStatus'";
+                header("Location:index.php?act=QuanLyDonHang");
+                exit;
+            }
+
+            if ($this->donHangModel->updateTrangThai($id, $newStatus)) {
+                
+                $_SESSION['success'] = "Cập nhật trạng thái thành công";
             } else {
-                $_SESSION['error'] =
-                    "Cập nhật trạng thái thất bại";
+                $_SESSION['error'] = "Cập nhật thất bại";
             }
 
             header("Location:index.php?act=QuanLyDonHang");
