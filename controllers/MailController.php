@@ -73,13 +73,14 @@ class MailController {
             foreach ($chiTiet as $sp) {
                 $tien = $sp['so_luong'] * $sp['gia_luc_mua'];
                 $tong += $tien;
+                $baseUrl = "http://localhost/LTWNC_LTWNC_WEBTMDT/";
                 $imgFile = $sp['hinh_anh_bien_the']
                     ?? $sp['hinh_anh']
                     ?? '';
 
                 $img = $imgFile
-                    ? '/LTWNC_LTWNC_WEBTMDT/assets/images/products/Bien_The_Products/' . $imgFile
-                    : '';
+                ? $baseUrl . 'assets/images/products/Bien_The_Products/' . $imgFile
+                : '';
                 $html .= "
                     <tr>
                         <td><img src='{$img}' width='60'></td>

@@ -5,7 +5,7 @@ class GioHangController {
     private $ghModel;
     private $db;
     public function __construct($db) {
-        $this->ghModel = new GiaHang($db);
+        $this->ghModel = new GioHang($db);
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }

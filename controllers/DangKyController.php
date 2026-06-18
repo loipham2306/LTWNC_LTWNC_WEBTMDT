@@ -129,7 +129,10 @@ private $modelTaiKhoan;
                 );
 
                 $this->db->commit();
-                
+                $_SESSION['user_id'] = $id_tk; // Lưu ID tài khoản vào session
+                // Có thể lưu thêm các thông tin khác nếu cần
+                $_SESSION['username'] = $username; 
+                $_SESSION['role'] = 'khach hang';
                 // Xóa session
                 unset($_SESSION['temp_data'], $_SESSION['otp'], $_SESSION['otp_expiry']);
                 

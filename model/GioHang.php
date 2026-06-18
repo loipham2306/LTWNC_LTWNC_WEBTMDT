@@ -1,5 +1,5 @@
 <?php
-class GiaHang {
+class GioHang {
     private $conn;
     private $table_gio_hang = 'gio_hang';
     private $table_chi_tiet = 'chi_tiet_gio_hang';

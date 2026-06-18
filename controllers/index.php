@@ -92,14 +92,6 @@ switch ($act) {
         $ShopController = new ShopController($db); // Bỏ dấu $ ở tên class
         $ShopController->handle($act);
         break;
-    case 'Product_Management':
-        if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] == 'admin') {
-            include '../views/pages/admin/ProductAdmin.php'; 
-        } else {
-            header("Location: index.php?act=login");
-            exit();
-        }
-        break;
     case 'Order_Management':
         if (isset($_SESSION['user']) && $_SESSION['user']['vai_tro'] == 'admin') {
             include '../views/pages/admin/OrderAdmin.php'; 

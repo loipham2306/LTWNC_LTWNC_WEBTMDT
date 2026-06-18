@@ -15,7 +15,7 @@ class ThanhToanController
         $this->db = $db;
 
         $this->donHangModel = new DonHangModel($db);
-        $this->gioHangModel = new GiaHang($db);
+        $this->gioHangModel = new GioHang($db);
         $this->voucher_model = new Vouchers($db);
     }
     public function showThanhCong($id) {
