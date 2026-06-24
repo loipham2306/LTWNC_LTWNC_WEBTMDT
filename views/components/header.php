@@ -61,12 +61,17 @@ $isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active
         
         <div class="col-md-4 col-lg-6 text-center">
             <div class="position-relative ps-4">
-                <div class="d-flex rounded-pill">
-                    <input class="form-control rounded-pill w-100 py-3 search-input" type="text" placeholder="Bạn đang tìm sản phẩm gì?">
-                    <button type="button" class="btn btn-orange rounded-pill py-3 px-5 ms-n5" style="margin-left: -60px; z-index: 10;">
+                <form action="index.php" method="GET" class="d-flex rounded-pill m-0">
+                    <input type="hidden" name="act" value="Shop">
+                    
+                    <input class="form-control rounded-pill w-100 py-3 search-input" type="text" name="keyword" 
+                           value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>" 
+                           placeholder="Bạn đang tìm sản phẩm gì?">
+                           
+                    <button type="submit" class="btn btn-orange rounded-pill py-3 px-5 ms-n5" style="margin-left: -60px; z-index: 10;">
                         <i class="fas fa-search"></i>
                     </button>
-                </div>
+                </form>
             </div>
         </div>
         

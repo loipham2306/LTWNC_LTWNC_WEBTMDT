@@ -6,7 +6,7 @@ $brands = $brands??[];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuLoShop - Trạm Hiệu Streetwear & Sneaker</title>
+    <title>Trạm Hiệu - Streetwear & Sneaker</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
@@ -163,19 +163,66 @@ $brands = $brands??[];
     ?>
     <div class="d-flex justify-content-center flex-wrap mb-4 gap-2">
 
-        <button class="btn btn-warning rounded-pill px-3"
-                onclick="filterBrand('all', this)">
-            Tất cả
+    <button type="button" class="btn btn-warning rounded-pill px-3 fw-bold text-dark"
+            onclick="filterBrand('all', this)">
+        Tất cả
+    </button>
+
+    <?php foreach ($brands as $b): ?>
+        <button type="button" class="btn btn-outline-warning rounded-pill px-3"
+                onclick="filterBrand('<?= htmlspecialchars($b['ten_thuong_hieu']) ?>', this)">
+            <?= htmlspecialchars($b['ten_thuong_hieu']) ?>
         </button>
+    <?php endforeach; ?>
+    <script>
+    function filterBrand(brandName, btnElement) {
+        // 1. Gỡ viền vàng của tất cả nút, làm nổi bật nút vừa bấm
+        let container = btnElement.parentElement;
+        let buttons = container.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.classList.remove('btn-warning', 'text-dark', 'fw-bold');
+            btn.classList.add('btn-outline-warning');
+        });
+        
+        btnElement.classList.remove('btn-outline-warning');
+        btnElement.classList.add('btn-warning', 'text-dark', 'fw-bold');
 
-        <?php foreach ($brands as $b): ?>
-            <button class="btn btn-outline-warning rounded-pill px-3"
-                    onclick="filterBrand('<?= htmlspecialchars($b['ten_thuong_hieu']) ?>', this)">
-                <?= htmlspecialchars($b['ten_thuong_hieu']) ?>
-            </button>
-        <?php endforeach; ?>
+        // 2. Lọc sản phẩm
+        let products = document.querySelectorAll('.home-product-item');
+        let count = 0; // Biến đếm số lượng đang hiển thị
 
-    </div>
+        products.forEach(item => {
+            let itemBrand = item.getAttribute('data-brand');
+            
+            if (brandName === 'all') {
+                // Nếu là "Tất cả", chỉ hiện 8 sản phẩm đầu tiên, còn lại ẩn đi
+                if (count < 8) {
+                    item.classList.remove('d-none');
+                    count++;
+                } else {
+                    item.classList.add('d-none');
+                }
+            } else {
+                // Nếu chọn một hãng (ví dụ "Adidas") -> Cứ đúng hãng là hiện, sai là ẩn
+                if (itemBrand === brandName) {
+                    item.classList.remove('d-none');
+                } else {
+                    item.classList.add('d-none');
+                }
+            }
+        });
+    }
+
+    // TỰ ĐỘNG CHẠY: Khi web vừa load xong, giả lập hành động bấm nút "Tất cả"
+    document.addEventListener("DOMContentLoaded", function() {
+        let defaultBtn = document.querySelector('button[onclick="filterBrand(\'all\', this)"]');
+        if(defaultBtn) {
+            filterBrand('all', defaultBtn);
+        }
+    });
+</script>
+
+</div>
     <div class="container-fluid home-section py-5">
         <div class="container py-5">
             

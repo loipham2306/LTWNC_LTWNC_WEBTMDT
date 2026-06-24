@@ -29,8 +29,8 @@ class SanPham {
         $this->id_thuong_hieu = $id_th;
         $this->trang_thai = $trang_thai;
     }
+
     // lấy sản phẩm cho cửa hàng
-    // Trong class SanPham, cập nhật hàm này:
     public function getAllProductsForShop($limit, $offset) {
             // Thêm LIMIT và OFFSET vào cuối câu truy vấn
             $sql = "SELECT 
@@ -67,7 +67,7 @@ class SanPham {
 
                 GROUP BY sp.id_san_pham
                 ORDER BY sp.id_san_pham DESC
-                LIMIT :limit OFFSET :offset"; // Thêm dòng này
+                LIMIT :limit OFFSET :offset"; 
         
         $stmt = $this->conn->prepare($sql);
         
@@ -78,6 +78,7 @@ class SanPham {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
     public function getChiTietSanPham($id) {
         // Truy vấn lấy thông tin sản phẩm và tất cả biến thể liên quan
         $query = "
@@ -147,7 +148,7 @@ class SanPham {
                     'kich_co'           => $row['kich_co'],
                     'mau_sac'           => $row['mau_sac'],
                     'gia_ban'           => $giaGoc,
-                    'gia_sau_giam'      => $giaSauGiam,   // 🔥 thêm cái này
+                    'gia_sau_giam'      => $giaSauGiam,   
                     'phan_tram_giam'    => $giam,
                     'so_luong_ton'      => $row['so_luong_ton'],
                     'hinh_anh_bien_the' => $row['hinh_anh_bien_the']
@@ -157,6 +158,7 @@ class SanPham {
 
         return $sanPham;
     }
+
     public function getSanPhamHome($limit = 8) {
         $query = "
             SELECT 
@@ -202,7 +204,8 @@ class SanPham {
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    // THÊM SẢN PHẨM (Đã bỏ cột 'giam_gia' và 'gia')
+
+    // THÊM SẢN PHẨM 
     public function ThemSanPham() {
         $query = "INSERT INTO " . $this->table_name . " 
                   SET ten_san_pham=:ten, gia_co_ban=:gia, mo_ta=:mota, 
@@ -221,29 +224,34 @@ class SanPham {
             ':tt'   => $this->trang_thai
         ]);
     }
+
     // 1. Đếm tổng để hiện trên thẻ Card
     public function countAllProducts() {
         return $this->conn->query("SELECT COUNT(*) FROM san_pham")->fetchColumn();
     }
+
     public function getTotalRevenue() {
         // Chỉ tính những đơn hàng đã thanh toán hoặc hoàn tất
         $sql = "SELECT SUM(tong_tien) FROM don_hang WHERE trang_thai = 'Hoàn Thành'";
         return $this->conn->query($sql)->fetchColumn() ?? 0;
     }
+
     public function countNewOrders() {
         // Đếm những đơn hàng đang ở trạng thái 'Chờ Duyệt'
         $sql = "SELECT COUNT(*) FROM don_hang WHERE trang_thai = 'Chờ Duyệt'";
         return $this->conn->query($sql)->fetchColumn();
     }
+
     // 2. Thống kê theo thương hiệu để vẽ biểu đồ/bảng
     public function getStatsByBrand() {
         $sql = "SELECT t.ten_thuong_hieu, COUNT(s.id_san_pham) as so_luong
                 FROM thuong_hieu t
                 LEFT JOIN san_pham s ON t.id_thuong_hieu = s.id_thuong_hieu
                 GROUP BY t.id_thuong_hieu
-                ORDER BY so_luong DESC"; // Thương hiệu nhiều SP nhất lên đầu
+                ORDER BY so_luong DESC"; 
         return $this->conn->query($sql)->fetchAll();
     }
+
     // CẬP NHẬT SẢN PHẨM
     public function CapNhatSanPham() {
         $query = "UPDATE " . $this->table_name . " 
@@ -266,7 +274,7 @@ class SanPham {
         ]);
     }
 
-    // Lấy danh sách sản phẩm (Kết hợp lấy giá biến thể rẻ nhất nếu cần)
+    // Lấy danh sách sản phẩm 
     public function LayTatCaSanPhamPhanTrang($limit, $offset) {
         $query = "SELECT sp.*, dm.ten_danh_muc, th.ten_thuong_hieu, 
                         COALESCE(SUM(bt.so_luong_ton), 0) AS so_luong_kho
@@ -292,17 +300,16 @@ class SanPham {
         
         return $stmt->execute([':id' => $this->id_san_pham]);
     }
-        // Đếm tổng số sản phẩm
+    
+    // Đếm tổng số sản phẩm
     public function countSanPham() {
         $query = "SELECT COUNT(*) FROM " . $this->table_name;
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchColumn();
     }
-    // model/SanPham.php
 
-
-   public function countAllProductsForShop($keyword = '')
+    public function countAllProductsForShop($keyword = '')
     {
         $sql = "SELECT COUNT(*) FROM san_pham WHERE 1";
 
@@ -324,6 +331,7 @@ class SanPham {
 
         return $stmt->fetchColumn();
     }
+
     public function applyPromotion(&$products)
     {
           if (!is_array($products)) {
@@ -345,6 +353,7 @@ class SanPham {
 
         unset($sp);
     }
+
     public function applyPromotionSingle(&$product)
     {
         if (!empty($product['bien_the'])) {
@@ -361,6 +370,7 @@ class SanPham {
             unset($bt);
         }
     }
+
     // thống kê bán chạy
     public function getTopSellingProducts($limit = 10)
     {
@@ -389,6 +399,7 @@ class SanPham {
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
     public function getThongTinBienThe($id_bien_the) {
         $sql = "SELECT bt.id_bien_the, bt.gia_ban, sp.id_san_pham,
                 COALESCE(MAX(km.phan_tram_giam), 0) AS phan_tram_giam
@@ -413,6 +424,90 @@ class SanPham {
         }
         return $item;
     }
-    
+
+    // ==========================================
+    // ĐÃ FIX: HÀM TÌM KIẾM THEO TỪ KHÓA (CHỈ TÌM THEO TÊN, GỘP SỐ LƯỢNG KHO VÀ % GIẢM GIÁ)
+    // ==========================================
+    // ==========================================
+    // ĐÃ FIX: TÌM KIẾM THEO TÊN SẢN PHẨM HOẶC TÊN DANH MỤC
+    // ==========================================
+    // ==========================================
+    // TÌM KIẾM THEO: TÊN SP, TÊN DANH MỤC VÀ TÊN THƯƠNG HIỆU
+    // ==========================================
+    public function searchProductsForShop($keyword, $limit, $offset) {
+        $sql = "SELECT 
+                    sp.id_san_pham, 
+                    sp.ten_san_pham, 
+                    sp.gia_co_ban, 
+                    sp.hinh_anh, 
+                    sp.ngay_tao,
+                    dm.ten_danh_muc, 
+                    th.ten_thuong_hieu, 
+                    COALESCE(SUM(bt.so_luong_ton), 0) AS so_luong_kho,
+
+                    COALESCE(
+                        MAX(
+                            CASE 
+                                WHEN km.trang_thai = 1 
+                                AND NOW() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
+                                THEN km.phan_tram_giam
+                                ELSE 0
+                            END
+                        ),
+                    0) AS phan_tram_giam
+
+                FROM san_pham sp
+                LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
+                LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
+                LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
+
+                LEFT JOIN chi_tiet_khuyen_mai ct 
+                    ON ct.id_san_pham = sp.id_san_pham
+
+                LEFT JOIN chuong_trinh_khuyen_mai km 
+                    ON ct.id_khuyen_mai = km.id_khuyen_mai
+
+                -- BỔ SUNG TÌM KIẾM TRONG THƯƠNG HIỆU
+                WHERE sp.ten_san_pham LIKE :keyword_sp 
+                   OR dm.ten_danh_muc LIKE :keyword_dm 
+                   OR th.ten_thuong_hieu LIKE :keyword_th
+
+                GROUP BY sp.id_san_pham
+                ORDER BY sp.id_san_pham DESC
+                LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($sql); 
+        
+        $searchKey = '%' . $keyword . '%';
+        // Truyền 3 lần searchKey cho SP, Danh Mục và Thương Hiệu
+        $stmt->bindValue(':keyword_sp', $searchKey, PDO::PARAM_STR);
+        $stmt->bindValue(':keyword_dm', $searchKey, PDO::PARAM_STR);
+        $stmt->bindValue(':keyword_th', $searchKey, PDO::PARAM_STR);
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ==========================================
+    // ĐẾM SỐ LƯỢNG TÌM KIẾM (Đếm SP, DM và TH)
+    // ==========================================
+    public function countSearchProductsForShop($keyword) {
+        $sql = "SELECT COUNT(DISTINCT sp.id_san_pham) 
+                FROM san_pham sp 
+                LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
+                LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
+                WHERE sp.ten_san_pham LIKE ? 
+                   OR dm.ten_danh_muc LIKE ? 
+                   OR th.ten_thuong_hieu LIKE ?";
+                
+        $stmt = $this->conn->prepare($sql); 
+        $searchKey = '%' . $keyword . '%';
+        // Truyền mảng 3 biến $searchKey
+        $stmt->execute([$searchKey, $searchKey, $searchKey]);
+        
+        return $stmt->fetchColumn();
+    }
 }
 ?>

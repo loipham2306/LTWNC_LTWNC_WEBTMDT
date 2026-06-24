@@ -108,8 +108,8 @@ if (!empty($product['ngay_tao'])
     .btn-orange-solid:hover { background-color: #d67a00; color: #fff; }
 </style>
 
-<div class="col-md-6 col-lg-4 col-xl-3 mb-4 wow fadeInUp" data-wow-delay="0.1s">
-    <div class="card h-100 product-card-anim">
+<div class="col-md-6 col-lg-4 col-xl-3 mb-4 wow fadeInUp home-product-item" data-brand="<?= htmlspecialchars($product['brand'] ?? 'Khác') ?>">
+    <div class="card h-100 product-card-anim ...">
         
         <div class="position-relative overflow-hidden" style="height: 240px; background-color: #222;">
             <img src="<?= $productImg ?>" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="<?= htmlspecialchars($product['name']) ?>">
