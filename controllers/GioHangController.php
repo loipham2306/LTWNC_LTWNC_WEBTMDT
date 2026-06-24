@@ -59,6 +59,7 @@ class GioHangController {
 }
 
     private function addToCart() {
+        header('Content-Type: application/json; charset=utf-8');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['status' => 'error', 'message' => 'Request không hợp lệ']);
             exit;
@@ -88,7 +89,7 @@ class GioHangController {
                 
                 if ($result) {
                     $this->syncCartFromDB();
-                    echo json_encode(['status' => 'success']);
+                    echo json_encode(['status' => 'success', 'message' => 'Đã thêm giỏ hàng thành công!']);
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Lỗi khi thêm vào DB']);
                 }

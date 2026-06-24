@@ -6,10 +6,11 @@ $name = $product['ten_san_pham'] ?? 'Sản phẩm không tên';
 $category = $product['ten_danh_muc'] ?? 'Chưa phân loại';
 $id = $product['id_san_pham'] ?? '#';
 
+// 🔥 SỬA Ở ĐÂY: Bắt cả 'ten_thuong_hieu' (từ DB gốc) và 'brand' (nếu đã map qua Controller)
+$brand = $product['ten_thuong_hieu'] ?? $product['brand'] ?? 'Khác';
+
 $giaGoc = (float)($product['gia_co_ban'] ?? 0);
-
 $giaSauGiam = (float)($product['gia_sau_giam'] ?? $giaGoc);
-
 $coKhuyenMai = (int)($product['co_khuyen_mai'] ?? 0);
 
 $oldPrice = $coKhuyenMai
@@ -23,6 +24,7 @@ $imgName = !empty($product['hinh_anh']) ? basename($product['hinh_anh']) : 'defa
 $productImg = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $imgName;
 $stock = (int)($product['so_luong_kho'] ?? 0);
 $tags = [];
+
 // 🏷️ Khuyến mãi
 if (!empty($product['phan_tram_giam']) && $product['phan_tram_giam'] > 0) {
     $tags[] = [
@@ -39,7 +41,6 @@ if ($stock <= 0) {
 if ($stock > 0 && $stock < 5) {
     $tags[] = ['SẮP HẾT', 'bg-warning text-dark'];
 }
-
 
 // 🆕 NEW (7 ngày gần đây)
 if (!empty($product['ngay_tao']) 
@@ -108,11 +109,13 @@ if (!empty($product['ngay_tao'])
     .btn-orange-solid:hover { background-color: #d67a00; color: #fff; }
 </style>
 
-<div class="col-md-6 col-lg-4 col-xl-3 mb-4 wow fadeInUp home-product-item" data-brand="<?= htmlspecialchars($product['brand'] ?? 'Khác') ?>">
-    <div class="card h-100 product-card-anim ...">
+<div class="col-md-6 col-lg-4 col-xl-3 mb-4 wow fadeInUp home-product-item" 
+     data-brand="<?= htmlspecialchars(trim($brand)) ?>">
+     
+    <div class="card h-100 product-card-anim">
         
         <div class="position-relative overflow-hidden" style="height: 240px; background-color: #222;">
-            <img src="<?= $productImg ?>" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="<?= htmlspecialchars($product['name']) ?>">
+            <img src="<?= $productImg ?>" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="<?= htmlspecialchars($name) ?>">
             
             <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center img-overlay">
                 <a href="index.php?act=ProductDetail&id=<?= htmlspecialchars($id) ?>" 
@@ -140,7 +143,7 @@ if (!empty($product['ngay_tao'])
             <?php endforeach; ?>
             <p class="text-white-50 small mb-1"><?= htmlspecialchars($category) ?></p>
             
-            <a href="/LTWNC_LTWNC_WEBTMDT/views/pages/ProductDetail.php?id=<?= htmlspecialchars($id) ?>" 
+            <a href="index.php?act=ProductDetail&id=<?= htmlspecialchars($id) ?>" 
                 class="card-title h6 fw-bold mb-2 text-white text-decoration-none d-block">
                     <?= htmlspecialchars($name) ?>
             </a>

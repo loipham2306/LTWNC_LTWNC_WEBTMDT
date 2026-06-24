@@ -17,7 +17,7 @@ class HomeController {
    public function index() {
         $today = date('Y-m-d');
 
-        $homeFeaturedProducts = $this->spModel->getSanPhamHome(8);
+        $homeFeaturedProducts = $this->spModel->getSanPhamHome(100);
 
         // GẮN KHUYẾN MÃI CHO SẢN PHẨM
         $this->spModel->applyPromotion($homeFeaturedProducts);

@@ -76,24 +76,11 @@ class SanPhamController {
 
         include "../views/pages/admin/QuanLySanPham.php";
     }
-     // Trong SanPhamController.php
-    public function hienThiTrangChu() {
-        $raw_products = $this->sp_model->getSanPhamHome(24); 
-    $products = [];
-    
-    foreach ($raw_products as $row) {
-        $products[] = [
-            'id'       => $row['id_san_pham'],
-            'name'     => $row['ten_san_pham'],
-            'img'      => $row['hinh_anh'],
-            'price'    => $row['gia_co_ban'],
-            'oldPrice' => $row['gia_khuyen_mai'] ?? 0,
-            'category' => $row['ten_danh_muc'] ?? 'Chưa phân loại',
-            'brand'    => $row['ten_thuong_hieu'] ?? 'Khác'
-        ];
+ public function laySanPhamTrangChu() {
+        // Chỉ cần lấy 100 sản phẩm từ Model và trả về y nguyên, không cần đổi tên biến
+        $raw_products = $this->sp_model->getSanPhamHome(100); 
+        return $raw_products; 
     }
-    return $products; // TRẢ VỀ MẢNG DỮ LIỆU THAY VÌ INCLUDE VIEW
-}
     private function xuLyThem() {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             try {
