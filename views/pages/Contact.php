@@ -112,16 +112,15 @@
                                 </div>
                             </div>
 
-                            <div class="rounded overflow-hidden flex-fill shadow-sm border border-secondary" style="min-height: 280px;">
-                                    <iframe 
-                                        class="w-100 h-100" 
-                                        style="border: 0; display: block;" 
-                                        src="https://maps.google.com/maps?q=624+%C3%82u+C%C6%A1,+Ph%C6%B0%E1%BB%9Dng+10,+T%C3%A2n+B%C3%ACnh,+H%E1%BB%93+Ch%C3%AD+Minh&z=16&output=embed" 
-                                        allowfullscreen="" 
-                                        loading="lazy" 
-                                        referrerpolicy="no-referrer-when-downgrade">
-                                    </iframe>
-                                </div>
+                            <div style="width: 100%; height: 350px; overflow: hidden; border-radius: 8px;">
+    <iframe 
+        style="border:0; width: 100%; height: 100%;" 
+        src="https://maps.google.com/maps?q=624%20Đường%20Âu%20Cơ,%20Phường%20Bảy%20Hiền,%20TP.%20Hồ%20Chí%20Minh&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+</div>
                                 </div>
                                     
                                 </div>
