@@ -14,9 +14,14 @@ class HomeController {
         $this->voucherModel = new Vouchers($db);
     }
 
-    public function index() {
+   public function index() {
         $today = date('Y-m-d');
+
         $homeFeaturedProducts = $this->spModel->getSanPhamHome(8);
+
+        // GẮN KHUYẾN MÃI CHO SẢN PHẨM
+        $this->spModel->applyPromotion($homeFeaturedProducts);
+
         $brands = $this->thModel->getTatCaThuongHieu();
 
         $currentUserId = $_SESSION['user']['id_tai_khoan'] ?? null;
@@ -25,9 +30,13 @@ class HomeController {
 
         foreach ($danhSachVoucher as &$vc) {
             $vc['da_luu'] = $currentUserId
-                ? $this->voucherModel->kiemTraDaLuuVoucher($currentUserId, $vc['id_voucher'])
+                ? $this->voucherModel->kiemTraDaLuuVoucher(
+                    $currentUserId,
+                    $vc['id_voucher']
+                )
                 : false;
-            $vc['is_expired'] = ($vc['ngay_het_han'] < $today);   
+
+            $vc['is_expired'] = ($vc['ngay_het_han'] < $today);
         }
 
         include '../index.php';

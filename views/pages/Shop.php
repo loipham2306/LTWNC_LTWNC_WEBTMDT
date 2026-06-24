@@ -167,6 +167,13 @@ $totalPages = $totalPages ?? 1;
     color: #fff;
     transform: translateY(-2px);
 }
+.promotion-btn{
+    color: #F28B00 !important;
+}
+
+.promotion-btn i{
+    color: #F28B00 !important;
+}
     </style>
 </head>
 <body>
@@ -199,11 +206,13 @@ $totalPages = $totalPages ?? 1;
                             <a href="javascript:void(0)" onclick="changeCategory('all')" class="btn-category <?= !isset($_GET['cat_id']) ? 'active' : '' ?>">
                                 <i class="fas fa-chevron-right me-2 small text-orange"></i> Tất Cả Sản Phẩm
                             </a>
-                            <li>
-                                <a href="index.php?act=KhuyenMai">
-                                    🔥 Khuyến mãi
+                            <div class="mt-2">
+                                <a href="javascript:void(0)"
+                                onclick="showPromotionProducts()"
+                                class="btn-category promotion-btn">
+                                    <i class="fas fa-fire me-2"></i>Khuyến mãi
                                 </a>
-                            </li>
+                            </div>
                             <?php foreach ($danhMucList as $cat): 
                                 if (empty($cat['id_danh_muc_cha'])): ?>
                                 <div class="category-group">
@@ -295,6 +304,8 @@ $totalPages = $totalPages ?? 1;
     <script>
         new WOW().init();
         // 1. NHẬN DỮ LIỆU TỪ PHP
+        let selectedCategory = 'all';
+        let onlyPromotion = false;
         const rawDbProducts = <?= json_encode($Products) ?>;
         console.log("Dữ liệu gốc:", rawDbProducts);
         const products = rawDbProducts.map(p => {
@@ -335,7 +346,6 @@ $totalPages = $totalPages ?? 1;
             renderProducts(); 
         });
         let searchQuery = '';
-        let selectedCategory = 'all';
 
        document.querySelectorAll('.category-parent').forEach(parent => {
             parent.addEventListener('click', function() {
@@ -351,19 +361,41 @@ $totalPages = $totalPages ?? 1;
                 }
             });
         });
+        function showPromotionProducts() {
 
+            onlyPromotion = true;
+            selectedCategory = 'all';
+
+            document.querySelectorAll('.btn-category').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            event.target.classList.add('active');
+
+            renderProducts();
+        }                  
         function renderProducts() {
             const container = document.getElementById('productsContainer');
             if (!container) return;
 
             const filtered = products.filter(p => {
+
+                if (onlyPromotion && !p.is_sale) {
+                    return false;
+                }
+
                 const dbCategory = (p.category || '').trim().toLowerCase();
                 const btnCategory = selectedCategory.trim().toLowerCase();
-                const matchCategory = (selectedCategory === 'all' || btnCategory === dbCategory);
+
+                const matchCategory =
+                    selectedCategory === 'all' ||
+                    btnCategory === dbCategory;
+
                 const productName = normalizeText(p.name || '');
                 const keyword = normalizeText(searchQuery);
 
                 const matchSearch = productName.includes(keyword);
+
                 return matchCategory && matchSearch;
             });
             if (filtered.length === 0) {
@@ -454,18 +486,19 @@ $totalPages = $totalPages ?? 1;
     }
 
         function changeCategory(catName) {
-            selectedCategory = catName; // Cập nhật danh mục đang chọn
-            
-            // 1. Cập nhật class 'active' cho nút được bấm
+
+            onlyPromotion = false;
+
+            selectedCategory = catName;
+
             document.querySelectorAll('.btn-category').forEach(btn => {
                 btn.classList.remove('active');
-                // Kiểm tra nếu innerText chứa tên danh mục thì thêm class active
+
                 if (btn.innerText.trim() === catName.trim()) {
                     btn.classList.add('active');
                 }
             });
 
-            // 2. Render lại sản phẩm theo danh mục mới
             renderProducts();
         }
 

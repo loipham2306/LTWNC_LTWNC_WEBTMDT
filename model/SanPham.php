@@ -160,25 +160,39 @@ class SanPham {
     public function getSanPhamHome($limit = 8) {
         $query = "
             SELECT 
-                sp.*,
-                GROUP_CONCAT(DISTINCT bt.kich_co SEPARATOR ', ') as danh_sach_size,
-                GROUP_CONCAT(DISTINCT bt.mau_sac SEPARATOR ', ') as danh_sach_mau,
-                SUM(bt.so_luong_ton) AS tong_ton_kho,
+                    sp.id_san_pham, 
+                    sp.ten_san_pham, 
+                    sp.gia_co_ban, 
+                    sp.hinh_anh, 
+                    sp.ngay_tao,
+                    dm.ten_danh_muc, 
+                    th.ten_thuong_hieu, 
+                    COALESCE(SUM(bt.so_luong_ton), 0) AS so_luong_kho,
 
-                CASE 
-                    WHEN SUM(bt.so_luong_ton) IS NULL OR SUM(bt.so_luong_ton) = 0 
-                    THEN 'HẾT HÀNG'
-                    WHEN SUM(bt.so_luong_ton) < 5 
-                    THEN 'SẮP HẾT'
-                    ELSE NULL
-                END AS trang_thai_sp
+                    COALESCE(
+                        MAX(
+                            CASE 
+                                WHEN km.trang_thai = 1 
+                                AND NOW() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
+                                THEN km.phan_tram_giam
+                                ELSE 0
+                            END
+                        ),
+                    0) AS phan_tram_giam
 
-            FROM san_pham sp
-            LEFT JOIN bien_the_san_pham bt 
-                ON sp.id_san_pham = bt.id_san_pham
+                FROM san_pham sp
+                LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
+                LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
+                LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
 
-            GROUP BY sp.id_san_pham
-            ORDER BY sp.id_san_pham DESC
+                LEFT JOIN chi_tiet_khuyen_mai ct 
+                    ON ct.id_san_pham = sp.id_san_pham
+
+                LEFT JOIN chuong_trinh_khuyen_mai km 
+                    ON ct.id_khuyen_mai = km.id_khuyen_mai
+
+                GROUP BY sp.id_san_pham
+                ORDER BY sp.id_san_pham DESC
             LIMIT :limit
         ";
 
@@ -399,5 +413,6 @@ class SanPham {
         }
         return $item;
     }
+    
 }
 ?>

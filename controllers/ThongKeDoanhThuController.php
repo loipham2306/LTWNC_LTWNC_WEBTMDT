@@ -1,11 +1,13 @@
 <?php
 // Giả sử các file này đã được require ở file index.php cha
 require_once '../model/ThongKeModel.php';
+require_once '../model/DonHangModel.php';
 class ThongKeDoanhThuController {
     private $model;
-
+    private $DHmodel;
     public function __construct($pdo) {
         $this->model = new ThongKeModel($pdo);
+        $this->DHmodel= new DonHangModel($pdo);
     }
 
     public function index() {
@@ -15,28 +17,28 @@ class ThongKeDoanhThuController {
             exit();
         }
 
-        // 2. Lấy dữ liệu từ Model
-        $dataTuan = $this->model->getDoanhThuTheoTuan();
+        $dataTuan = array_reverse($this->model->getDoanhThuTheoTuan());
+        $dataThang = array_reverse($this->model->getDoanhThuTheoThang());
         $dataSanPham = $this->model->getTopSanPhamBanChay();
+        $dataKhachHang = $this->model->getTopKhachHang();
+        $tongDoanhThu = $this->DHmodel->getTongDoanhThu();
+        $tongDonHang = $this->DHmodel->countDonHang();
 
-        // 3. Chuẩn bị dữ liệu cho biểu đồ (Format lại để Chart.js dễ hiểu)
-        // Đảo ngược mảng để hiển thị từ tuần cũ đến tuần mới (trái sang phải)
-        $dataTuan = array_reverse($dataTuan);
-        
-        $labelsTuan = [];
-        $valuesTuan = [];
-        foreach ($dataTuan as $item) {
-            $labelsTuan[] = 'T' . $item['tuan'] . '/' . $item['nam'];
-            $valuesTuan[] = (float)$item['doanh_thu'];
-        }
+        // Chuẩn bị mảng để truyền sang JS (Tránh lỗi định dạng)
+        $chartData = [
+            'tuan' => [
+                'labels' => array_map(fn($i) => 'T' . $i['tuan'] . '/' . $i['nam'], $dataTuan),
+                'values' => array_map(fn($i) => (float)$i['doanh_thu'], $dataTuan)
+            ],
+            'thang' => [
+                'labels' => array_map(fn($i) => 'Tháng ' . $i['thang'] . '/' . $i['nam'], $dataThang),
+                'values' => array_map(fn($i) => (float)$i['doanh_thu'], $dataThang)
+            ]
+        ];
 
-        // 4. Render nội dung
-        // Sử dụng bộ đệm để tách view khỏi controller
         ob_start();
         include '../views/pages/admin/ThongKeDoanhThu.php';
         $PAGE_CONTENT = ob_get_clean();
-
-        // 5. Nạp layout chính
         include '../views/pages/admin/AdminLayout.php';
     }
-}
+};

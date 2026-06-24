@@ -6,19 +6,30 @@ $name = $product['ten_san_pham'] ?? 'Sản phẩm không tên';
 $category = $product['ten_danh_muc'] ?? 'Chưa phân loại';
 $id = $product['id_san_pham'] ?? '#';
 
-// Xử lý giá (DB trả về gia_co_ban)
-$price = $product['gia_co_ban'] ?? 0;
-// Vì bạn chưa có bảng khuyến mãi, tạm thời để oldPrice là 0
-$oldPrice = '&nbsp;'; 
-$currentPrice = number_format($price, 0, ',', '.') . ' đ';
+$giaGoc = (float)($product['gia_co_ban'] ?? 0);
+
+$giaSauGiam = (float)($product['gia_sau_giam'] ?? $giaGoc);
+
+$coKhuyenMai = (int)($product['co_khuyen_mai'] ?? 0);
+
+$oldPrice = $coKhuyenMai
+    ? number_format($giaGoc, 0, ',', '.') . ' đ'
+    : '';
+
+$currentPrice = number_format($giaSauGiam, 0, ',', '.') . ' đ';
 
 // Xử lý ảnh (DB trả về hinh_anh)
 $imgName = !empty($product['hinh_anh']) ? basename($product['hinh_anh']) : 'default.png';
 $productImg = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $imgName;
-$stock = (int)($product['tong_ton_kho'] ?? 0);
-
+$stock = (int)($product['so_luong_kho'] ?? 0);
 $tags = [];
-
+// 🏷️ Khuyến mãi
+if (!empty($product['phan_tram_giam']) && $product['phan_tram_giam'] > 0) {
+    $tags[] = [
+        '🔥 -' . (int)$product['phan_tram_giam'] . '%',
+        'bg-danger'
+    ];
+}
 // 🔴 Hết hàng
 if ($stock <= 0) {
     $tags[] = ['HẾT HÀNG', 'bg-secondary'];
@@ -113,8 +124,17 @@ if (!empty($product['ngay_tao'])
         </div>
 
         <div class="card-body text-center d-flex flex-column p-4">
-            <?php foreach ($tags as $t): ?>
-                <span class="position-absolute top-0 start-0 m-2 badge <?= $t[1] ?> mb-1 d-block">
+            <?php foreach ($tags as $index => $t): ?>
+                <span
+                    class="position-absolute start-0 badge <?= $t[1] ?>"
+                    style="
+                        top: <?= 10 + ($index * 35) ?>px;
+                        left:10px;
+                        z-index:5;
+                        font-size:0.75rem;
+                        padding:6px 10px;
+                    "
+                >
                     <?= $t[0] ?>
                 </span>
             <?php endforeach; ?>
@@ -125,9 +145,20 @@ if (!empty($product['ngay_tao'])
                     <?= htmlspecialchars($name) ?>
             </a>
                             
-            <div class="d-flex justify-content-center align-items-center">
-                <del class="me-2 text-white-50 small"><?= $oldPrice ?></del>
-                <span class="text-orange fs-5 fw-bold"><?= $currentPrice ?></span>
+            <div class="text-center">
+
+                <?php if($coKhuyenMai): ?>
+                    <div>
+                        <del class="text-secondary">
+                            <?= $oldPrice ?>
+                        </del>
+                    </div>
+                <?php endif; ?>
+
+                <div class="text-orange fs-4 fw-bold">
+                    <?= $currentPrice ?>
+                </div>
+
             </div>
 
             <div class="card-expand-area">
