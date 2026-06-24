@@ -1,6 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 ob_start(); 
+$listKM = $listKM ??[];
+$listBienThe = $listBienThe??[];
 ?>
 
 <div class="container-fluid p-4" style="background-color: #111; min-height: 100vh; color: #fff;">
@@ -33,27 +35,54 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
+                    <?php foreach($listKM as $km): ?>
                     <tr>
-                        <td class="py-3 text-start ps-4 fw-bold">Siêu Sale Hè 2026</td>
+                        <td class="py-3 text-start ps-4 fw-bold">
+                            <?= htmlspecialchars($km['ten_km']) ?>
+                        </td>
+
                         <td class="py-3">
-                            <?php if (!empty($km['hinh_anh_banner'])): ?>
-                                <img src="/LTWNC_LTWNC_WEBTMDT/assets/images/banners/<?= $km['hinh_anh_banner'] ?>" 
-                                    style="width: 60px; height: 30px; object-fit: cover; cursor: pointer;" 
-                                    class="rounded border border-secondary"
-                                    onclick="showFullImage(this.src)">
+                            <?php if(!empty($km['hinh_anh_banner'])): ?>
+                                <img
+                                    src="/LTWNC_LTWNC_WEBTMDT/assets/images/banners/<?= $km['hinh_anh_banner'] ?>"
+                                    style="width:60px;height:30px;object-fit:cover;"
+                                    class="rounded border border-secondary">
                             <?php else: ?>
-                                <span class="text-secondary small">Không có</span>
+                                <span class="text-secondary">Không có</span>
                             <?php endif; ?>
                         </td>
-                        <td class="py-3 text-warning fw-bold">-20%</td>
-                        <td class="py-3 small text-white-50">10/06/2026 - 30/06/2026</td>
-                        <td class="py-3"><span class="badge bg-success rounded-pill">Đang chạy</span></td>
+
+                        <td class="py-3 text-warning fw-bold">
+                            -<?= $km['phan_tram_giam'] ?>%
+                        </td>
+
+                        <td class="py-3 small text-white-50">
+                            <?= date('d/m/Y', strtotime($km['ngay_bat_dau'])) ?>
+                            -
+                            <?= date('d/m/Y', strtotime($km['ngay_ket_thuc'])) ?>
+                        </td>
+
                         <td class="py-3">
-                            <button class="btn btn-sm btn-outline-warning rounded-circle"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger rounded-circle"><i class="fas fa-trash"></i></button>
+                            <?php if($km['trang_thai'] == 1): ?>
+                                <span class="badge bg-success rounded-pill">
+                                    Đang chạy
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-secondary rounded-pill">
+                                    Tạm dừng
+                                </span>
+                            <?php endif; ?>
+                        </td>
+
+                        <td class="py-3">
+                            <a href="index.php?act=toggleStatusKM&id=<?= $km['id_khuyen_mai'] ?>&status=<?= $km['trang_thai'] ? 0 : 1 ?>"
+                            class="btn btn-sm btn-outline-warning rounded-circle">
+                                <i class="fas fa-power-off"></i>
+                            </a>
                         </td>
                     </tr>
-                </tbody>
+                    <?php endforeach; ?>
+                    </tbody>
             </table>
         </div>
     </div>

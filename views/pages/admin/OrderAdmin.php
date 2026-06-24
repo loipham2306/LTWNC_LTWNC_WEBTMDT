@@ -171,11 +171,12 @@ function getStatusBadge($status)
                                         $order['trang_thai_don_hang'] != 'Đã giao'
                                     ): ?>
 
-                                    <a id="cancelLink"
+                                    <a
+                                        href="index.php?act=HuyDonHang&id=<?= $order['id_don_hang'] ?>"
                                         class="btn btn-sm btn-outline-danger"
                                         onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
                                         <i class="fas fa-times me-2"></i>Hủy Đơn Hàng
-                                        </a>
+                                    </a>
 
                                     <?php endif; ?>
 
@@ -321,6 +322,7 @@ function getStatusBadge($status)
                 </div>
             </div>
         </div>
+                        
     </div>
 
 </div>

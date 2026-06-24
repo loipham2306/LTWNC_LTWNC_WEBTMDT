@@ -145,7 +145,7 @@
                                         <?php 
                                         $total = 0;
                                         foreach ($_SESSION['checkout_items'] as $item): 
-                                            $subTotal = (float)$item['gia'] * (int)$item['so_luong'];
+                                            $subTotal = (float)$item['gia_thuc'] * (int)$item['so_luong'];
                                             $total += $subTotal;
                                         ?>
                                             <tr>

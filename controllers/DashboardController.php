@@ -20,38 +20,28 @@ class DashboardController {
 
     public function index() {
         try {
-
-            // =========================
-            // KPI ĐƠN HÀNG
-            // =========================
-            $totalRevenue = $this->donHangModel->getTongDoanhThu() ?? 0;
-            $totalOrders  = $this->donHangModel->countDonHang() ?? 0;
-
             // ⚠️ tạm thời nếu chưa có hàm
             $newOrders      = 0;
             $shippingOrders = 0;
-            $cancelOrders   = 0;
-
-            // =========================
+            $cancel_orders   = 0;
+            // KPI ĐƠN HÀNG
+            $totalRevenue = $this->donHangModel->getTongDoanhThu() ?? 0;
+            $totalOrders  = $this->donHangModel->countDonHang() ?? 0;
+            $cancel_orders = $this->donHangModel-> countCancelledOrders() ?? 0;
+            $newOrders = $this->donHangModel->countNewOrders() ?? 0;
+            $shippingOrders= $this->donHangModel->countShippingOrders()  ?? 0;
             // SẢN PHẨM - USER
-            // =========================
             $totalProducts = $this->sp_model->countAllProducts() ?? 0;
             $totalUsers    = $this->tai_khoan_model->countTotalCustomers() ?? 0;
-
-            // =========================
             // THƯƠNG HIỆU
-            // =========================
             $brandStats = $this->thuong_hieu_model->getAllThuongHieuWithCount() ?? [];
             $totalBrand = $this->thuong_hieu_model->countThuongHieu();
-
-            // =========================
+            $topProducts =  $this->sp_model->getTopSellingProducts(10);
+           
             // BIỂU ĐỒ (tạm thời)
-            // =========================
             $revenueByMonth = $this->donHangModel->getRevenueByMonth();
 
-            // =========================
             // ĐƠN GẦN ĐÂY (RAW → MAP LẠI CHO UI)
-            // =========================
             $rawOrders = $this->donHangModel->getFilteredOrders('', '', 0, 5);
 
             $recentOrders = array_map(function ($o) {
@@ -64,15 +54,13 @@ class DashboardController {
                 ];
             }, $rawOrders);
 
-            // =========================
             // DATA VIEW
-            // =========================
             $data = [
                 'total_revenue'    => $totalRevenue,
                 'new_orders'       => $newOrders,
                 'total_orders'     => $totalOrders,
                 'shipping_orders'  => $shippingOrders,
-                'cancel_orders'    => $cancelOrders,
+                'cancel_orders'    => $cancel_orders,
 
                 'total_products'   => $totalProducts,
                 'total_users'      => $totalUsers,

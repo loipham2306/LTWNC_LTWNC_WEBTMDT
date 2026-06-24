@@ -3,8 +3,10 @@ require_once '../model/khachhang.php';
 require_once '../model/Vouchers.php';
 require_once '../model/TaiKhoan.php';
 require_once '../model/DonHangModel.php';
+require_once '../model/BinhLuanVaDanhGia.php';
 class UserProfileController {
     private $db;
+    private $binhLuanModel;
     private $kh_model;
     private $voucher_model;
     private $tk_model;
@@ -15,6 +17,7 @@ class UserProfileController {
         $this->voucher_model = new Vouchers($db);
         $this->tk_model = new TaiKhoan($db);
         $this->donhang_model = new DonHangModel($db);
+        $this->binhLuanModel = new BinhLuanVaDanhGia($db);
         // Kiểm tra đăng nhập cho tất cả các hành động trong controller này
         if (!isset($_SESSION['user'])) {
             header("Location: ../views/pages/login.php");
@@ -32,6 +35,9 @@ class UserProfileController {
                 break;
             case 'changePassword':
                 $this->updatePassword();
+                break;
+            case 'guiDanhGia':
+                $this->xuLyGuiDanhGia();
                 break;
             default:
                 $this->showProfile();
@@ -140,5 +146,22 @@ class UserProfileController {
 
         header("Location: index.php?act=UserProfile");
         exit;
+    }
+    // Bình luận và đánh giá sản phẩm
+    private function xuLyGuiDanhGia() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id_kh = $_SESSION['user']['id_khach_hang']; // Đảm bảo trong session có thông tin này
+            $id_sp = $_POST['id_san_pham'];
+            $so_sao = $_POST['so_sao'];
+            $noi_dung = $_POST['noi_dung'];
+
+            if ($this->binhLuanModel->themBinhLuan($id_kh, $id_sp, $so_sao, $noi_dung)) {
+                $_SESSION['success'] = "Cảm ơn bạn đã đánh giá sản phẩm!";
+            } else {
+                $_SESSION['error'] = "Đã có lỗi xảy ra khi gửi đánh giá.";
+            }
+            header("Location: index.php?act=UserProfile");
+            exit;
+        }
     }
 }

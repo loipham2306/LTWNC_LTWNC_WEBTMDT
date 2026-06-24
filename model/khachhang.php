@@ -118,5 +118,32 @@
             $stmt = $this->conn->prepare($query);
             $stmt->execute([$id_tk, $ho, $ten, $sdt, $diachi]);
         }
+        // Trong model KhachHangModel.php
+        // Sửa lại hàm tinhToanVaCapNhatHang trong class khachhang
+       public function tinhToanVaCapNhatHang($id_khach_hang) {
+            // 1. Tính tổng chi tiêu
+            $sqlTong = "SELECT SUM(tong_tien) as total 
+                        FROM don_hang 
+                        WHERE id_khach_hang = ? AND trang_thai_don_hang = 'Đã giao'";
+            $stmtTong = $this->conn->prepare($sqlTong);
+            $stmtTong->execute([$id_khach_hang]);
+            $result = $stmtTong->fetch(PDO::FETCH_ASSOC);
+            $tong = (float)($result['total'] ?? 0);
+
+            // 2. Xác định hạng
+            $hangMoi = 'member';
+            if ($tong >= 50000000) $hangMoi = 'diamond';
+            elseif ($tong >= 20000000) $hangMoi = 'gold';
+            elseif ($tong >= 5000000) $hangMoi = 'silver';
+
+            // 3. Cập nhật vào bảng khách hàng
+            $sqlUpdate = "UPDATE khach_hang SET hang_thanh_vien = ? WHERE id_khach_hang = ?";
+            $stmtUpdate = $this->conn->prepare($sqlUpdate);
+            
+            // THỰC THI TRƯỚC
+            $isExecuted = $stmtUpdate->execute([$hangMoi, $id_khach_hang]);
+
+            return $isExecuted;
+        }
     }
 ?>

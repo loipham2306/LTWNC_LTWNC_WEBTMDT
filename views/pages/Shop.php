@@ -4,7 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
 } 
 $Products=$Products??[];
 $danhMucList = $danhMucList ?? [];
-
+$page = $page ?? 1;
+$totalPages = $totalPages ?? 1;
+//echo "<pre>";
+//print_r($Products);
+//die();
 ?>
 
 <!DOCTYPE html>
@@ -137,6 +141,32 @@ $danhMucList = $danhMucList ?? [];
             margin: 5px 0;
             padding: 5px 0;
         }
+        .pagination .page-link {
+    min-width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px !important;
+    background: #222;
+    border: 1px solid #333;
+    color: #F28B00;
+    font-weight: 600;
+}
+
+.pagination .page-item.active .page-link {
+    background: #F28B00;
+    border-color: #F28B00;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(242, 139, 0, 0.4);
+}
+
+.pagination .page-link:hover {
+    background: #F28B00;
+    border-color: #F28B00;
+    color: #fff;
+    transform: translateY(-2px);
+}
     </style>
 </head>
 <body>
@@ -169,7 +199,11 @@ $danhMucList = $danhMucList ?? [];
                             <a href="javascript:void(0)" onclick="changeCategory('all')" class="btn-category <?= !isset($_GET['cat_id']) ? 'active' : '' ?>">
                                 <i class="fas fa-chevron-right me-2 small text-orange"></i> Tất Cả Sản Phẩm
                             </a>
-
+                            <li>
+                                <a href="index.php?act=KhuyenMai">
+                                    🔥 Khuyến mãi
+                                </a>
+                            </li>
                             <?php foreach ($danhMucList as $cat): 
                                 if (empty($cat['id_danh_muc_cha'])): ?>
                                 <div class="category-group">
@@ -214,7 +248,38 @@ $danhMucList = $danhMucList ?? [];
                         <?php endforeach; ?>
                     </div>
                 </div>
-                            
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center">
+
+                        <?php if($page > 1): ?>
+                            <li class="page-item">
+                                <a class="page-link"
+                                href="index.php?act=Shop&page=<?= $page-1 ?>">
+                                Trước
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php for($i=1;$i<=$totalPages;$i++): ?>
+                            <li class="page-item <?= $i==$page?'active':'' ?>">
+                                <a class="page-link"
+                                href="index.php?act=Shop&page=<?= $i ?>">
+                                <?= $i ?>
+                                </a>
+                            </li>
+                        <?php endfor; ?>
+ 
+                        <?php if($page < $totalPages): ?>
+                            <li class="page-item">
+                                <a class="page-link"
+                                href="index.php?act=Shop&page=<?= $page+1 ?>">
+                                Sau
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                    </ul>
+                </nav>     
             </div> 
         </div> 
     </div> 
@@ -229,22 +294,39 @@ $danhMucList = $danhMucList ?? [];
     
     <script>
         new WOW().init();
-         let currentPage = 1;
-        const itemsPerPage = 9; // Số sản phẩm hiển thị mỗi trang                       
         // 1. NHẬN DỮ LIỆU TỪ PHP
         const rawDbProducts = <?= json_encode($Products) ?>;
         console.log("Dữ liệu gốc:", rawDbProducts);
-        const products = rawDbProducts.map(p => ({
-            id: p.id_san_pham,
-            name: p.ten_san_pham,
-            category: p.ten_danh_muc || 'Khác',
-            price: Number(p.gia_co_ban) || 0,
-            oldPrice: 0, 
-            img: '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' + (p.hinh_anh || 'default.png'),
-            so_luong_kho: Number(p.so_luong_kho) || 0, 
-            ngay_tao: p.ngay_tao,
-            is_sale: false // Nếu DB chưa có cột này thì luôn là false
-        }));
+        const products = rawDbProducts.map(p => {
+
+            const phanTram = Number(p.phan_tram_giam) || 0;
+
+            const giaGoc = Number(p.gia_co_ban);
+
+            const giaSauGiam =
+                phanTram > 0
+                ? giaGoc * (1 - phanTram / 100)
+                : giaGoc;
+
+            return {
+                id: p.id_san_pham,
+                name: p.ten_san_pham,
+                category: p.ten_danh_muc || 'Khác',
+
+                price: giaSauGiam,
+                oldPrice: phanTram > 0 ? giaGoc : 0,
+
+                discount: phanTram,
+
+                img: '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' + (p.hinh_anh || 'default.png'),
+
+                so_luong_kho: Number(p.so_luong_kho) || 0,
+
+                ngay_tao: p.ngay_tao,
+
+                is_sale: phanTram > 0
+            };
+        });
 
         console.log("Mảng đã map:", products);
 
@@ -275,20 +357,15 @@ $danhMucList = $danhMucList ?? [];
             if (!container) return;
 
             const filtered = products.filter(p => {
-                // Lấy tên danh mục từ object sản phẩm
                 const dbCategory = (p.category || '').trim().toLowerCase();
-                // Lấy tên danh mục người dùng vừa chọn
                 const btnCategory = selectedCategory.trim().toLowerCase();
-                
-                // Kiểm tra logic lọc
                 const matchCategory = (selectedCategory === 'all' || btnCategory === dbCategory);
-                const matchSearch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-                
+                const productName = normalizeText(p.name || '');
+                const keyword = normalizeText(searchQuery);
+
+                const matchSearch = productName.includes(keyword);
                 return matchCategory && matchSearch;
             });
-             const totalPages = Math.ceil(filtered.length / itemsPerPage);
-            const start = (currentPage - 1) * itemsPerPage;
-            const paginatedItems = filtered.slice(start, start + itemsPerPage);                   
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="col-12 text-center py-5">
@@ -300,6 +377,7 @@ $danhMucList = $danhMucList ?? [];
             let html = '';
             const now = new Date();
 
+            // SỬA Ở ĐÂY: Dùng paginatedItems thay vì filtered
             filtered.forEach(product => {
                 // 1. Tính toán trạng thái
                 const kho = Number(product.so_luong_kho) || 0;
@@ -313,14 +391,23 @@ $danhMucList = $danhMucList ?? [];
                 if (isOutOfStock) {
                     tagsHtml = `<span class="badge position-absolute top-0 start-0 m-2" style="background: #333; z-index: 2;">Hết hàng</span>`;
                 } else {
-                    if (isSale) tagsHtml += `<span class="badge position-absolute top-0 start-0 m-2" style="background: #dc3545; z-index: 2;">Khuyến mãi</span>`;
+                    if (isSale)
+                        tagsHtml += `
+                            <span class="badge position-absolute top-0 start-0 m-2"
+                                style="background:#dc3545; z-index:2;">
+                                -${product.discount}%
+                            </span>
+                        `;                    
                     if (isNew) tagsHtml += `<span class="badge position-absolute top-0 end-0 m-2" style="background: #F28B00; z-index: 2;">Mới</span>`;
                 }
 
                 // 3. Xử lý giá
                 const formattedPrice = Number(product.price).toLocaleString('vi-VN') + ' đ';
-                const formattedOldPrice = (product.oldPrice && product.oldPrice > product.price) 
-                    ? `<del class="me-2 text-white-50 small">${Number(product.oldPrice).toLocaleString('vi-VN')} đ</del>` 
+                const formattedOldPrice =
+                    (product.oldPrice && product.oldPrice > product.price)
+                    ? `<del class="me-2 text-white-50 small">
+                        ${Number(product.oldPrice).toLocaleString('vi-VN')} đ
+                    </del>`
                     : '';
 
                 // 4. Mã hóa JSON an toàn để tránh lỗi cú pháp
@@ -346,7 +433,9 @@ $danhMucList = $danhMucList ?? [];
                                 </a>
                                 <div class="d-flex justify-content-center align-items-center mb-3">
                                     ${formattedOldPrice}
-                                    <span style="color: #F28B00;" class="fs-5 fw-bold">${formattedPrice}</span>
+                                    <span style="color:#F28B00;" class="fs-5 fw-bold">
+                                        ${formattedPrice}
+                                    </span>                                
                                 </div>
                                <a href="index.php?act=ProductDetail&id=${product.id}"
                                 class="btn ${isOutOfStock ? 'btn-secondary' : 'btn-orange'} w-100 rounded-pill py-2 fw-bold shadow-sm">
@@ -360,28 +449,9 @@ $danhMucList = $danhMucList ?? [];
                     </div>
                 `;
             });
-            html += `
-        <div class="col-12 mt-4">
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                        <a class="page-link bg-dark text-white border-0" href="#" onclick="changePage(${currentPage - 1})">Trước</a>
-                    </li>
-                    ${Array.from({length: totalPages}, (_, i) => i + 1).map(page => `
-                        <li class="page-item ${currentPage === page ? 'active' : ''}">
-                            <a class="page-link ${currentPage === page ? 'bg-warning' : 'bg-dark text-white'} border-0" href="#" onclick="changePage(${page})">${page}</a>
-                        </li>
-                    `).join('')}
-                    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                        <a class="page-link bg-dark text-white border-0" href="#" onclick="changePage(${currentPage + 1})">Sau</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    `;
-
-            container.innerHTML = html;
-        }
+           
+        container.innerHTML = html;
+    }
 
         function changeCategory(catName) {
             selectedCategory = catName; // Cập nhật danh mục đang chọn
@@ -403,7 +473,14 @@ $danhMucList = $danhMucList ?? [];
             searchQuery = inputEl.value;
             renderProducts();
         }
-
+        function normalizeText(str) {
+            return str
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/đ/g, "d")
+                .trim();
+        }                    
         function handleAddToCartFromShop(product) {
             let currentCart = JSON.parse(localStorage.getItem('cart')) || [];
             let existingItemIndex = currentCart.findIndex(item => item.id === product.id);
@@ -420,11 +497,6 @@ $danhMucList = $danhMucList ?? [];
             if (typeof updateCartBadge === 'function') updateCartBadge();
             alert(`Thành công! Đã thêm ${product.name} vào giỏ hàng.`);
         }
-function changePage(page) {
-    currentPage = page;
-    renderProducts();
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Cuộn lên đầu trang
-}
     </script>
 </body>
 </html>

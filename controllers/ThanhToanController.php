@@ -120,7 +120,7 @@ class ThanhToanController
            $tong_goc = 0;
 
             foreach ($_SESSION['checkout_items'] as $item) {
-                $tong_goc += ($item['gia'] ?? 0) * ($item['so_luong'] ?? 0);
+                $tong_goc += ($item['gia_thuc'] ?? 0) * ($item['so_luong'] ?? 0);
             }
 
             $id_voucher_input = $_POST['id_voucher'] ?? null;
@@ -213,7 +213,7 @@ class ThanhToanController
                     ':id_bien_the'  => $item['id_bien_the'],
                     ':id_san_pham'  => $item['id_san_pham'], // Phải có trường này vì cấu trúc bảng có
                     ':so_luong'     => $item['so_luong'],
-                    ':gia_luc_mua'  => $item['gia']          // Đổi tên key khớp với SQL
+                    ':gia_luc_mua'  => $item['gia_thuc']        
                 ]);
                 
                 $this->donHangModel->updateTonKho($item['id_bien_the'], $item['so_luong']);
@@ -246,7 +246,7 @@ class ThanhToanController
 
         } catch (Exception $e) {
            if ($this->db->inTransaction()) $this->db->rollBack();
-
+error_log("LỖI ĐẶT HÀNG ID 54: " . $e->getMessage() . " - File: " . $e->getFile() . " Line: " . $e->getLine());
             // Thay vì chỉ báo lỗi, hãy log lỗi thật sự vào console hoặc file
             error_log("Lỗi đặt hàng: " . $e->getMessage()); 
             

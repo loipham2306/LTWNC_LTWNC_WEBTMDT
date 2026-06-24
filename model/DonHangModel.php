@@ -318,11 +318,13 @@ class DonHangModel
     }
     public function countCancelledOrders()
     {
+        // Sử dụng IN để kiểm tra nhiều giá trị cùng lúc
         $sql = "SELECT COUNT(*)
                 FROM {$this->table_don_hang}
-                WHERE trang_thai_don_hang = 'Hủy'";
+                WHERE trang_thai_don_hang IN ('Hủy', 'Đã hủy')";
 
-        return $this->conn->query($sql)->fetchColumn() ?? 0;
+        $stmt = $this->conn->query($sql);
+        return $stmt ? (int)$stmt->fetchColumn() : 0;
     }
     public function getSoLuongTonByBienThe($id_bien_the) {
         // Truy vấn SQL của bạn

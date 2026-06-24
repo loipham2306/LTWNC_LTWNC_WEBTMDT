@@ -20,6 +20,11 @@ include_once '../controllers/GioHangController.php';
 require_once '../controllers/ThanhToanController.php';
 require_once '../controllers/UserProfileController.php';
 require_once '../controllers/DonHangController.php';
+require_once '../controllers/BinhLuanVaDanhGiaController.php';
+require_once '../controllers/ThongKeDoanhThuController.php';
+
+require_once '../model/QuanLyKhuyenMai.php';
+
 // 2. Lấy action (act) từ URL
 $act = $_REQUEST['act'] ?? 'trangchu';
 
@@ -60,6 +65,7 @@ switch ($act) {
     case 'UserProfile':
     case 'updateProfile':
     case 'changePassword':
+    case 'guiDanhGia':
     // 1. Khởi tạo Controller
         include_once 'UserProfileController.php';
         $profileController = new UserProfileController($db);
@@ -161,15 +167,32 @@ switch ($act) {
     // chi tiết sản phẩm
     case 'ProductDetail':
         if (isset($_GET['id'])) {
+
             $id = $_GET['id'];
+
             $spModel = new SanPham($db);
-            // Lưu ý tên biến ở đây phải khớp với tên biến trong file View
-            $product = $spModel->getChiTietSanPham($id); 
-            
-            // Gán giá hiện tại mặc định bằng giá cơ bản (hoặc giá biến thể đầu tiên)
-            $gia_hien_tai = $product['gia_co_ban']; 
+            $blModel = new BinhLuanVaDanhGia($db);
+
+            $product = $spModel->getChiTietSanPham($id);
+
+            if (!$product) {
+                include '../views/pages/ProductDetail.php';
+                break;
+            }
+
+            // 🔥 đồng bộ promotion
+            $spModel->applyPromotionSingle($product);
+
+            $DanhSachBinhLuan = $blModel->layBinhLuanTheoSanPham($id);
+
+            // 👉 dùng giá đã tính
+            $firstVariant = $product['bien_the'][0] ?? null;
+
+            $gia_hien_tai = $firstVariant['gia_sau_giam']
+                ?? $firstVariant['gia_ban']
+                ?? $product['gia_co_ban'];
             $imgPath = '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' . $product['hinh_anh'];
-            
+
             include '../views/pages/ProductDetail.php';
         }
         break;
@@ -246,6 +269,21 @@ switch ($act) {
         $dhController = new DonHangController($db);
         $dhController->handle($act);
 
+        break;
+    // Nhóm quản lý bình luận
+    case 'QuanLyBinhLuan':
+    case 'CapNhatTrangThaiBinhLuan':
+    case 'XoaBinhLuan':
+        include_once 'BinhLuanVaDanhGiaController.php';
+        $blController = new BinhLuanVaDanhGiaController($db);
+        $blController->handle($act);
+        break;
+    // ThongKeDoanhThu
+    // index.php
+    case 'ThongKeDoanhThu':
+        require_once 'ThongKeDoanhThuController.php';
+        $controller = new ThongKeDoanhThuController($db); // $pdo là kết nối database của bạn
+        $controller->index();
         break;
     // --- MẶC ĐỊNH ---
     default:

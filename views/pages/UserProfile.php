@@ -93,6 +93,25 @@
     text-transform: uppercase;
 }
 .btn-copy:hover { background-color: #d67a00 !important; }
+/* Style cho Rank Badge */
+.rank-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #fff;
+    margin-top: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+/* Màu sắc theo từng hạng */
+.rank-diamond { background: linear-gradient(45deg, #00d4ff, #0055ff); }
+.rank-gold    { background: linear-gradient(45deg, #FFD700, #F28B00); }
+.rank-silver  { background: linear-gradient(45deg, #adb5bd, #6c757d); }
+.rank-member  { background: #444; }
     </style>
 </head>
 <body>
@@ -123,12 +142,10 @@
                     <div class="card profile-card rounded p-4 text-center mb-4">
                         <div class="d-flex justify-content-center mb-3">
                             <div id="userAvatar" class="avatar-circle rounded-circle d-flex align-items-center justify-content-center"
-                                 style="width: 80px; height: 80px; font-size: 30px;">
-                                U
-                            </div>
+                                style="width: 80px; height: 80px; font-size: 30px;">U</div>
                         </div>
                         <h5 id="userSidebarName" class="text-white fw-bold mb-1">Khách Hàng</h5>
-                        <p id="userRank" class="text-white-50 small mb-0">Hạng: Thành Viên Mới</p>
+                        <div id="userRankBadge" class="rank-badge">Thành Viên</div> 
                     </div>
 
                     <div class="card profile-card rounded overflow-hidden">
@@ -338,7 +355,26 @@
             document.getElementById('userAvatar').innerText = userData.ten ? userData.ten.charAt(0) : 'U';
             
             // Hạng thành viên
-            document.getElementById('userRank').innerText = 'Hạng: ' + (userData.hang_thanh_vien || 'Thành Viên Mới');
+            const rankElement = document.getElementById('userRankBadge'); // Đảm bảo ID đúng trong HTML
+            const rankRaw = (userData.hang_thanh_vien || 'member').toLowerCase();
+            
+            // Reset classes
+            rankElement.className = 'rank-badge'; 
+            
+            // Gán class màu sắc và text
+            if (rankRaw.includes('diamond')) {
+                rankElement.classList.add('rank-diamond');
+                rankElement.innerText = '💎 Kim Cương';
+            } else if (rankRaw.includes('gold')) {
+                rankElement.classList.add('rank-gold');
+                rankElement.innerText = '👑 Vàng';
+            } else if (rankRaw.includes('silver')) {
+                rankElement.classList.add('rank-silver');
+                rankElement.innerText = '🥈 Bạc';
+            } else {
+                rankElement.classList.add('rank-member');
+                rankElement.innerText = '👤 Thành Viên';
+            }
         }
 
         function renderOrders() {
@@ -363,7 +399,13 @@
                 const status = order.trang_thai_don_hang;
 
                let badgeClass = 'bg-secondary';
-
+               let actionButton = `
+                    <button
+                        class="btn btn-sm btn-outline-orange"
+                        onclick="viewOrderDetail(${order.id_don_hang})">
+                        Chi tiết
+                    </button>
+                `;
                 switch (order.trang_thai_don_hang) {
                     case 'Đã giao':
                         badgeClass = 'bg-success';
@@ -393,12 +435,7 @@
                                 ${status}
                             </span>
                         </td>
-                        <td class="py-3">
-                            <button class="btn btn-sm btn-outline-orange rounded-pill px-3"
-                                onclick="viewOrderDetail(${id})">
-                            Xem
-                            </button>
-                        </td>
+                       <td class="py-3">${actionButton}</td>
                     </tr>
                 `;
             });
@@ -424,6 +461,7 @@
                             <th>SL</th>
                             <th>Giá</th>
                             <th>Tạm tính</th>
+                            <th>Đánh giá</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -433,7 +471,16 @@
                     const price = Number(sp.gia_luc_mua || 0);
                     const qty = Number(sp.so_luong || 0);
                     const total = price * qty;
-
+                    const reviewBtn =
+                        order.trang_thai_don_hang === 'Đã giao'
+                        ? `
+                            <button
+                                class="btn btn-warning btn-sm mt-2"
+                                onclick="openReviewModal(${order.id_don_hang}, ${sp.id_bien_the})">
+                                ⭐ Đánh giá
+                            </button>
+                        `
+                        : '';    
                     itemsHtml += `
                         <tr>
                             <td>${sp.ten_san_pham}</td>
@@ -446,6 +493,10 @@
                             <td>${price.toLocaleString('vi-VN')} đ</td>
                             <td class="text-warning fw-bold">
                                 ${total.toLocaleString('vi-VN')} đ
+                            </td>
+                            <td>
+                                <div>${sp.ten_san_pham}</div>
+                                ${reviewBtn}
                             </td>
                         </tr>
                     `;
@@ -562,21 +613,186 @@
                     container.innerHTML = '<p class="text-danger">Không thể tải voucher.</p>';
                 });
         }
+        function openReviewModal(orderId, detailId) {
+
+            const order = orders.find(
+                o => o.id_don_hang == orderId
+            );
+
+            if (!order) return;
+             console.log("ORDER:", order);
+            console.log("DETAIL ID:", detailId);
+            console.table(order.items);           
+            const item = order.items.find(
+                i => i.id_bien_the == detailId
+            );
+
+            if (!item) return;
+
+            document.getElementById('review_order_id').innerText =
+                order.id_don_hang;
+
+            document.getElementById('review_order_date').innerText =
+                order.ngay_dat;
+
+            document.getElementById('review_product_name').innerText =
+                item.ten_san_pham;
+
+            document.getElementById('review_product_size').innerText =
+                item.kich_co || '-';
+
+            document.getElementById('review_product_color').innerText =
+                item.mau_sac || '-';
+
+            document.getElementById('review_product_qty').innerText =
+                item.so_luong;
+            document.getElementById('review_product_image').src =
+                '/LTWNC_LTWNC_WEBTMDT/assets/images/products/' + item.hinh_anh_san_pham;
+
+            document.getElementById('review_id_san_pham').value =
+                item.id_san_pham;
+
+            document.getElementById('review_id_bien_the').value =
+        item.id_bien_the;
+
+            new bootstrap.Modal(
+                document.getElementById('reviewModal')
+            ).show();
+        }
         
     </script>
-<div class="modal fade" id="orderDetailModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content bg-dark text-white border border-secondary">
+    
+    <div class="modal fade" id="orderDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border border-secondary">
 
-      <div class="modal-header border-secondary">
-        <h5 class="modal-title text-orange">Chi tiết đơn hàng</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-orange">Chi tiết đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
 
-      <div class="modal-body" id="orderDetailBody"></div>
+            <div class="modal-body" id="orderDetailBody"></div>
 
+            </div>
+        </div>
     </div>
-  </div>
-</div>
+   <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border border-secondary">
+
+                <form action="index.php?act=guiDanhGia" method="POST">
+
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title text-orange">
+                            ⭐ Đánh Giá Sản Phẩm
+                        </h5>
+
+                        <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <input type="hidden" name="id_san_pham" id="review_id_san_pham">
+                        <input type="hidden" name="id_bien_the" id="review_id_bien_the">
+                        <!-- Thông tin đơn hàng -->
+                        <div class="mb-3 p-3 border rounded bg-secondary bg-opacity-10">
+                            <div class="small text-white-50">
+                                Đơn hàng #
+                                <span id="review_order_id"></span>
+                            </div>
+
+                            <div class="small text-white-50">
+                                Ngày mua:
+                                <span id="review_order_date"></span>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin sản phẩm -->
+                        <div class="d-flex gap-3 mb-4 align-items-center">
+
+                            <img
+                                id="review_product_image"
+                                src=""
+                                width="100"
+                                height="100"
+                                class="rounded border"
+                                style="object-fit:cover"
+                            >
+
+                            <div>
+                                <h5 id="review_product_name" class="fw-bold mb-2"></h5>
+
+                                <div class="text-white-50">
+                                    Size:
+                                    <span id="review_product_size"></span>
+                                </div>
+
+                                <div class="text-white-50">
+                                    Màu:
+                                    <span id="review_product_color"></span>
+                                </div>
+
+                                <div class="text-white-50">
+                                    Số lượng:
+                                    <span id="review_product_qty"></span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Đánh giá -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Số sao đánh giá
+                            </label>
+
+                            <select
+                                name="so_sao"
+                                class="form-control"
+                                required>
+
+                                <option value="5">⭐⭐⭐⭐⭐ Rất hài lòng</option>
+                                <option value="4">⭐⭐⭐⭐ Hài lòng</option>
+                                <option value="3">⭐⭐⭐ Bình thường</option>
+                                <option value="2">⭐⭐ Chưa hài lòng</option>
+                                <option value="1">⭐ Tệ</option>
+
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Nhận xét của bạn
+                            </label>
+
+                            <textarea
+                                name="noi_dung"
+                                rows="4"
+                                class="form-control"
+                                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..."
+                                required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                            Đóng
+                        </button>
+                        <button
+                            type="submit"
+                            class="btn btn-orange">
+                            Gửi Đánh Giá
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

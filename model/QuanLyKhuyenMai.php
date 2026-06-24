@@ -38,18 +38,27 @@ class QuanLyKhuyenMai {
     
     // 3. Thêm mới chương trình
     public function createKhuyenMai($ten_km, $phan_tram, $start, $end, $trang_thai, $banner) {
-        $query = "INSERT INTO " . $this->table_chuong_trinh_KM . " 
-                  (ten_km, phan_tram_giam, ngay_bat_dau, ngay_ket_thuc, trang_thai, hinh_anh_banner) 
-                  VALUES (:ten, :phan_tram, :start, :end, :status, :banner)";
-        $stmt = $this->conn->prepare($query);
-        return $stmt->execute([
-            ':ten' => $ten_km,
-            ':phan_tram' => $phan_tram,
-            ':start' => $start,
-            ':end' => $end,
-            ':status' => $trang_thai,
-            ':banner' => $banner
-        ]);
+        try {
+            $query = "INSERT INTO chuong_trinh_khuyen_mai
+                    (ten_km, phan_tram_giam, ngay_bat_dau, ngay_ket_thuc, trang_thai, hinh_anh_banner)
+                    VALUES (:ten, :phan_tram, :start, :end, :status, :banner)";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([
+                ':ten' => $ten_km,
+                ':phan_tram' => $phan_tram,
+                ':start' => $start,
+                ':end' => $end,
+                ':status' => $trang_thai,
+                ':banner' => $banner
+            ]);
+
+            return $this->conn->lastInsertId();
+        } catch (PDOException $e) {
+            // Ghi log lỗi vào file hoặc xuất ra màn hình để sửa
+            error_log("Lỗi tạo KM: " . $e->getMessage());
+            return false;
+        }
     }
 
     // 4. Lấy danh sách biến thể để gán khuyến mãi
@@ -90,5 +99,48 @@ class QuanLyKhuyenMai {
         $query = "UPDATE " . $this->table_chuong_trinh_KM . " SET trang_thai = ? WHERE id_khuyen_mai = ?";
         return $this->conn->prepare($query)->execute([$status, $id_km]);
     }
+    public function getSanPhamByBienThe($id_bien_the)
+    {
+        $sql = "SELECT id_san_pham
+                FROM bien_the_san_pham
+                WHERE id_bien_the = ?";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$id_bien_the]);
+
+        return $stmt->fetchColumn();
+    }
+    public function getSanPhamKhuyenMai() {
+        $sql = "
+            SELECT
+                sp.*,
+                dm.ten_danh_muc,
+                COALESCE(MAX(km.phan_tram_giam),0) AS phan_tram_giam
+            FROM san_pham sp
+            LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
+
+            LEFT JOIN chi_tiet_khuyen_mai ct 
+                ON (
+                    ct.id_san_pham = sp.id_san_pham 
+                    OR ct.id_san_pham IN (
+                        SELECT id_san_pham 
+                        FROM bien_the_san_pham 
+                        WHERE id_san_pham = sp.id_san_pham
+                    )
+                )
+
+            LEFT JOIN chuong_trinh_khuyen_mai km 
+                ON ct.id_khuyen_mai = km.id_khuyen_mai
+                AND km.trang_thai = 1
+                AND NOW() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
+
+            GROUP BY sp.id_san_pham
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
+
 ?>

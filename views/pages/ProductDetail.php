@@ -9,6 +9,7 @@
     $product = $product ?? [];
     $imgPath = $imgPath ?? '';
     $gia_hien_tai = $gia_hien_tai ?? 0;
+    
     ?>
 
     <!DOCTYPE html>
@@ -163,6 +164,30 @@
         background: rgba(0, 0, 0, 0.2); /* Làm tối nền button */
         pointer-events: none; /* Đảm bảo click không bị vướng */
     }
+    .text-warning { color: #ffc107 !important; }
+.text-secondary { color: #444 !important; }
+.price-sale {
+    font-size: 28px;
+    font-weight: 800;
+    color: #F28B00;
+}
+
+.price-old {
+    font-size: 16px;
+    color: #999;
+    text-decoration: line-through;
+    margin-top: 5px;
+}
+
+.discount {
+    display: inline-block;
+    background: red;
+    color: white;
+    font-size: 13px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 8px;
+}
         </style>
     </head>
     <body>
@@ -228,8 +253,28 @@
 
                                         <div class="col-lg-6">
                                                 <h1 class="product-title-lg"><?= htmlspecialchars($product['ten_san_pham']) ?></h1>
-                                                <div class="price-tag mb-3" id="price-display"><?= number_format($gia_hien_tai, 0, ',', '.') ?> VNĐ</div>
+                                                <?php
+                                                   $variantDefault = $product['bien_the'][0] ?? null;
+                                                    $gia_sale = $variantDefault['gia_sau_giam'] ?? 0;
+                                                    $gia_goc = $variantDefault['gia_ban'] ?? 0;
+                                                    $giam = $variantDefault['phan_tram_giam'] ?? 0;
+                                                ?>
 
+                                                <div class="price-box mb-3">
+                                                    <div class="price-sale" id="price-display">
+                                                        <?= number_format($gia_sale, 0, ',', '.') ?> VNĐ
+                                                    </div>
+
+                                                    <div class="price-old" id="price-old">
+                                                        <?= number_format($gia_goc, 0, ',', '.') ?> VNĐ
+                                                    </div>
+
+                                                    <?php if ($giam > 0): ?>
+                                                        <div class="discount" id="discount-percent">
+                                                            -<?= $giam ?>%
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <div class="short-description text-white-50 mb-4">
                                                     <?php 
                                                     // Chỉ lấy câu đầu tiên làm giới thiệu nhanh
@@ -256,8 +301,15 @@
                                                             $isOutOfStock = ($bt['so_luong_ton'] <= 0);
                                                         ?>
                                                             <button class="btn btn-outline-warning btn-sm px-3 <?= $isOutOfStock ? 'btn-size-disabled' : '' ?>" 
-                                                                    <?= $isOutOfStock ? 'disabled' : '' ?>
-                                                                    onclick="selectVariant(<?= $bt['gia_ban'] ?>, <?= $bt['so_luong_ton'] ?>, '<?= $bt['kich_co'] ?>', this)">
+                                                                <?= $isOutOfStock ? 'disabled' : '' ?>
+                                                                onclick="selectVariant(
+                                                                    <?= $bt['gia_sau_giam'] ?>, 
+                                                                    <?= $bt['so_luong_ton'] ?>, 
+                                                                    '<?= $bt['kich_co'] ?>', 
+                                                                    this, 
+                                                                    <?= $bt['gia_ban'] ?>, 
+                                                                    <?= $bt['phan_tram_giam'] ?? 0 ?>
+                                                                )">
                                                                 <?= htmlspecialchars($bt['kich_co']) ?>
                                                             </button>
                                                         <?php endforeach; ?>
@@ -312,7 +364,25 @@
                                                 <?= nl2br(htmlspecialchars($product['mo_ta'])) ?>
                                             </div>
                                             <div class="tab-pane fade" id="review">
-                                                <p class="text-white-50">Chưa có đánh giá nào cho sản phẩm này.</p>
+                                                <?php if (empty($DanhSachBinhLuan)): ?>
+                                                    <p class="text-white-50">Chưa có đánh giá nào cho sản phẩm này.</p>
+                                                <?php else: ?>
+                                                    <?php foreach ($DanhSachBinhLuan as $bl): ?>
+                                                        <div class="card bg-dark border-secondary mb-3">
+                                                            <div class="card-body">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <h6 class="text-orange fw-bold"><?= htmlspecialchars($bl['ho_ten']) ?></h6>
+                                                                    <small class="text-white-50 fw-bold"><?= date('d/m/Y H:i', strtotime($bl['ngay_binh_luan'])) ?></small>                                                                </div>
+                                                                <div class="text-warning mb-2">
+                                                                    <?php for($i=1; $i<=5; $i++): ?>
+                                                                        <i class="fas fa-star <?= $i <= $bl['so_sao'] ? 'text-warning' : 'text-secondary' ?>"></i>
+                                                                    <?php endfor; ?>
+                                                                </div>
+                                                                <p class="text-white mb-0"><?= htmlspecialchars($bl['noi_dung']) ?></p>
+                                                            </div>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
@@ -334,80 +404,45 @@
             window.currentSelectedSize = null;
             window.currentSelectedColor = null;
             window.currentStock = 0; 
-            function updateQty(id, type) {
-                let input = document.getElementById(`qty-${id}`);
-                let checkbox = document.querySelector(`.product-checkbox[value="${id}"]`);
-                
-                // Lấy số lượng tồn kho từ data-attribute
-                let stock = parseInt(checkbox.dataset.stock); 
-                let currentQty = parseInt(input.value);
-                
-                let newQty = (type === 'plus') ? currentQty + 1 : Math.max(1, currentQty - 1);
-
-                // CHẶN: Nếu tăng mà vượt quá stock
-                if (type === 'plus' && newQty > stock) {
-                    alert("Sản phẩm chỉ còn " + stock + " cái trong kho!");
-                    return; // Dừng hàm, không gửi request
-                }
-
-                fetch(`index.php?act=CapNhatSoLuong&id=${id}&type=${type}`)
-                .then(res => res.json()) // Giả sử controller trả về json
-                .then(data => {
-                    if (data.status === 'success') {
-                        input.value = newQty;
-                        let unitPrice = parseFloat(checkbox.dataset.unitPrice);
-                        let newTotalRow = newQty * unitPrice;
-                        checkbox.dataset.price = newTotalRow;
-
-                        let row = checkbox.closest('tr');
-                        row.querySelectorAll('td')[5].innerText = newTotalRow.toLocaleString('vi-VN') + ' đ';
-                        updateTotal();
-                    } else {
-                        alert(data.message); // Hiển thị lỗi từ server
-                    }
-                });
-            }
-
+         function getVariant() {
+            return variants.find(v =>
+                v.kich_co == window.currentSelectedSize &&
+                v.mau_sac == window.currentSelectedColor
+            );
+        }   
+        
         function addToCartDetail() {
-            if (!window.currentSelectedSize || !window.currentSelectedColor) {
+            const variant = getVariant();
+
+            if (!variant) {
                 alert("Vui lòng chọn Size và Màu!");
                 return;
             }
 
-            // Tìm ID biến thể (dựa vào mảng variants có sẵn trong trang)
-            const variant = variants.find(v => v.kich_co == window.currentSelectedSize && v.mau_sac == window.currentSelectedColor);
-
-            if (!variant) {
-                alert("Sản phẩm không hợp lệ!");
-                return;
-            }
-
-            // Gửi dữ liệu về Server bằng AJAX
             const formData = new FormData();
-                formData.append('id_bien_the', variant.id_bien_the);
-                formData.append('so_luong', document.getElementById('buyQty').value);
+            formData.append('id_bien_the', variant.id_bien_the);
+            
+            // Đảm bảo gửi giá sau giảm (đã tính toán sẵn từ JS)
+            // Nếu variant.gia_sau_giam tồn tại, dùng nó, nếu không dùng gia_ban
+            const priceToSubmit = variant.gia_sau_giam > 0 ? variant.gia_sau_giam : variant.gia_ban;
+            formData.append('gia', priceToSubmit); 
 
-                fetch('index.php?act=ThemGioHang', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(data => {
+            formData.append('so_luong', document.getElementById('buyQty').value);
 
-                    console.log(data);
-
-                    if(data.trim() === 'success'){
-                        alert('Đã thêm vào giỏ hàng');
-                        window.location.href='index.php?act=GioHang';
-                    }else{
-                        alert(data);
-                    }
-
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-            }
+            fetch('index.php?act=ThemGioHang', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.text())
+            .then(data => {
+                if (data.trim() === 'success') {
+                    alert('Đã thêm vào giỏ hàng');
+                    location.href = 'index.php?act=GioHang';
+                } else {
+                    alert(data);
+                }
+            });
+        }
             function changeImage(src, element) {
                 // 1. Thay đổi ảnh lớn
                 const mainImg = document.getElementById('main-product-img');
@@ -419,40 +454,82 @@
                 document.querySelectorAll('.thumb-box').forEach(el => el.classList.remove('active'));
                 element.classList.add('active');
             }
-            function selectVariant(price, stock, size, element) {
-                if (stock <= 0) return;
-                
-                // Lưu tồn kho vào biến toàn cục
-                window.currentStock = stock;
-                window.currentSelectedSize = size;
-                window.currentSelectedPrice = price;
-
-                // Reset lại số lượng về 1 khi đổi size
-                document.getElementById('buyQty').value = 1;
-                
-                // Cập nhật giá
-                document.getElementById('price-display').innerText = 
-                    new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ';
-                
-                // Cập nhật thông báo tồn kho
-                document.getElementById('stock-info').innerText = 'Còn ' + stock + ' sản phẩm (Size ' + size + ')';
-                
-                // UI nhấn chọn
-                document.querySelectorAll('.btn-outline-warning').forEach(btn => btn.classList.remove('active'));
-                element.classList.add('active');
-            }
-            function selectColor(color, element)
-            {
-                document.querySelectorAll('.color-option').forEach(el => {
-                    el.classList.remove('active');
+            // Thay thế hoặc bổ sung các hàm này vào script hiện tại của bạn
+            function updateProductInfo() {
+                // Không return sớm nếu thiếu một trong hai, 
+                // mà hãy thử tìm variant dựa trên những gì đã chọn
+                const variant = variants.find(v => {
+                    let matchSize = !window.currentSelectedSize || v.kich_co == window.currentSelectedSize;
+                    let matchColor = !window.currentSelectedColor || v.mau_sac == window.currentSelectedColor;
+                    return matchSize && matchColor;
                 });
+
+                if (!variant) return;
+
+                // Cập nhật stock
+                window.currentStock = parseInt(variant.so_luong_ton);
+
+                // 👉 Cập nhật giá GIẢM (luôn luôn có)
+                document.getElementById('price-display').innerText =
+                    new Intl.NumberFormat('vi-VN').format(variant.gia_sau_giam) + ' VNĐ';
+
+                const oldPriceEl = document.getElementById('price-old');
+                const discountEl = document.getElementById('discount-percent');
+
+                // Hiển thị/Ẩn giá cũ & phần trăm giảm
+                if (variant.phan_tram_giam > 0) {
+                    oldPriceEl.style.display = 'block';
+                    discountEl.style.display = 'inline-block';
+                    oldPriceEl.innerText = new Intl.NumberFormat('vi-VN').format(variant.gia_ban) + ' VNĐ';
+                    discountEl.innerText = '-' + variant.phan_tram_giam + '%';
+                } else {
+                    oldPriceEl.style.display = 'none';
+                    discountEl.style.display = 'none';
+                }
+
+                // Cập nhật thông tin tồn kho
+                document.getElementById('stock-info').innerText = `Còn ${variant.so_luong_ton} sản phẩm`;
+
+                // Reset lại số lượng đặt
+                document.getElementById('buyQty').value = 1;
+                document.getElementById('buyQty').setAttribute('max', variant.so_luong_ton);
+            }
+
+            function selectVariant(price, stock, size, element) {
+                window.currentSelectedSize = size;
+
+                document.querySelectorAll('.btn-outline-warning')
+                    .forEach(btn => btn.classList.remove('active'));
+                element.classList.add('active');
+
+                window.currentStock = stock;
+
+                const variant = getVariant();
+                if (variant) selectedVariant = variant;
+
+                document.getElementById('stock-info').innerText =
+                    `Còn ${stock} sản phẩm`;
+
+                document.getElementById('buyQty').value = 1;
+                updateProductInfo();
+            }
+            // Sửa hàm selectColor
+            function selectColor(color, element) {
+                window.currentSelectedColor = color;
+
+                document.querySelectorAll('.color-option')
+                    .forEach(el => el.classList.remove('active'));
 
                 element.classList.add('active');
 
                 document.getElementById('selected-color-text').innerText =
                     'Màu đã chọn: ' + color;
 
-                window.currentSelectedColor = color;
+                const variant = getVariant();
+                if (variant) {
+                    selectedVariant = variant;
+                    updateProductInfo(); // cập nhật giá NGAY
+                }
             }
         function updateQty(change) {
 

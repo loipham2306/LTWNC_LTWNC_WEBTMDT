@@ -1,4 +1,18 @@
-<!-- 🔥 VOUCHER STRIP - HOME PAGE -->
+
+<style>
+    .voucher-status {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: white;
+}
+.bg-success { background-color: #28a745; }
+.bg-danger { background-color: #dc3545; }
+.btn-disabled { 
+    background-color: #6c757d !important; 
+    cursor: not-allowed; 
+}
+</style>
 <div class="container-fluid py-3 bg-dark border-top border-bottom border-secondary">
     <div class="container">
 
@@ -25,8 +39,8 @@
                                     🎟 <?= htmlspecialchars($vc['ma_voucher']) ?>
                                 </span>
 
-                                <span class="voucher-status">
-                                    Active
+                               <span class="voucher-status <?= $vc['is_expired'] ? 'bg-danger' : 'bg-success' ?>">
+                                    <?= $vc['is_expired'] ? 'Hết hạn' : 'Hoạt động' ?>
                                 </span>
                             </div>
 
@@ -52,11 +66,11 @@
 
                             </div>
 
-                           <button class="btn-copy <?= $vc['da_luu'] ? 'btn-disabled' : '' ?>" 
-                                onclick="layVoucher(this, <?= $vc['id_voucher'] ?>)"
-                                <?= $vc['da_luu'] ? 'disabled' : '' ?>>
-                            <?= $vc['da_luu'] ? 'Đã lưu' : 'Lấy mã' ?>
-                        </button>
+                           <button class="btn-copy <?= ($vc['da_luu'] || $vc['is_expired']) ? 'btn-disabled' : '' ?>" 
+                                    onclick="layVoucher(this, <?= $vc['id_voucher'] ?>)"
+                                    <?= ($vc['da_luu'] || $vc['is_expired']) ? 'disabled' : '' ?>>
+                                <?= $vc['is_expired'] ? 'Đã hết hạn' : ($vc['da_luu'] ? 'Đã lưu' : 'Lấy mã') ?>
+                            </button>
 
                         </div>
                     </div>

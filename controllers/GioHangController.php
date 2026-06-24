@@ -163,36 +163,42 @@ class GioHangController {
     }         
     // Thêm hàm này vào Controller
     public function syncCartFromDB() {
-
         $id_khach_hang = $_SESSION['user']['id_khach_hang'] ?? null;
-
         if (!$id_khach_hang) {
             $_SESSION['cart'] = [];
             return;
         }
 
         $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
-
         if (!$id_gio_hang) {
             $_SESSION['cart'] = [];
             return;
         }
 
+        // Giả sử hàm getChiTietGioHang của bạn đã bao gồm cả % giảm giá 
+        // Nếu chưa, hãy đảm bảo query trong model lấy được phan_tram_giam
         $items = $this->ghModel->getChiTietGioHang($id_gio_hang);
 
         $_SESSION['cart'] = [];
 
         foreach ($items as $item) {
+            $gia_goc = (float)$item['gia_ban'];
+            $phan_tram = (float)($item['phan_tram_giam'] ?? 0);
+            
+            // TÍNH TOÁN GIÁ SAU GIẢM TẠI ĐÂY
+            $gia_sau_giam = $gia_goc * (1 - ($phan_tram / 100));
 
             $_SESSION['cart'][$item['id_bien_the']] = [
                 'id_bien_the'  => $item['id_bien_the'],
                 'ten_san_pham' => $item['ten_san_pham'],
-                'gia'          => (float)$item['gia_ban'],
+                'gia_goc'      => $gia_goc,       // Lưu giá gốc để hiển thị gạch bỏ nếu cần
+                'gia_thuc'     => $gia_sau_giam,  // Đây là giá dùng để tính tổng tiền
                 'size'         => $item['kich_co'],
                 'mau'          => $item['mau_sac'],
                 'hinh_anh'     => $item['hinh_anh_bien_the'],
                 'so_luong'     => (int)$item['so_luong'],
-                'so_luong_ton' => (int)$item['so_luong_ton']
+                'so_luong_ton' => (int)$item['so_luong_ton'],
+                'phan_tram'    => $phan_tram
             ];
         }
     }

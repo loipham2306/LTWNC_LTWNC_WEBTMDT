@@ -58,9 +58,18 @@ class QuanLyKhuyenMaiController {
             if ($id_km) {
                 // Gán vào sản phẩm hoặc biến thể tương ứng
                 if ($type === 'sp') {
-                    $this->kmModel->addKhuyenMaiToSanPham($id_km, $id);
+                    $this->kmModel->addProductToKhuyenMai(
+                        $id_km,
+                        $id,
+                        null
+                    );
                 } else {
-                    $this->kmModel->addKhuyenMaiToBienThe($id_km, $id);
+                    $id_sp = $this->kmModel->getSanPhamByBienThe($id);
+                    $this->kmModel->addProductToKhuyenMai(
+                        $id_km,
+                        $id_sp,
+                        $id
+                    );
                 }
                 $_SESSION['success'] = "Tạo khuyến mãi và gán thành công!";
                 header("Location: index.php?act=QuanLyKhuyenMai");
@@ -91,7 +100,7 @@ class QuanLyKhuyenMaiController {
         $id = (int)$_GET['id'];
         $status = (int)$_GET['status'];
         $this->kmModel->toggleStatus($id, $status);
-        header("Location: index.php?controller=khuyen_mai");
+        header("Location: index.php?act=QuanLyKhuyenMai");
     }
     // Thêm vào QuanLyKhuyenMaiController.php
     public function deleteKH() {

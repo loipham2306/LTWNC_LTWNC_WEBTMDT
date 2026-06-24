@@ -51,18 +51,28 @@ $vouchers = $danhSachVoucher ?? [];
                 </thead>
                <tbody>
                     <?php foreach ($vouchers as $v): 
-                        // Lấy giá trị an toàn
+                        // 1. Tính toán thời gian
+                        $now = time();
+                        $ngay_het_han = strtotime($v['ngay_het_han']);
+                        $is_expired = ($now > $ngay_het_han);
+                        
+                        // 2. Logic trạng thái (Chỉ tính một lần duy nhất)
+                        if ($is_expired) {
+                            $status_text = 'Đã hết hạn';
+                            $status_class = 'bg-danger';
+                        } else {
+                            $status_text = ($v['trang_thai'] == 1) ? 'Đang chạy' : 'Ngừng';
+                            $status_class = ($v['trang_thai'] == 1) ? 'bg-success' : 'bg-secondary';
+                        }
+
+                        // 3. Định dạng dữ liệu khác
                         $ma = $v['ma_voucher'] ?? 'N/A';
                         $loai = ($v['loai_giam_gia'] == 'percent') ? 'Giảm (%)' : 'Giảm tiền';
                         $gia_tri = number_format($v['gia_tri_giam'], 0, ',', '.') . ($v['loai_giam_gia'] == 'percent' ? '%' : 'đ');
                         $min = number_format($v['don_toi_thieu'], 0, ',', '.') . 'đ';
                         $used = (int)$v['so_luong_da_dung'];
                         $limit = (int)$v['so_luong_ma'];
-                        $percent = ($limit > 0) ? ($used / $limit) * 100 : 0;
-                        
-                        // Chuyển đổi trạng thái số sang chữ
-                        $status_text = ($v['trang_thai'] == 1) ? 'Đang chạy' : 'Ngừng';
-                        $status_class = ($v['trang_thai'] == 1) ? 'bg-success' : 'bg-secondary';
+                        $percent = ($limit > 0) ? min(($used / $limit) * 100, 100) : 0;
                     ?>
                     <tr style="border-bottom: 1px solid #333;">
                         <td class="py-3 px-3"><span class="badge bg-dark border border-warning text-warning fs-6"><?= $ma ?></span></td>

@@ -77,6 +77,13 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
                 </a>
             </li>
             <li>
+                <a href="index.php?act=ThongKeDoanhThu" 
+                class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('ThongKeDoanhThu.php', $_GET['act'] ?? '') ? 'text-white' : 'text-muted' ?>"
+                style="background-color: <?= isActive('ThongKeDoanhThu.php', $_GET['act'] ?? '') ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
+                    <i class="fas fa-chart-line me-3" style="width: 20px;"></i> Thống Kê Doanh Thu
+                </a>
+            </li>
+            <li>
                 <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyThuongHieu" 
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 py-2 px-3 <?= isActive('QuanLyThuongHieu.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('QuanLyThuongHieu.php', $current_page) ? '#F28B00' : 'transparent' ?>; border-radius: 8px; transition: all 0.3s;">
@@ -124,6 +131,13 @@ $adminName = isset($_SESSION['user']['ten']) ? $_SESSION['user']['ten'] : 'Quả
                    class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('QuanLyKhuyenMai.php', $current_page) ? 'text-white' : 'text-muted' ?>"
                    style="background-color: <?= isActive('QuanLyKhuyenMai.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
                     <i class="fas fa-ticket-alt me-3" style="width: 20px;"></i> Quản Lý Khuyến Mãi
+                </a>
+            </li>
+            <li>
+                <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuanLyBinhLuan" 
+                   class="nav-link fw-bold d-flex align-items-center w-100 text-start border-0 <?= isActive('QuanLyBinhLuanDanhGia.php', $current_page) ? 'text-white' : 'text-muted' ?>"
+                   style="background-color: <?= isActive('QuanLyBinhLuanDanhGia.php', $current_page) ? '#F28B00' : 'transparent' ?>; transition: all 0.3s;">
+                    <i class="fas fa-ticket-alt me-3" style="width: 20px;"></i> Quản Lý Bình Luận Và Đánh Giá
                 </a>
             </li>
         </ul>

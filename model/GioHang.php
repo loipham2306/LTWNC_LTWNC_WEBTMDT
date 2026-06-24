@@ -126,13 +126,19 @@ class GioHang {
                 bt.gia_ban,
                 bt.hinh_anh_bien_the,
                 bt.so_luong_ton,
-                sp.ten_san_pham
+                sp.ten_san_pham,
+                /* Lấy % giảm giá cao nhất đang hoạt động */
+                COALESCE(MAX(km.phan_tram_giam), 0) AS phan_tram_giam
             FROM chi_tiet_gio_hang ct
-            INNER JOIN bien_the_san_pham bt
-                ON ct.id_bien_the = bt.id_bien_the
-            INNER JOIN san_pham sp
-                ON bt.id_san_pham = sp.id_san_pham
+            INNER JOIN bien_the_san_pham bt ON ct.id_bien_the = bt.id_bien_the
+            INNER JOIN san_pham sp ON bt.id_san_pham = sp.id_san_pham
+            /* Kết nối tới bảng chi tiết khuyến mãi và chương trình khuyến mãi */
+            LEFT JOIN chi_tiet_khuyen_mai ctk ON sp.id_san_pham = ctk.id_san_pham
+            LEFT JOIN chuong_trinh_khuyen_mai km ON ctk.id_khuyen_mai = km.id_khuyen_mai 
+                AND km.trang_thai = 1 
+                AND NOW() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
             WHERE ct.id_gio_hang = ?
+            GROUP BY ct.id_gio_hang, ct.id_bien_the
         ";
 
         $stmt = $this->conn->prepare($query);

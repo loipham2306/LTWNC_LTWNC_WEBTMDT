@@ -1,16 +1,17 @@
 <?php
 
 require_once '../model/DonHangModel.php';
-
+require_once '../model/khachhang.php';
 class DonHangController
 {
     private $db;
     private $donHangModel;
-
+    private $khachHangModel;
     public function __construct($db)
     {
         $this->db = $db;
         $this->donHangModel = new DonHangModel($db);
+        $this->khachHangModel = new khachhang($db);
     }
 
     public function handle($act)
@@ -137,7 +138,13 @@ class DonHangController
             }
 
             if ($this->donHangModel->updateTrangThai($id, $newStatus)) {
-                
+                if ($newStatus === 'Đã giao') {
+                    $id_khach_hang = $order['id_khach_hang'];
+                    $result = $this->khachHangModel->tinhToanVaCapNhatHang($id_khach_hang);
+        
+                // --- LOG KẾT QUẢ ---
+                error_log("DEBUG: Kết quả update hạng: " . ($result ? "Thành công" : "Thất bại"));
+                }
                 $_SESSION['success'] = "Cập nhật trạng thái thành công";
             } else {
                 $_SESSION['error'] = "Cập nhật thất bại";

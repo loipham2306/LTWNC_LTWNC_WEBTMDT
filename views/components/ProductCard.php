@@ -21,7 +21,7 @@ $tags = [];
 
 // 🔴 Hết hàng
 if ($stock <= 0) {
-    $tags[] = ['HẾT HÀNG', 'bg-danger'];
+    $tags[] = ['HẾT HÀNG', 'bg-secondary'];
 }
 
 // 🟡 Sắp hết
@@ -33,11 +33,15 @@ if ($stock > 0 && $stock < 5) {
 // 🆕 NEW (7 ngày gần đây)
 if (!empty($product['ngay_tao']) 
     && strtotime($product['ngay_tao']) > strtotime('-7 days')) {
-    $tags[] = ['MỚI', 'bg-primary'];
+    $tags[] = ['MỚI', 'bg-orange'];
 }
 ?>
 
 <style>
+    .bg-orange {
+    background-color: #F28B00 !important;
+    color: #fff !important;
+}
     /* Tổng thể Card */
     .product-card-anim {
         background-color: #1a1a1a;

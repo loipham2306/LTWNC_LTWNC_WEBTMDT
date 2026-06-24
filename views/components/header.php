@@ -94,7 +94,9 @@ $isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active
                     }
                     ?>
                     <?php if ($totalQty > 0): ?>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark" style="font-size: 0.65rem;">
+                        <span id="cart-badge"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark"
+                            style="font-size: 0.65rem;">
                             <?= $totalQty ?>
                         </span>
                     <?php endif; ?>
@@ -182,4 +184,5 @@ function updateMiniCartUI() {
         `;
     });
 }
+
 </script>

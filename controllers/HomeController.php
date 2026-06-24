@@ -15,6 +15,7 @@ class HomeController {
     }
 
     public function index() {
+        $today = date('Y-m-d');
         $homeFeaturedProducts = $this->spModel->getSanPhamHome(8);
         $brands = $this->thModel->getTatCaThuongHieu();
 
@@ -26,6 +27,7 @@ class HomeController {
             $vc['da_luu'] = $currentUserId
                 ? $this->voucherModel->kiemTraDaLuuVoucher($currentUserId, $vc['id_voucher'])
                 : false;
+            $vc['is_expired'] = ($vc['ngay_het_han'] < $today);   
         }
 
         include '../index.php';
