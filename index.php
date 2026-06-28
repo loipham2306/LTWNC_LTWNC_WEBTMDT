@@ -204,9 +204,8 @@ $brands = $brands ?? [];
     include 'views/components/Footer.php'; 
     ?>
 
-    <script src="https://cdnjs.cloudflare.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
-    
     <script>
         function filterBrand(brandName, btnElement) {
             // 1. Điều khiển trạng thái active của các nút bấm

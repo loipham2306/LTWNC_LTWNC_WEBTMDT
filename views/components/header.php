@@ -1,6 +1,4 @@
 <?php
-
-
 $BASE_URL_IMAGE = '/LTWNC_LTWNC_WEBTMDT/';
 $BASE_URL = '/LTWNC_LTWNC_WEBTMDT/controllers/';
 // Lấy chính xác tên file hiện tại đang chạy (VD: index.php, Shop.php...)
@@ -11,8 +9,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 $isHomeActive     = ($currentPage == 'index.php' && $act == '') ? 'active' : '';
 $isShopActive     = ($act == 'Shop' || $currentPage == 'ProductDetail.php') ? 'active' : '';
 $isCartActive     = ($act == 'GioHang' || $currentPage == 'Cart.php') ? 'active' : '';
-$isCheckoutActive = ($act == 'ThanhToan' ||$currentPage == 'Checkout.php') ? 'active' : '';
-$isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active' : '';
+$isCheckoutActive = ($act == 'ThanhToan' || $currentPage == 'Checkout.php') ? 'active' : '';
+$isContactActive  = ($act == 'LienHe' || $currentPage == 'Contact.php') ? 'active' : '';
 ?>
 
 <style>
@@ -36,7 +34,7 @@ $isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active
     .nav-bar-bg .nav-link { 
         color: rgba(255, 255, 255, 0.65) !important; 
         font-weight: 600; 
-        padding: 20px 15px; 
+        padding: 15px; /* Giảm padding trên mobile */
         transition: 0.3s; 
     }
     
@@ -45,52 +43,33 @@ $isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active
         color: #ffffff !important; 
         background-color: transparent !important; 
     }
+
+    /* Đảm bảo khung logo không bị bóp méo trên mobile */
+    .header-logo { height: 50px; object-fit: contain; }
+    @media (min-width: 992px) { .header-logo { height: 60px; } }
 </style>
 
-<div class="container-fluid px-5 py-4 d-none d-lg-block top-bar-bg">
-    <div class="row gx-0 align-items-center text-center">
-        <div class="col-md-4 col-lg-3 text-center text-lg-start">
-            <div class="d-inline-flex align-items-center">
-                <a href="index.php" class="navbar-brand p-0 text-decoration-none">
-                    <h1 class="display-5 m-0" style="color: #F28B00;">
-                        <img src="<?= $BASE_URL_IMAGE ?>assets/images/img/th.png" alt="Logo" class="h-100px" style="height: 60px; object-fit: contain;" onerror="this.style.display='none';"> 
-                    </h1>
-                </a>
-            </div>
+<div class="container-fluid px-3 px-lg-5 py-3 top-bar-bg">
+    <div class="row gx-0 align-items-center">
+        <div class="col-6 col-lg-3 text-start">
+            <a href="index.php" class="navbar-brand p-0 text-decoration-none">
+                <img src="<?= $BASE_URL_IMAGE ?>assets/images/img/th.png" alt="Logo" class="header-logo" onerror="this.style.display='none';"> 
+            </a>
         </div>
         
-        <div class="col-md-4 col-lg-6 text-center">
-            <div class="position-relative ps-4">
-                <form action="index.php" method="GET" class="d-flex rounded-pill m-0">
-                    <input type="hidden" name="act" value="Shop">
-                    
-                    <input class="form-control rounded-pill w-100 py-3 search-input" type="text" name="keyword" 
-                           value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>" 
-                           placeholder="Bạn đang tìm sản phẩm gì?">
-                           
-                    <button type="submit" class="btn btn-orange rounded-pill py-3 px-5 ms-n5" style="margin-left: -60px; z-index: 10;">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
-        
-        <div class="col-md-4 col-lg-3 text-center text-lg-end">
-            <div class="d-inline-flex align-items-center gap-3 justify-content-end w-100">
-                
-                <a href="#" class="text-decoration-none">
-                    <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
+        <div class="col-6 col-lg-3 order-lg-3 text-end">
+            <div class="d-inline-flex align-items-center gap-2 justify-content-end w-100">
+                <a href="#" class="text-decoration-none d-none d-sm-flex">
+                    <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 40px; height: 40px;">
                         <i class="fas fa-heart"></i>
                     </span>
                 </a>
 
                 <a href="index.php?act=GioHang" class="text-decoration-none position-relative">
-                    <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 45px; height: 45px;">
+                    <span class="rounded-circle btn-md-square d-flex align-items-center justify-content-center icon-circle" style="width: 40px; height: 40px;">
                         <i class="fas fa-shopping-cart"></i>
                     </span>
-                    
                     <?php
-                    // Tính tổng số lượng từ session cart
                     $totalQty = 0;
                     if (!empty($_SESSION['cart'])) {
                         foreach ($_SESSION['cart'] as $item) {
@@ -106,34 +85,51 @@ $isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active
                         </span>
                     <?php endif; ?>
                 </a>
-                <?php
-                    // Kiểm tra trạng thái đăng nhập (đảm bảo session_start() đã được gọi ở đầu file)
-                    if (isset($_SESSION['user']) && !empty($_SESSION['user'])): ?>
-                        <a href="index.php?act=UserProfile" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;" title="Trang cá nhân">
-                            <i class="fas fa-user text-white"></i>
-                        </a>
-                    <?php else: ?>
-                        <a href="index.php?act=Login" class="btn btn-warning rounded-pill px-3 py-2 fw-bold text-white shadow-sm" style="height: 45px; line-height: 30px;">
-                            Đăng nhập
-                        </a>
+                
+                <?php if (isset($_SESSION['user']) && !empty($_SESSION['user'])): ?>
+                    <a href="index.php?act=UserProfile" class="btn btn-orange rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" title="Trang cá nhân">
+                        <i class="fas fa-user text-white"></i>
+                    </a>
+                <?php else: ?>
+                    <a href="index.php?act=Login" class="btn btn-warning rounded-pill px-3 fw-bold text-white shadow-sm d-none d-sm-inline-block" style="line-height: 28px;">
+                        Đăng nhập
+                    </a>
+                    <a href="index.php?act=Login" class="btn btn-warning rounded-circle d-sm-none fw-bold text-white shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                         <i class="fas fa-sign-in-alt"></i>
+                    </a>
                 <?php endif; ?>
-
             </div>
-            
         </div>
+        
+        <div class="col-12 col-lg-6 order-lg-2 text-center mt-3 mt-lg-0">
+            <div class="position-relative w-100">
+                <form action="index.php" method="GET" class="d-flex rounded-pill m-0">
+                    <input type="hidden" name="act" value="Shop">
+                    <input class="form-control rounded-pill w-100 py-2 search-input" type="text" name="keyword" 
+                           value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>" 
+                           placeholder="Bạn đang tìm sản phẩm gì?">
+                           
+                    <button type="submit" class="btn btn-orange rounded-pill py-2 px-4 ms-n4" style="margin-left: -50px; z-index: 10;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div> 
     </div>
 </div>
 
 <div class="container-fluid nav-bar p-0 mb-0">
-    
-    <div class="row gx-0 nav-bar-bg px-5 align-items-center mb-0">
-        <div class="col-12 col-lg-12">
-            <nav class="navbar navbar-expand-lg navbar-dark bg-transparent py-0">
-                <button class="navbar-toggler ms-auto my-2 border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+    <div class="row gx-0 nav-bar-bg px-3 px-lg-5 align-items-center mb-0">
+        <div class="col-12">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-transparent py-2">
+                <span class="d-lg-none fw-bold text-white fs-5">DANH MỤC</span>
+                
+                <button class="navbar-toggler ms-auto my-1 border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" style="z-index: 1050 cursor: pointer;">
                     <span class="fa fa-bars fa-1x text-white"></span>
                 </button>
+                
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <div class="navbar-nav py-0">
+                    <div class="navbar-nav py-2 py-lg-0">
                         <a href="<?= $BASE_URL ?>index.php" class="nav-item nav-link <?= $isHomeActive ?>">Trang Chủ</a>
                         <a href="index.php?act=Shop" class="nav-item nav-link <?= $isShopActive ?>">Cửa hàng</a>
                         <a href="index.php?act=GioHang" class="nav-item nav-link <?= $isCartActive ?>">Giỏ Hàng</a>
@@ -141,7 +137,7 @@ $isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active
                         <a href="index.php?act=LienHe" class="nav-item nav-link me-2 <?= $isContactActive ?>">Liên Hệ</a>
                     </div>
 
-                    <div class="ms-auto d-none d-lg-block">
+                    <div class="ms-auto d-none d-xl-block">
                         <a href="tel:0123456789" class="btn rounded-pill py-2 px-4 fw-bold shadow-sm" style="background-color: #111; color: #F28B00;">
                             <i class="fa fa-mobile-alt me-2"></i> 0123 456 789
                         </a>
@@ -151,31 +147,29 @@ $isContactActive  = ($act == 'LienHe' ||$currentPage == 'Contact.php') ? 'active
         </div>
     </div>
 </div>
-<div id="mini-cart-drawer" style="position: fixed; top: 0; right: -400px; width: 350px; height: 100%; background: #1a1a1a; z-index: 9999; transition: 0.4s; padding: 20px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border-left: 2px solid #F28B00;">
+
+<div id="mini-cart-drawer" style="position: fixed; top: 0; right: -400px; width: 350px; max-width: 90vw; height: 100%; background: #1a1a1a; z-index: 9999; transition: 0.4s; padding: 20px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border-left: 2px solid #F28B00;">
     <div class="d-flex justify-content-between align-items-center mb-4 text-white">
         <h5>Giỏ Hàng Của Bạn</h5>
         <button onclick="closeMiniCart()" class="btn btn-link text-white"><i class="fas fa-times"></i></button>
     </div>
-    <div id="mini-cart-items" style="max-height: 70vh; overflow-y: auto;">
-        </div>
+    <div id="mini-cart-items" style="max-height: 70vh; overflow-y: auto;"></div>
     <div class="mt-3">
         <a href="index.php?act=GioHang" class="btn btn-orange w-100">Xem Giỏ Hàng Chi Tiết</a>
     </div>
 </div>
+
 <script>
 function openMiniCart() {
     document.getElementById('mini-cart-drawer').style.right = '0';
 }
-
 function closeMiniCart() {
     document.getElementById('mini-cart-drawer').style.right = '-400px';
 }
-
 function updateMiniCartUI() {
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
     let container = document.getElementById('mini-cart-items');
-    container.innerHTML = ''; // Xóa cũ
-
+    container.innerHTML = '';
     cart.forEach(item => {
         container.innerHTML += `
             <div class="d-flex align-items-center mb-3 text-white border-bottom border-secondary pb-2">
@@ -189,5 +183,4 @@ function updateMiniCartUI() {
         `;
     });
 }
-
 </script>
