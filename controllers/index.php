@@ -61,6 +61,16 @@ switch ($act) {
         $dangKyController = new DangKyController($db);
         $dangKyController->handle($act);
         break;
+    // --- NHÓM QUÊN MẬT KHẨU ---
+    case 'QuenMatKhau':
+    case 'XuLyQuenMatKhau':
+    case 'XacNhanOTPQuenMat':
+    case 'FormDatLaiMatKhau':
+    case 'XuLyDatLaiMatKhau':
+        require_once 'QuenMatKhauController.php';
+        $qmkController = new QuenMatKhauController($db);
+        $qmkController->handle($act);
+        break;
     // --- profile ---
     case 'UserProfile':
     case 'updateProfile':

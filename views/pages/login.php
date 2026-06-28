@@ -59,7 +59,7 @@
                         <span class="text-muted">Chưa có tài khoản? </span>
                         <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=Register" class="auth-switch-link fw-bold">Đăng ký ngay</a>
                     </div>
-                    <a href="#" class="padding text-decoration-none small text-warning">Quên mật khẩu?</a>
+                    <a href="/LTWNC_LTWNC_WEBTMDT/controllers/index.php?act=QuenMatKhau" class="text-orange text-decoration-none fw-bold small">Quên mật khẩu?</a>
                 </div>
                 
             </form>

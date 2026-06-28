@@ -36,7 +36,36 @@ class MailController {
             exit();
         }
     }
+    // THÊM HÀM NÀY VÀO TRONG CLASS MailController
+    public static function sendResetLink($emailNhan, $tenNguoiDung, $linkReset) {
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        try {
+            // Lợi copy y chang 5 dòng cấu hình (Host, SMTPAuth, Username, Password, Port) 
+            // từ hàm sendOTP hiện tại của Lợi thả vào đây nhé!
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = '...'; // Copy từ sendOTP xuống
+            $mail->Password   = '...'; // Copy từ sendOTP xuống
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+            $mail->CharSet    = 'UTF-8';
 
+            $mail->setFrom($mail->Username, 'Hệ Thống Trạm Hiệu'); // Tên người gửi
+            $mail->addAddress($emailNhan, $tenNguoiDung);
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Yêu cầu đặt lại mật khẩu - Trạm Hiệu';
+            $mail->Body    = "Chào <b>{$tenNguoiDung}</b>,<br><br>
+                              Bạn vừa yêu cầu đặt lại mật khẩu. Vui lòng click vào link dưới đây để thiết lập mật khẩu mới (Link có hiệu lực 15 phút):<br><br>
+                              <a href='{$linkReset}' style='background: #F28B00; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>ĐẶT LẠI MẬT KHẨU</a><br><br>
+                              Nếu bạn không yêu cầu, vui lòng bỏ qua email này.";
+
+            return $mail->send();
+        } catch (Exception $e) {
+            return false;
+        }
+    }
     public static function sendOrderConfirmation($toEmail, $donHang, $chiTiet, $tong_tien, $giam)    {
         $mail = new PHPMailer(true);
 
