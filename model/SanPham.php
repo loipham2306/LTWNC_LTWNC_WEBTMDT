@@ -31,87 +31,154 @@ class SanPham {
     }
 
     // lấy sản phẩm cho cửa hàng
-    public function getAllProductsForShop($limit, $offset) {
-            // Thêm LIMIT và OFFSET vào cuối câu truy vấn
-            $sql = "SELECT 
-                    sp.id_san_pham, 
-                    sp.ten_san_pham, 
-                    sp.gia_co_ban, 
-                    sp.hinh_anh, 
-                    sp.ngay_tao,
-                    dm.ten_danh_muc, 
-                    th.ten_thuong_hieu, 
-                    COALESCE(SUM(bt.so_luong_ton), 0) AS so_luong_kho,
+  public function getAllProductsForShop($limit, $offset)
+{
+    $sql = "
+        SELECT 
+            sp.id_san_pham, 
+            sp.ten_san_pham, 
+            sp.gia_co_ban, 
+            sp.hinh_anh, 
+            sp.ngay_tao,
+            dm.ten_danh_muc, 
+            th.ten_thuong_hieu, 
 
-                    COALESCE(
-                        MAX(
-                            CASE 
-                                WHEN km.trang_thai = 1 
-                                AND NOW() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
-                                THEN km.phan_tram_giam
-                                ELSE 0
-                            END
-                        ),
-                    0) AS phan_tram_giam
+            COALESCE(kho.so_luong_kho, 0) AS so_luong_kho,
+            COALESCE(km.final_discount, 0) AS phan_tram_giam
 
-                FROM san_pham sp
-                LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
-                LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
-                LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
+        FROM san_pham sp
 
-                LEFT JOIN chi_tiet_khuyen_mai ct 
-                    ON ct.id_san_pham = sp.id_san_pham
+        LEFT JOIN danh_muc dm 
+            ON sp.id_danh_muc = dm.id_danh_muc
 
-                LEFT JOIN chuong_trinh_khuyen_mai km 
-                    ON ct.id_khuyen_mai = km.id_khuyen_mai
+        LEFT JOIN thuong_hieu th 
+            ON sp.id_thuong_hieu = th.id_thuong_hieu
 
-                GROUP BY sp.id_san_pham
-                ORDER BY sp.id_san_pham DESC
-                LIMIT :limit OFFSET :offset"; 
-        
-        $stmt = $this->conn->prepare($sql);
-        
-        // Gán giá trị cho các tham số
-        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-        
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
 
-    public function getChiTietSanPham($id) {
-        // Truy vấn lấy thông tin sản phẩm và tất cả biến thể liên quan
-        $query = "
-            SELECT sp.*, 
-                dm.ten_danh_muc, 
-                th.ten_thuong_hieu,
-                bt.id_bien_the, 
-                bt.kich_co, 
-                bt.mau_sac, 
-                bt.gia_ban, 
-                bt.so_luong_ton, 
-                bt.hinh_anh_bien_the,
+        /* =========================
+           TỒN KHO (GOM TRƯỚC)
+        ========================= */
+        LEFT JOIN (
+            SELECT id_san_pham, SUM(so_luong_ton) AS so_luong_kho
+            FROM bien_the_san_pham
+            GROUP BY id_san_pham
+        ) kho ON kho.id_san_pham = sp.id_san_pham
 
-                COALESCE(km_best.phan_tram_giam, 0) AS phan_tram_giam
+
+        /* =========================
+           KHUYẾN MÃI (GOM TRƯỚC)
+           VARIANT + PRODUCT
+        ========================= */
+        LEFT JOIN (
+            SELECT 
+                sp.id_san_pham,
+
+                GREATEST(
+                    COALESCE(MAX(km_bt.phan_tram_giam), 0),
+                    COALESCE(MAX(km_sp.phan_tram_giam), 0)
+                ) AS final_discount
 
             FROM san_pham sp
-            LEFT JOIN danh_muc dm ON sp.id_danh_muc = dm.id_danh_muc
-            LEFT JOIN thuong_hieu th ON sp.id_thuong_hieu = th.id_thuong_hieu
-            LEFT JOIN bien_the_san_pham bt ON sp.id_san_pham = bt.id_san_pham
 
-            LEFT JOIN (
-                SELECT ct.id_san_pham,
-                    MAX(km.phan_tram_giam) AS phan_tram_giam
-                FROM chi_tiet_khuyen_mai ct
-                JOIN chuong_trinh_khuyen_mai km 
-                    ON ct.id_khuyen_mai = km.id_khuyen_mai
-                WHERE km.trang_thai = 1
-                AND NOW() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
-                GROUP BY ct.id_san_pham
-            ) km_best ON km_best.id_san_pham = sp.id_san_pham
+            LEFT JOIN bien_the_san_pham bt 
+                ON bt.id_san_pham = sp.id_san_pham
+
+            LEFT JOIN chi_tiet_khuyen_mai ct_bt 
+                ON ct_bt.id_bien_the = bt.id_bien_the
+
+            LEFT JOIN chuong_trinh_khuyen_mai km_bt 
+                ON km_bt.id_khuyen_mai = ct_bt.id_khuyen_mai
+                AND km_bt.trang_thai = 1
+                AND NOW() BETWEEN km_bt.ngay_bat_dau AND km_bt.ngay_ket_thuc
+
+            LEFT JOIN chi_tiet_khuyen_mai ct_sp 
+                ON ct_sp.id_san_pham = sp.id_san_pham
+
+            LEFT JOIN chuong_trinh_khuyen_mai km_sp 
+                ON km_sp.id_khuyen_mai = ct_sp.id_khuyen_mai
+                AND km_sp.trang_thai = 1
+                AND NOW() BETWEEN km_sp.ngay_bat_dau AND km_sp.ngay_ket_thuc
+
+            GROUP BY sp.id_san_pham
+        ) km ON km.id_san_pham = sp.id_san_pham
+
+
+        ORDER BY sp.id_san_pham DESC
+        LIMIT :limit OFFSET :offset
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+
+    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+    public function getChiTietSanPham($id)
+    {
+        $query = "
+            SELECT 
+                sp.id_san_pham,
+                sp.ten_san_pham,
+                sp.gia_co_ban,
+                sp.mo_ta,
+                sp.hinh_anh,
+
+                dm.ten_danh_muc,
+                th.ten_thuong_hieu,
+
+                bt.id_bien_the,
+                bt.kich_co,
+                bt.mau_sac,
+                bt.gia_ban,
+                bt.so_luong_ton,
+                bt.hinh_anh_bien_the,
+
+                /* KM theo biến thể */
+                COALESCE(km_bt.phan_tram_giam, 0) AS km_bien_the,
+
+                /* KM theo sản phẩm */
+                COALESCE(km_sp.phan_tram_giam, 0) AS km_san_pham
+
+            FROM san_pham sp
+
+            LEFT JOIN danh_muc dm 
+                ON sp.id_danh_muc = dm.id_danh_muc
+
+            LEFT JOIN thuong_hieu th 
+                ON sp.id_thuong_hieu = th.id_thuong_hieu
+
+            LEFT JOIN bien_the_san_pham bt 
+                ON bt.id_san_pham = sp.id_san_pham
+
+            /* =========================
+            KM THEO BIẾN THỂ
+            ========================= */
+            LEFT JOIN chi_tiet_khuyen_mai ct_bt
+                ON ct_bt.id_bien_the = bt.id_bien_the
+
+            LEFT JOIN chuong_trinh_khuyen_mai km_bt
+                ON km_bt.id_khuyen_mai = ct_bt.id_khuyen_mai
+                AND km_bt.trang_thai = 1
+                AND NOW() BETWEEN km_bt.ngay_bat_dau AND km_bt.ngay_ket_thuc
+
+            /* =========================
+            KM THEO SẢN PHẨM (CHỈ ÁP DỤNG KHI KHÔNG CÓ BIẾN THỂ)
+            ========================= */
+            LEFT JOIN chi_tiet_khuyen_mai ct_sp
+                ON ct_sp.id_san_pham = sp.id_san_pham
+                AND ct_sp.id_bien_the IS NULL
+
+            LEFT JOIN chuong_trinh_khuyen_mai km_sp
+                ON km_sp.id_khuyen_mai = ct_sp.id_khuyen_mai
+                AND km_sp.trang_thai = 1
+                AND NOW() BETWEEN km_sp.ngay_bat_dau AND km_sp.ngay_ket_thuc
 
             WHERE sp.id_san_pham = :id
-            ";
+        ";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':id' => $id]);
@@ -119,41 +186,45 @@ class SanPham {
 
         if (!$data) return null;
 
-        // Tổ chức lại dữ liệu: Thông tin chính + Mảng các biến thể
         $sanPham = [
-            'id_san_pham'    => $data[0]['id_san_pham'],
-            'ten_san_pham'   => $data[0]['ten_san_pham'],
-            'gia_co_ban'     => $data[0]['gia_co_ban'],
-            'mo_ta'          => $data[0]['mo_ta'],
-            'hinh_anh'       => $data[0]['hinh_anh'],
-            'ten_danh_muc'   => $data[0]['ten_danh_muc'],
-            'ten_thuong_hieu'=> $data[0]['ten_thuong_hieu'],
-            'bien_the'       => []
+            'id_san_pham'     => $data[0]['id_san_pham'],
+            'ten_san_pham'    => $data[0]['ten_san_pham'],
+            'gia_co_ban'      => $data[0]['gia_co_ban'],
+            'mo_ta'           => $data[0]['mo_ta'],
+            'hinh_anh'        => $data[0]['hinh_anh'],
+            'ten_danh_muc'    => $data[0]['ten_danh_muc'],
+            'ten_thuong_hieu' => $data[0]['ten_thuong_hieu'],
+            'bien_the'        => []
         ];
 
         foreach ($data as $row) {
-            if ($row['id_bien_the']) {
+            if (!$row['id_bien_the']) continue;
 
-                $giaGoc = (float)$row['gia_ban'];
-                $giam   = (float)$row['phan_tram_giam'];
+            $giaGoc = (float)$row['gia_ban'];
 
-                $giaSauGiam = $giaGoc;
+            // 🎯 LOGIC ƯU TIÊN KM
+            $giam = (float)$row['km_bien_the'];
 
-                if ($giam > 0 && $giam <= 100) {
-                    $giaSauGiam = round($giaGoc * (1 - $giam / 100), 0);
-                }
-
-                $sanPham['bien_the'][] = [
-                    'id_bien_the'       => $row['id_bien_the'],
-                    'kich_co'           => $row['kich_co'],
-                    'mau_sac'           => $row['mau_sac'],
-                    'gia_ban'           => $giaGoc,
-                    'gia_sau_giam'      => $giaSauGiam,   
-                    'phan_tram_giam'    => $giam,
-                    'so_luong_ton'      => $row['so_luong_ton'],
-                    'hinh_anh_bien_the' => $row['hinh_anh_bien_the']
-                ];
+            if ($giam <= 0) {
+                $giam = (float)$row['km_san_pham'];
             }
+
+            $giaSauGiam = $giaGoc;
+
+            if ($giam > 0 && $giam <= 100) {
+                $giaSauGiam = round($giaGoc * (1 - $giam / 100), 0);
+            }
+
+            $sanPham['bien_the'][] = [
+                'id_bien_the'       => $row['id_bien_the'],
+                'kich_co'           => $row['kich_co'],
+                'mau_sac'           => $row['mau_sac'],
+                'gia_ban'           => $giaGoc,
+                'gia_sau_giam'      => $giaSauGiam,
+                'phan_tram_giam'    => $giam,
+                'so_luong_ton'      => $row['so_luong_ton'],
+                'hinh_anh_bien_the' => $row['hinh_anh_bien_the']
+            ];
         }
 
         return $sanPham;

@@ -21,6 +21,8 @@ class ThongKeDoanhThuController {
         $dataThang = array_reverse($this->model->getDoanhThuTheoThang());
         $dataSanPham = $this->model->getTopSanPhamBanChay();
         $dataKhachHang = $this->model->getTopKhachHang();
+        $thongKeSanPham = $this->model->getThongKeSanPham();
+        $thongKeBienThe = $this->model->getThongKeBienThe();
         $tongDoanhThu = $this->DHmodel->getTongDoanhThu();
         $tongDonHang = $this->DHmodel->countDonHang();
 

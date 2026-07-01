@@ -30,10 +30,11 @@ class QuanLyKhuyenMaiController {
     // Hiển thị danh sách
     private function index() {
         $listKM = $this->kmModel->getAllKhuyenMai();
-       $listBienThe = $this->kmModel->getDanhSachBienThe();
+       $listSanPham = $this->kmModel->getDanhSachBienThe();
+       
         include '../views/pages/admin/QuanLyKhuyenMai.php';
     }
-              
+   
     private function TaoKhuyenMai() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ten = $_POST['ten_km'];

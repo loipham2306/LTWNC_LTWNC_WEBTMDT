@@ -80,10 +80,7 @@ class DonHangController
 
         include '../views/pages/admin/OrderAdmin.php';
     }
-
-    /**
-     * CHI TIẾT ĐƠN HÀNG
-     */
+    //CHI TIẾT ĐƠN HÀNG
     private function chiTietDonHang()
     {
         $id = $_GET['id'] ?? 0;
@@ -161,7 +158,6 @@ class DonHangController
    private function huyDonHang()
     {
         $id = $_GET['id'] ?? 0;
-
         $donHang = $this->donHangModel->getDonHangById($id);
 
         if (!$donHang) {
@@ -169,40 +165,37 @@ class DonHangController
             header("Location:index.php?act=QuanLyDonHang");
             exit;
         }
-
         if (in_array($donHang['trang_thai_don_hang'], ['Đang giao', 'Đã giao'])) {
             $_SESSION['error'] = "Không thể hủy đơn";
             header("Location:index.php?act=QuanLyDonHang");
             exit;
         }
-
         $this->db->beginTransaction();
-
         try {
             $chiTiet = $this->donHangModel->getChiTietDonHang($id);
-
             foreach ($chiTiet as $item) {
                 $this->donHangModel->restoreTonKho(
                     $item['id_bien_the'],
                     $item['so_luong']
                 );
             }
-
+            if (!empty($donHang['id_voucher'])) {
+                $this->donHangModel->restoreVoucher(
+                    $donHang['id_tai_khoan'],
+                    $donHang['id_voucher']
+                );
+            }
+           
             $ok = $this->donHangModel->cancelDonHang($id);
-
             if (!$ok) {
                 throw new Exception("Cancel fail");
             }
-
             $this->db->commit();
-
             $_SESSION['success'] = "Hủy đơn + hoàn kho thành công";
-
         } catch (Exception $e) {
             $this->db->rollBack();
             $_SESSION['error'] = $e->getMessage();
         }
-
         header("Location:index.php?act=QuanLyDonHang");
         exit;
     }

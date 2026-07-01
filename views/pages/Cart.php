@@ -1,4 +1,8 @@
-
+<?php
+//echo "<pre>";
+//print_r($_SESSION['cart']);
+//die();
+?>
 <!DOCTYPE html>
 <html lang="vi">
 

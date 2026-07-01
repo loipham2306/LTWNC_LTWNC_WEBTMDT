@@ -62,14 +62,46 @@ class QuanLyKhuyenMai {
     }
 
     // 4. Lấy danh sách biến thể để gán khuyến mãi
-    public function getDanhSachBienThe() {
-        $query = "SELECT bt.id_bien_the, bt.id_san_pham, sp.ten_san_pham, bt.mau_sac, bt.so_luong_ton, bt.kich_co 
-                  FROM " . $this->table_bien_the . " bt
-                  JOIN " . $this->table_san_pham . " sp ON bt.id_san_pham = sp.id_san_pham";
-
-        $stmt = $this->conn->prepare($query);
+    public function getDanhSachBienThe()
+    {
+        $sql = "
+            SELECT
+                bt.id_bien_the,
+                bt.id_san_pham,
+                sp.ten_san_pham,
+                bt.mau_sac,
+                bt.kich_co,
+                bt.so_luong_ton
+            FROM bien_the_san_pham bt
+            INNER JOIN san_pham sp
+                ON sp.id_san_pham=bt.id_san_pham
+            ORDER BY
+                sp.ten_san_pham,
+                bt.id_bien_the
+        ";
+        $stmt=$this->conn->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result=[];
+        foreach($rows as $row){
+            $id=$row['id_san_pham'];
+            if(!isset($result[$id])){
+
+                $result[$id]=[
+                    "id_san_pham"=>$id,
+                    "ten_san_pham"=>$row['ten_san_pham'],
+                    "bien_the"=>[]
+                ];
+            }
+            $result[$id]['bien_the'][]=[
+
+                "id_bien_the"=>$row['id_bien_the'],
+                "kich_co"=>$row['kich_co'],
+                "mau_sac"=>$row['mau_sac'],
+                "so_luong_ton"=>$row['so_luong_ton']
+            ];
+        }
+        return array_values($result);
     }
 
     // 5. Gán sản phẩm/biến thể vào chương trình (Cập nhật bảng chi_tiet_khuyen_mai)
@@ -141,6 +173,8 @@ class QuanLyKhuyenMai {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    // lấy banner khuyến mãi
+   
 }
 
 ?>

@@ -57,11 +57,11 @@ function getStatusBadge($status)
                     </div>
                     <select id="statusFilter" onchange="filterOrders()" class="form-select bg-dark border-secondary text-white" style="min-width: 160px; max-width: 100%;">
                         <option value="">Tất cả trạng thái</option>
-                        <option value="Chờ Duyệt">Chờ Duyệt</option>
+                        <option value="Chờ duyệt">Chờ Duyệt</option>
                         <option value="Đã xác nhận">Đã xác nhận</option>
-                        <option value="Đang Giao">Đang Giao</option>
+                        <option value="Đang giao">Đang Giao</option>
                         <option value="Đã giao">Đã giao</option>
-                        <option value="Đã Hủy">Đã Hủy</option>
+                        <option value="Đã hủy">Đã Hủy</option>
                     </select>
                 </div>
             </div>
@@ -214,9 +214,12 @@ function getStatusBadge($status)
                 <form action="index.php?act=CapNhatTrangThaiDonHang" method="POST" id="btnCancelForm" class="w-100 w-sm-auto mb-2 mb-sm-0">
                     <input type="hidden" name="id_don_hang" class="order-id-hidden">
                     <input type="hidden" name="trang_thai" value="Đã hủy">
-                    <button type="submit" class="btn btn-outline-danger w-100 fw-bold" onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                        <a id="btnCancelLink"
+                        href="#"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('Bạn có muốn hủy đơn hàng này?')">
                         <i class="fas fa-times me-2"></i>Hủy Đơn Hàng
-                    </button>
+                    </a>
                 </form>
 
                 <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-content-end">
@@ -270,7 +273,8 @@ function getStatusBadge($status)
         document.getElementById('modalDate').innerText = order.ngay_dat;
         document.getElementById('modalPayment').innerText = order.phuong_thuc_thanh_toan;
         document.getElementById('modalTotal').innerText = Number(order.tong_tien).toLocaleString('vi-VN') + ' đ';
-
+        document.getElementById("btnCancelLink").href =
+            "index.php?act=HuyDonHang&id=" + order.id_don_hang;
         // Trạng thái
         let statusEl = document.getElementById('modalStatus');
         statusEl.className = `badge rounded-pill px-2 py-1 ms-1 ${getJsStatusBadge(order.trang_thai_don_hang)}`;

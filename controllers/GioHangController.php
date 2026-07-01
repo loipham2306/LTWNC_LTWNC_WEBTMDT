@@ -89,7 +89,13 @@ class GioHangController {
                 
                 if ($result) {
                     $this->syncCartFromDB();
-                    echo json_encode(['status' => 'success', 'message' => 'Đã thêm giỏ hàng thành công!']);
+                    echo json_encode(
+                        [
+                            'status' => 'success',
+                            'message' => 'Đã thêm giỏ hàng thành công!'
+                        ],
+                        JSON_UNESCAPED_UNICODE
+                    );
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Lỗi khi thêm vào DB']);
                 }
@@ -102,24 +108,33 @@ class GioHangController {
         exit;
     }
      // Ví dụ xử lý trong GioHangController
-   public function capNhatSoLuong() {
+    public function capNhatSoLuong() {
 
         header('Content-Type: application/json');
 
-        $id = $_GET['id']; // id_bien_the
+        $id_bien_the = (int)$_GET['id'];
         $type = $_GET['type'];
 
         $id_khach_hang = $_SESSION['user']['id_khach_hang'];
         $id_gio_hang = $this->ghModel->getGioHangId($id_khach_hang);
 
-        // 🔥 LẤY STOCK TỪ DB
-        $stock = $this->ghModel->getStockByVariant($id);
+        // LẤY VARIANT TỪ DB
+        $variant = $this->ghModel->getThongTinBienThe($id_bien_the);
 
-        $current = $_SESSION['cart'][$id]['so_luong'] ?? 0;
-        $stock = $_SESSION['cart'][$id]['so_luong_ton'] ?? 0;
+        if (!$variant) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Không tìm thấy biến thể"
+            ]);
+            exit;
+        }
+
+        $stock = (int)$variant['so_luong_ton'];
+
+        $current = $_SESSION['cart'][$id_bien_the]['so_luong'] ?? 0;
+
         if ($type === 'plus') {
 
-            // ❌ CHẶN VƯỢT KHO
             if ($current >= $stock) {
                 echo json_encode([
                     "status" => "error",
@@ -128,21 +143,20 @@ class GioHangController {
                 exit;
             }
 
-            $this->ghModel->updateQty($id_gio_hang, $id, 1);
+            $this->ghModel->updateQty($id_gio_hang, $id_bien_the, 1);
 
         } else {
 
             if ($current <= 1) {
-                $this->ghModel->removeFromGioHang($id_gio_hang, $id);
+                $this->ghModel->removeFromGioHang($id_gio_hang, $id_bien_the);
             } else {
-                $this->ghModel->updateQty($id_gio_hang, $id, -1);
+                $this->ghModel->updateQty($id_gio_hang, $id_bien_the, -1);
             }
         }
 
-        // sync lại cart
         $this->syncCartFromDB();
 
-        $newQty = $_SESSION['cart'][$id]['so_luong'] ?? 0;
+        $newQty = $_SESSION['cart'][$id_bien_the]['so_luong'] ?? 0;
 
         echo json_encode([
             "status" => "success",
@@ -176,30 +190,40 @@ class GioHangController {
             return;
         }
 
-        // Giả sử hàm getChiTietGioHang của bạn đã bao gồm cả % giảm giá 
-        // Nếu chưa, hãy đảm bảo query trong model lấy được phan_tram_giam
         $items = $this->ghModel->getChiTietGioHang($id_gio_hang);
 
         $_SESSION['cart'] = [];
 
         foreach ($items as $item) {
-            $gia_goc = (float)$item['gia_ban'];
-            $phan_tram = (float)($item['phan_tram_giam'] ?? 0);
-            
-            // TÍNH TOÁN GIÁ SAU GIẢM TẠI ĐÂY
-            $gia_sau_giam = $gia_goc * (1 - ($phan_tram / 100));
+
+            $giaGoc = (float)$item['gia_ban'];
+
+            // ưu tiên KM biến thể
+            $giam = (float)$item['km_bien_the'];
+
+            // fallback KM sản phẩm
+            if ($giam <= 0) {
+                $giam = (float)$item['km_san_pham'];
+            }
+
+            // default
+            $giaThuc = $giaGoc;
+
+            if ($giam > 0 && $giam <= 100) {
+                $giaThuc = round($giaGoc * (1 - $giam / 100), 0);
+            }
 
             $_SESSION['cart'][$item['id_bien_the']] = [
-                'id_bien_the'  => $item['id_bien_the'],
+                'id_bien_the' => $item['id_bien_the'],
                 'ten_san_pham' => $item['ten_san_pham'],
-                'gia_goc'      => $gia_goc,       // Lưu giá gốc để hiển thị gạch bỏ nếu cần
-                'gia_thuc'     => $gia_sau_giam,  // Đây là giá dùng để tính tổng tiền
-                'size'         => $item['kich_co'],
-                'mau'          => $item['mau_sac'],
-                'hinh_anh'     => $item['hinh_anh_bien_the'],
-                'so_luong'     => (int)$item['so_luong'],
+                'gia_goc' => $giaGoc,
+                'gia_thuc' => $giaThuc,
+                'size' => $item['kich_co'],
+                'mau' => $item['mau_sac'],
+                'hinh_anh' => $item['hinh_anh_bien_the'],
+                'so_luong' => (int)$item['so_luong'],
                 'so_luong_ton' => (int)$item['so_luong_ton'],
-                'phan_tram'    => $phan_tram
+                'phan_tram' => $giam
             ];
         }
     }

@@ -5,7 +5,7 @@ class ThongKeModel {
     public function __construct($conn) {
         $this->conn = $conn;
     }
-
+    
     // Thống kê doanh thu theo tuần (5 tuần gần nhất)
     public function getDoanhThuTheoTuan()
     {
@@ -34,7 +34,6 @@ class ThongKeModel {
             SELECT 
                 sp.ten_san_pham, 
                 SUM(ct.so_luong) as tong_ban, 
-                /* Sử dụng cột 'gia_luc_mua' từ bảng chi_tiet_don_hang (ct) */
                 SUM(ct.so_luong * ct.gia_luc_mua) as doanh_thu 
             FROM chi_tiet_don_hang ct
             INNER JOIN bien_the_san_pham bt ON ct.id_bien_the = bt.id_bien_the
@@ -75,5 +74,71 @@ class ThongKeModel {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+    public function getThongKeSanPham()
+    {
+        $sql = "
+            SELECT
+                sp.id_san_pham,
+                sp.ten_san_pham,
+                sp.hinh_anh,
+                COALESCE(SUM(ct.so_luong),0) AS da_ban,
+                (
+                    SELECT SUM(so_luong_ton)
+                    FROM bien_the_san_pham bt2
+                    WHERE bt2.id_san_pham = sp.id_san_pham
+                ) AS ton_kho,
+                COALESCE(SUM(ct.so_luong * ct.gia_luc_mua),0) AS doanh_thu,
+                  CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM chi_tiet_khuyen_mai ctkm
+                        INNER JOIN chuong_trinh_khuyen_mai km
+                            ON km.id_khuyen_mai = ctkm.id_khuyen_mai
+                        WHERE ctkm.id_san_pham = sp.id_san_pham
+                        AND km.trang_thai = 1
+                        AND CURDATE() BETWEEN km.ngay_bat_dau
+                                        AND km.ngay_ket_thuc
+                    )
+                    THEN 1
+                    ELSE 0
+                END AS co_khuyen_mai
+            FROM san_pham sp
+            LEFT JOIN bien_the_san_pham bt
+                ON sp.id_san_pham = bt.id_san_pham
+            LEFT JOIN chi_tiet_don_hang ct
+                ON bt.id_bien_the = ct.id_bien_the
+            LEFT JOIN don_hang dh
+                ON ct.id_don_hang = dh.id_don_hang
+                AND dh.trang_thai_don_hang='Đã giao'
+            GROUP BY sp.id_san_pham
+            ORDER BY da_ban DESC
+        ";
+        return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getThongKeBienThe()
+    {
+        $sql = "
+            SELECT
+                bt.id_bien_the,
+                sp.ten_san_pham,
+                bt.kich_co,
+                bt.mau_sac,
+                bt.so_luong_ton,
+                COALESCE(SUM(ct.so_luong),0) AS da_ban,
+                COALESCE(SUM(ct.so_luong*ct.gia_luc_mua),0) AS doanh_thu
+            FROM bien_the_san_pham bt
+            INNER JOIN san_pham sp
+                ON bt.id_san_pham=sp.id_san_pham
+            LEFT JOIN chi_tiet_don_hang ct
+                ON bt.id_bien_the=ct.id_bien_the
+            LEFT JOIN don_hang dh
+                ON ct.id_don_hang=dh.id_don_hang
+                AND dh.trang_thai_don_hang='Đã giao'
+            GROUP BY bt.id_bien_the
+            ORDER BY da_ban DESC
+        ";
+
+        return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

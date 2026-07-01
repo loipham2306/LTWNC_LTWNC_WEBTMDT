@@ -119,26 +119,47 @@ class GioHang {
     public function getChiTietGioHang($id_gio_hang)
     {
         $query = "
-            SELECT
-                ct.*,
-                bt.kich_co,
-                bt.mau_sac,
-                bt.gia_ban,
-                bt.hinh_anh_bien_the,
-                bt.so_luong_ton,
-                sp.ten_san_pham,
-                /* Lấy % giảm giá cao nhất đang hoạt động */
-                COALESCE(MAX(km.phan_tram_giam), 0) AS phan_tram_giam
-            FROM chi_tiet_gio_hang ct
-            INNER JOIN bien_the_san_pham bt ON ct.id_bien_the = bt.id_bien_the
-            INNER JOIN san_pham sp ON bt.id_san_pham = sp.id_san_pham
-            /* Kết nối tới bảng chi tiết khuyến mãi và chương trình khuyến mãi */
-            LEFT JOIN chi_tiet_khuyen_mai ctk ON sp.id_san_pham = ctk.id_san_pham
-            LEFT JOIN chuong_trinh_khuyen_mai km ON ctk.id_khuyen_mai = km.id_khuyen_mai 
-                AND km.trang_thai = 1 
-                AND NOW() BETWEEN km.ngay_bat_dau AND km.ngay_ket_thuc
-            WHERE ct.id_gio_hang = ?
-            GROUP BY ct.id_gio_hang, ct.id_bien_the
+           SELECT
+            ct.id_bien_the,
+            ct.so_luong,
+
+            bt.kich_co,
+            bt.mau_sac,
+            bt.gia_ban,
+            bt.hinh_anh_bien_the,
+            bt.so_luong_ton,
+
+            sp.ten_san_pham,
+
+            COALESCE(km_bt.phan_tram_giam, 0) AS km_bien_the,
+            COALESCE(km_sp.phan_tram_giam, 0) AS km_san_pham
+
+        FROM chi_tiet_gio_hang ct
+
+        JOIN bien_the_san_pham bt 
+            ON ct.id_bien_the = bt.id_bien_the
+
+        JOIN san_pham sp 
+            ON bt.id_san_pham = sp.id_san_pham
+
+        LEFT JOIN chi_tiet_khuyen_mai ct_bt
+            ON ct_bt.id_bien_the = bt.id_bien_the
+
+        LEFT JOIN chuong_trinh_khuyen_mai km_bt
+            ON km_bt.id_khuyen_mai = ct_bt.id_khuyen_mai
+            AND km_bt.trang_thai = 1
+            AND NOW() BETWEEN km_bt.ngay_bat_dau AND km_bt.ngay_ket_thuc
+
+        LEFT JOIN chi_tiet_khuyen_mai ct_sp
+            ON ct_sp.id_san_pham = sp.id_san_pham
+            AND ct_sp.id_bien_the IS NULL
+
+        LEFT JOIN chuong_trinh_khuyen_mai km_sp
+            ON km_sp.id_khuyen_mai = ct_sp.id_khuyen_mai
+            AND km_sp.trang_thai = 1
+            AND NOW() BETWEEN km_sp.ngay_bat_dau AND km_sp.ngay_ket_thuc
+
+        WHERE ct.id_gio_hang = ?
         ";
 
         $stmt = $this->conn->prepare($query);

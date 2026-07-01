@@ -81,19 +81,32 @@
          * @param int $offset Vị trí bắt đầu lấy
          */
         public function getAllKhachHang($limit, $offset) {
-            // Đã thêm tk.ngay_tao vào câu SELECT
+
             $query = "SELECT kh.*, tk.trang_thai, tk.ngay_tao,
-                            (SELECT COUNT(*) FROM don_hang dh WHERE dh.id_khach_hang = kh.id_khach_hang) as so_don,
-                            (SELECT SUM(tong_tien) FROM don_hang dh WHERE dh.id_khach_hang = kh.id_khach_hang) as tong_chi_tieu
-                    FROM khach_hang kh 
-                    JOIN tai_khoan tk ON kh.id_tai_khoan = tk.id_tai_khoan   
-                    WHERE tk.vai_tro != 'admin'  
-                    LIMIT :limit OFFSET :offset"; 
-                    
+                            (
+                                SELECT COUNT(*)
+                                FROM don_hang dh
+                                WHERE dh.id_khach_hang = kh.id_khach_hang
+                            ) AS so_don,
+
+                            (
+                                SELECT COALESCE(SUM(dh.tong_tien), 0)
+                                FROM don_hang dh
+                                WHERE dh.id_khach_hang = kh.id_khach_hang
+                                AND dh.trang_thai_don_hang = 'Đã giao'
+                            ) AS tong_chi_tieu
+
+                    FROM khach_hang kh
+                    JOIN tai_khoan tk
+                        ON kh.id_tai_khoan = tk.id_tai_khoan
+                    WHERE tk.vai_tro != 'admin'
+                    LIMIT :limit OFFSET :offset";
+
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
+
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 

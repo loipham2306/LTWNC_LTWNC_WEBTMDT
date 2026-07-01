@@ -124,7 +124,7 @@ $isContactActive  = ($act == 'LienHe' || $currentPage == 'Contact.php') ? 'activ
             <nav class="navbar navbar-expand-lg navbar-dark bg-transparent py-2">
                 <span class="d-lg-none fw-bold text-white fs-5">DANH MỤC</span>
                 
-                <button class="navbar-toggler ms-auto my-1 border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" style="z-index: 1050 cursor: pointer;">
+                <button class="navbar-toggler ms-auto my-1 border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" style="z-index: 1050 ">
                     <span class="fa fa-bars fa-1x text-white"></span>
                 </button>
                 

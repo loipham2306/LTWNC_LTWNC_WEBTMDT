@@ -9,7 +9,9 @@
     $product = $product ?? [];
     $imgPath = $imgPath ?? '';
     $gia_hien_tai = $gia_hien_tai ?? 0;
-    
+    //echo "<pre>";
+    //print_r($product);
+    //die();
     ?>
 
     <!DOCTYPE html>
@@ -240,9 +242,9 @@
                                     <div class="price-old" id="price-old" style="display: <?= $giam > 0 ? 'block' : 'none' ?>;">
                                         <?= number_format($gia_goc, 0, ',', '.') ?> VNĐ
                                     </div>
-                                    <?php if ($giam > 0): ?>
-                                        <div class="discount" id="discount-percent">-<?= $giam ?>%</div>
-                                    <?php endif; ?>
+                                    <div class="discount" id="discount-percent" style="display: <?= $giam > 0 ? 'inline-block' : 'none' ?>;">
+                                        -<?= $giam ?>%
+                                    </div>
                                 </div>
 
                                 <div class="short-description text-white-50 mb-4">
@@ -271,14 +273,7 @@
                                         ?>
                                             <button class="btn btn-outline-warning btn-sm px-3 <?= $isOutOfStock ? 'btn-size-disabled' : '' ?>" 
                                                 <?= $isOutOfStock ? 'disabled' : '' ?>
-                                                onclick="selectVariant(
-                                                    <?= $bt['gia_sau_giam'] ?>, 
-                                                    <?= $bt['so_luong_ton'] ?>, 
-                                                    '<?= $bt['kich_co'] ?>', 
-                                                    this, 
-                                                    <?= $bt['gia_ban'] ?>, 
-                                                    <?= $bt['phan_tram_giam'] ?? 0 ?>
-                                                )">
+                                                onclick="selectVariant('<?= trim($bt['kich_co']) ?>', this)">
                                                 <?= htmlspecialchars($bt['kich_co']) ?>
                                             </button>
                                         <?php endforeach; ?>
@@ -373,12 +368,25 @@
             window.currentStock = 0; 
             
             function getVariant() {
-                return variants.find(v =>
-                    v.kich_co == window.currentSelectedSize &&
-                    v.mau_sac == window.currentSelectedColor
-                );
-            }   
-            
+                const matches = variants.filter(v => {
+                    const sizeOk = window.currentSelectedSize
+                        ? String(v.kich_co).trim() === String(window.currentSelectedSize).trim()
+                        : true;
+
+                    const colorOk = window.currentSelectedColor
+                        ? String(v.mau_sac).trim() === String(window.currentSelectedColor).trim()
+                        : true;
+
+                    return sizeOk && colorOk;
+                });
+
+                if (matches.length === 0) return null;
+
+                // CHỌN bản tốt nhất (ưu tiên giảm giá)
+                return matches.sort((a, b) => {
+                    return (b.phan_tram_giam || 0) - (a.phan_tram_giam || 0);
+                })[0];
+            }
             function addToCartDetail() {
                 const variant = getVariant();
 
@@ -389,9 +397,6 @@
 
                 const formData = new FormData();
                 formData.append('id_bien_the', variant.id_bien_the);
-                
-                const priceToSubmit = variant.gia_sau_giam > 0 ? variant.gia_sau_giam : variant.gia_ban;
-                formData.append('gia', priceToSubmit); 
                 formData.append('so_luong', document.getElementById('buyQty').value);
 
                 fetch('index.php?act=ThemGioHang', {
@@ -426,47 +431,58 @@
             }
 
             function updateProductInfo() {
-                const variant = variants.find(v => {
-                    let matchSize = !window.currentSelectedSize || v.kich_co == window.currentSelectedSize;
-                    let matchColor = !window.currentSelectedColor || v.mau_sac == window.currentSelectedColor;
-                    return matchSize && matchColor;
-                });
-
+                 const variant = getVariant();
                 if (!variant) return;
-
                 window.currentStock = parseInt(variant.so_luong_ton);
 
+                // Giá sale
                 document.getElementById('price-display').innerText =
-                    new Intl.NumberFormat('vi-VN').format(variant.gia_sau_giam) + ' VNĐ';
+                    new Intl.NumberFormat('vi-VN').format(variant.gia_sau_giam || variant.gia_ban) + ' VNĐ';
 
+                // Giá gốc
                 const oldPriceEl = document.getElementById('price-old');
                 const discountEl = document.getElementById('discount-percent');
+                if (oldPriceEl) {
+                    oldPriceEl.style.display = 'block';
+                }
 
+                if (discountEl) {
+                    discountEl.style.display = 'inline-block';
+                }
                 if (variant.phan_tram_giam > 0) {
                     oldPriceEl.style.display = 'block';
                     discountEl.style.display = 'inline-block';
-                    oldPriceEl.innerText = new Intl.NumberFormat('vi-VN').format(variant.gia_ban) + ' VNĐ';
+
+                    oldPriceEl.innerText =
+                        new Intl.NumberFormat('vi-VN').format(variant.gia_ban) + ' VNĐ';
+
                     discountEl.innerText = '-' + variant.phan_tram_giam + '%';
                 } else {
                     oldPriceEl.style.display = 'none';
                     discountEl.style.display = 'none';
                 }
 
-                document.getElementById('stock-info').innerText = `Còn ${variant.so_luong_ton} sản phẩm`;
+                document.getElementById('stock-info').innerText =
+                    `Còn ${variant.so_luong_ton} sản phẩm`;
+
                 document.getElementById('buyQty').value = 1;
                 document.getElementById('buyQty').setAttribute('max', variant.so_luong_ton);
             }
 
-            function selectVariant(price, stock, size, element) {
+            function selectVariant(size, element) {
                 window.currentSelectedSize = size;
-                document.querySelectorAll('.btn-outline-warning').forEach(btn => btn.classList.remove('active'));
+
+                document.querySelectorAll('.btn-outline-warning')
+                    .forEach(btn => btn.classList.remove('active'));
+
                 element.classList.add('active');
-                window.currentStock = stock;
+
                 const variant = getVariant();
-                if (variant) selectedVariant = variant;
-                document.getElementById('stock-info').innerText = `Còn ${stock} sản phẩm`;
-                document.getElementById('buyQty').value = 1;
-                updateProductInfo();
+
+                if (variant) {
+                    selectedVariant = variant;
+                    updateProductInfo();
+                }
             }
 
             function selectColor(color, element) {

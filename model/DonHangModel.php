@@ -111,9 +111,15 @@ class DonHangModel
     }
     public function getDonHangById($id)
     {
-        $sql = "SELECT * FROM {$this->table_don_hang} WHERE id_don_hang = ?";
+        $sql = "SELECT dh.*, kh.id_tai_khoan
+                FROM {$this->table_don_hang} dh
+                INNER JOIN khach_hang kh
+                    ON dh.id_khach_hang = kh.id_khach_hang
+                WHERE dh.id_don_hang = ?";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
+
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     public function getDonHangByKhachHang($id_khach_hang)
@@ -175,7 +181,7 @@ class DonHangModel
         ]);
         return $stmt->rowCount() > 0;
     }
-        public function restoreTonKho($id_bien_the, $so_luong)
+    public function restoreTonKho($id_bien_the, $so_luong)
     {
         if ($so_luong <= 0) return false;
 
@@ -191,6 +197,33 @@ class DonHangModel
             ':so_luong' => (int)$so_luong,
             ':id_bien_the' => $id_bien_the
         ]);
+    }
+    // trả về voucher
+    public function restoreVoucher($id_tai_khoan, $id_voucher)
+    {
+        // Trả lại quyền sử dụng voucher cho khách
+        $sql = "UPDATE voucher_cua_nguoi_dung
+                SET da_su_dung = 0
+                WHERE id_tai_khoan = ?
+                AND id_voucher = ?
+                AND da_su_dung = 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$id_tai_khoan, $id_voucher]);
+
+        // Giảm số lượt đã dùng của voucher
+        $sql = "UPDATE voucher
+                SET so_luong_da_dung =
+                    CASE
+                        WHEN so_luong_da_dung > 0
+                        THEN so_luong_da_dung - 1
+                        ELSE 0
+                    END
+                WHERE id_voucher = ?";
+
+        $stmt = $this->conn->prepare($sql);
+
+        return $stmt->execute([$id_voucher]);
     }
     // Thêm vào trong class DonHangModel
     public function getDonHangByKhachHangId($id_khach_hang) {
